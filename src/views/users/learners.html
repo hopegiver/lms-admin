@@ -1,0 +1,243 @@
+<div class="learners-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">학습자</h4>
+            <p class="text-muted mb-0">전체 학습자를 관리합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="openImportModal">
+                <span class="me-1">📥</span> 일괄 등록
+            </button>
+            <button class="btn btn-primary" @click="openCreateModal">
+                <span class="me-1">➕</span> 학습자 등록
+            </button>
+        </div>
+    </div>
+
+    <!-- 필터 & 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <select class="form-select" v-model="filters.status">
+                        <option value="">전체 상태</option>
+                        <option value="active">활성</option>
+                        <option value="inactive">비활성</option>
+                        <option value="suspended">정지</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" v-model="filters.organization">
+                        <option value="">전체 조직</option>
+                        <option v-for="org in organizations" :key="org.id" :value="org.id">
+                            {{ org.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">🔍</span>
+                        <input type="text" class="form-control" placeholder="이름, 이메일 검색..." v-model="searchQuery">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            내보내기
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" @click="exportData('excel')">📊 Excel</a></li>
+                            <li><a class="dropdown-item" href="#" @click="exportData('csv')">📄 CSV</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 데이터 테이블 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" class="form-check-input" v-model="selectAll" @change="toggleSelectAll">
+                            </th>
+                            <th>이름</th>
+                            <th>이메일</th>
+                            <th>조직</th>
+                            <th class="text-center">수강중</th>
+                            <th class="text-center">상태</th>
+                            <th>가입일</th>
+                            <th style="width: 100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="learner in learners" :key="learner.id">
+                            <td>
+                                <input type="checkbox" class="form-check-input" v-model="selectedIds" :value="learner.id">
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-2"
+                                         style="width: 36px; height: 36px;">
+                                        {{ learner.name.charAt(0) }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">{{ learner.name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ learner.email }}</td>
+                            <td>{{ learner.organization || '-' }}</td>
+                            <td class="text-center">{{ learner.enrolledCourses }}개</td>
+                            <td class="text-center">
+                                <span class="badge" :class="getStatusClass(learner.status)">
+                                    {{ getStatusText(learner.status) }}
+                                </span>
+                            </td>
+                            <td>{{ learner.createdAt }}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                                        ⋮
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" @click="viewDetail(learner)">👤 상세보기</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="editLearner(learner)">✏️ 수정</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" @click="deleteLearner(learner)">🗑️ 삭제</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 선택된 항목 액션바 -->
+        <div class="card-footer bg-white border-top py-2" v-if="selectedIds.length > 0">
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted">{{ selectedIds.length }}개 선택됨</span>
+                <button class="btn btn-sm btn-outline-secondary" @click="bulkAction('activate')">활성화</button>
+                <button class="btn btn-sm btn-outline-secondary" @click="bulkAction('deactivate')">비활성화</button>
+                <button class="btn btn-sm btn-outline-danger" @click="bulkAction('delete')">삭제</button>
+            </div>
+        </div>
+        <!-- 페이지네이션 -->
+        <div class="card-footer bg-white border-top">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                    총 {{ totalCount }}명 중 {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, totalCount) }}명
+                </div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                            <a class="page-link" href="#" @click.prevent="currentPage--">이전</a>
+                        </li>
+                        <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }">
+                            <a class="page-link" href="#" @click.prevent="currentPage = page">{{ page }}</a>
+                        </li>
+                        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                            <a class="page-link" href="#" @click.prevent="currentPage++">다음</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- 학습자 상세 슬라이드 패널 -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="learnerDetailPanel" style="width: 450px;">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title">{{ selectedLearner?.name }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0" v-if="selectedLearner">
+            <!-- 탭 메뉴 -->
+            <ul class="nav nav-tabs px-3 pt-3">
+                <li class="nav-item">
+                    <a class="nav-link" :class="{ active: detailTab === 'info' }" href="#" @click.prevent="detailTab = 'info'">기본정보</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" :class="{ active: detailTab === 'learning' }" href="#" @click.prevent="detailTab = 'learning'">학습이력</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" :class="{ active: detailTab === 'purchase' }" href="#" @click.prevent="detailTab = 'purchase'">구매이력</a>
+                </li>
+            </ul>
+
+            <!-- 기본정보 탭 -->
+            <div class="p-3" v-if="detailTab === 'info'">
+                <div class="mb-3">
+                    <label class="form-label text-muted small">이메일</label>
+                    <div>{{ selectedLearner.email }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">연락처</label>
+                    <div>{{ selectedLearner.phone || '-' }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">조직</label>
+                    <div>{{ selectedLearner.organization || '-' }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">가입일</label>
+                    <div>{{ selectedLearner.createdAt }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">상태</label>
+                    <div>
+                        <span class="badge" :class="getStatusClass(selectedLearner.status)">
+                            {{ getStatusText(selectedLearner.status) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 학습이력 탭 -->
+            <div class="p-3" v-if="detailTab === 'learning'">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0" v-for="course in selectedLearner.courses" :key="course.id">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-medium">{{ course.title }}</div>
+                                <small class="text-muted">진도율 {{ course.progress }}%</small>
+                            </div>
+                            <div class="progress" style="width: 100px; height: 6px;">
+                                <div class="progress-bar" :style="{ width: course.progress + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 구매이력 탭 -->
+            <div class="p-3" v-if="detailTab === 'purchase'">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0" v-for="order in selectedLearner.orders" :key="order.id">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="fw-medium">{{ order.product }}</div>
+                                <small class="text-muted">{{ order.date }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div>{{ order.amount }}</div>
+                                <span class="badge bg-success">{{ order.status }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="offcanvas-footer border-top p-3">
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary flex-grow-1" @click="editLearner(selectedLearner)">수정</button>
+                <button class="btn btn-outline-danger" @click="deleteLearner(selectedLearner)">삭제</button>
+            </div>
+        </div>
+    </div>
+</div>

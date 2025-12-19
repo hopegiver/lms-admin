@@ -1,0 +1,109 @@
+<div class="banners-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">배너/팝업</h4>
+            <p class="text-muted mb-0">사이트 배너와 팝업을 관리합니다</p>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" @click="openCreateBannerModal">
+                <span class="me-1">+</span> 배너 추가
+            </button>
+            <button class="btn btn-outline-primary" @click="openCreatePopupModal">
+                <span class="me-1">+</span> 팝업 추가
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ 'active': activeTab === 'banners' }" href="#" @click.prevent="activeTab = 'banners'">
+                배너 <span class="badge bg-primary ms-1">{{ banners.length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ 'active': activeTab === 'popups' }" href="#" @click.prevent="activeTab = 'popups'">
+                팝업 <span class="badge bg-primary ms-1">{{ popups.length }}</span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- 배너 목록 -->
+    <div v-if="activeTab === 'banners'">
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4" v-for="banner in banners" :key="banner.id">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                        <img v-if="banner.image" :src="banner.image" alt="배너" class="img-fluid" style="max-height: 100%;">
+                        <span v-else class="text-muted">이미지 없음</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">{{ banner.title }}</h6>
+                            <span class="badge" :class="banner.isActive ? 'bg-success' : 'bg-secondary'">
+                                {{ banner.isActive ? '활성' : '비활성' }}
+                            </span>
+                        </div>
+                        <p class="card-text text-muted small mb-2">{{ banner.location }}</p>
+                        <div class="text-muted small">
+                            {{ banner.startDate }} ~ {{ banner.endDate }}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-secondary flex-fill" @click="editBanner(banner)">수정</button>
+                            <button class="btn btn-sm btn-outline-secondary" @click="toggleBanner(banner)">
+                                {{ banner.isActive ? '비활성화' : '활성화' }}
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" @click="deleteBanner(banner)">삭제</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 팝업 목록 -->
+    <div v-if="activeTab === 'popups'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>팝업명</th>
+                                <th>표시 페이지</th>
+                                <th>노출 기간</th>
+                                <th class="text-center">상태</th>
+                                <th style="width: 150px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="popup in popups" :key="popup.id">
+                                <td>
+                                    <div class="fw-medium">{{ popup.title }}</div>
+                                    <div class="text-muted small">{{ popup.size }}</div>
+                                </td>
+                                <td>{{ popup.displayPage }}</td>
+                                <td>{{ popup.startDate }} ~ {{ popup.endDate }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="popup.isActive ? 'bg-success' : 'bg-secondary'">
+                                        {{ popup.isActive ? '활성' : '비활성' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-secondary" @click="previewPopup(popup)">미리보기</button>
+                                        <button class="btn btn-sm btn-outline-secondary" @click="editPopup(popup)">수정</button>
+                                        <button class="btn btn-sm btn-outline-danger" @click="deletePopup(popup)">삭제</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

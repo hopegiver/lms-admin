@@ -1,0 +1,278 @@
+<div class="promotions-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">프로모션</h4>
+            <p class="text-muted mb-0">쿠폰과 할인 이벤트를 관리합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="openCouponModal">
+                <span class="me-1">🎟️</span> 쿠폰 생성
+            </button>
+            <button class="btn btn-primary" @click="openEventModal">
+                <span class="me-1">🎉</span> 이벤트 생성
+            </button>
+        </div>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">진행중 이벤트</div>
+                            <div class="fs-4 fw-bold text-success">{{ stats.activeEvents }}</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <span class="fs-4">🎉</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">발급 쿠폰</div>
+                            <div class="fs-4 fw-bold">{{ stats.issuedCoupons }}</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <span class="fs-4">🎟️</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">쿠폰 사용률</div>
+                            <div class="fs-4 fw-bold">{{ stats.usageRate }}</div>
+                        </div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                            <span class="fs-4">📊</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">총 할인금액</div>
+                            <div class="fs-4 fw-bold text-danger">{{ stats.totalDiscount }}</div>
+                        </div>
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                            <span class="fs-4">💸</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'events' }" href="#" @click.prevent="activeTab = 'events'">
+                할인 이벤트 <span class="badge bg-success ms-1">{{ events.length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'coupons' }" href="#" @click.prevent="activeTab = 'coupons'">
+                쿠폰 관리 <span class="badge bg-secondary ms-1">{{ coupons.length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'usage' }" href="#" @click.prevent="activeTab = 'usage'">
+                사용 내역
+            </a>
+        </li>
+    </ul>
+
+    <!-- 할인 이벤트 탭 -->
+    <div v-if="activeTab === 'events'">
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4" v-for="event in events" :key="event.id">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <span class="badge" :class="event.status === 'active' ? 'bg-success' : 'bg-secondary'">
+                            {{ event.status === 'active' ? '진행중' : '종료' }}
+                        </span>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown">⋮</button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" @click="editEvent(event)">수정</a></li>
+                                <li><a class="dropdown-item" href="#" @click="duplicateEvent(event)">복제</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" @click="deleteEvent(event)">삭제</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-2">{{ event.name }}</h6>
+                        <p class="text-muted small mb-3">{{ event.description }}</p>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small">할인율</span>
+                            <span class="fw-bold text-danger">{{ event.discount }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small">대상</span>
+                            <span class="badge bg-light text-dark">{{ event.target }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">기간</span>
+                            <span class="small">{{ event.period }}</span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">{{ event.usedCount }}회 적용</span>
+                            <button class="btn btn-sm" :class="event.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'"
+                                    @click="toggleEventStatus(event)">
+                                {{ event.status === 'active' ? '종료' : '활성화' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 쿠폰 관리 탭 -->
+    <div v-if="activeTab === 'coupons'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>쿠폰코드</th>
+                                <th>쿠폰명</th>
+                                <th>할인</th>
+                                <th class="text-center">발급/사용</th>
+                                <th>유효기간</th>
+                                <th class="text-center">상태</th>
+                                <th style="width: 120px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="coupon in coupons" :key="coupon.id">
+                                <td>
+                                    <code class="bg-light px-2 py-1 rounded">{{ coupon.code }}</code>
+                                </td>
+                                <td>
+                                    <div class="fw-medium">{{ coupon.name }}</div>
+                                    <div class="text-muted small">{{ coupon.target }}</div>
+                                </td>
+                                <td>
+                                    <span class="text-danger fw-bold">{{ coupon.discount }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-medium">{{ coupon.used }}</span>
+                                    <span class="text-muted"> / {{ coupon.issued }}</span>
+                                </td>
+                                <td>{{ coupon.validPeriod }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getCouponStatusClass(coupon.status)">
+                                        {{ getCouponStatusText(coupon.status) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary" @click="editCoupon(coupon)">수정</button>
+                                        <button class="btn btn-sm btn-outline-secondary" @click="issueCoupon(coupon)">발급</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사용 내역 탭 -->
+    <div v-if="activeTab === 'usage'">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-3">
+                        <select class="form-select" v-model="usageFilter.type">
+                            <option value="">전체 유형</option>
+                            <option value="coupon">쿠폰</option>
+                            <option value="event">이벤트</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">📅</span>
+                            <input type="date" class="form-control" v-model="usageFilter.startDate">
+                            <input type="date" class="form-control" v-model="usageFilter.endDate">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">🔍</span>
+                            <input type="text" class="form-control" placeholder="쿠폰코드, 사용자..." v-model="usageFilter.query">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>유형</th>
+                                <th>프로모션명</th>
+                                <th>사용자</th>
+                                <th>주문번호</th>
+                                <th class="text-end">할인금액</th>
+                                <th>사용일시</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="usage in usageHistory" :key="usage.id">
+                                <td>
+                                    <span class="badge" :class="usage.type === 'coupon' ? 'bg-primary' : 'bg-success'">
+                                        {{ usage.type === 'coupon' ? '쿠폰' : '이벤트' }}
+                                    </span>
+                                </td>
+                                <td>{{ usage.promotionName }}</td>
+                                <td>{{ usage.user }}</td>
+                                <td><a href="#" class="text-primary">{{ usage.orderNo }}</a></td>
+                                <td class="text-end fw-bold text-danger">-{{ usage.discountAmount }}</td>
+                                <td>{{ usage.usedAt }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-center mt-4" v-if="activeTab === 'usage'">
+        <nav>
+            <ul class="pagination">
+                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>

@@ -1,0 +1,212 @@
+<div class="assessments-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">평가</h4>
+            <p class="text-muted mb-0">시험, 과제, 문제은행을 관리합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="openCreateModal">
+            <span class="me-1">➕</span> 새로 만들기
+        </button>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'exams' }" href="#" @click.prevent="activeTab = 'exams'">
+                📝 시험
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'assignments' }" href="#" @click.prevent="activeTab = 'assignments'">
+                ✍️ 과제
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'questionbank' }" href="#" @click.prevent="activeTab = 'questionbank'">
+                🗃️ 문제은행
+            </a>
+        </li>
+    </ul>
+
+    <!-- 시험 탭 -->
+    <div v-if="activeTab === 'exams'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>시험명</th>
+                                <th>강좌</th>
+                                <th class="text-center">문항 수</th>
+                                <th class="text-center">시간 제한</th>
+                                <th class="text-center">응시자</th>
+                                <th class="text-center">평균 점수</th>
+                                <th class="text-center">상태</th>
+                                <th style="width: 100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="exam in exams" :key="exam.id">
+                                <td>
+                                    <div class="fw-medium">{{ exam.title }}</div>
+                                    <small class="text-muted">{{ exam.type }}</small>
+                                </td>
+                                <td>{{ exam.course }}</td>
+                                <td class="text-center">{{ exam.questions }}문항</td>
+                                <td class="text-center">{{ exam.timeLimit }}</td>
+                                <td class="text-center">{{ exam.submissions }}명</td>
+                                <td class="text-center">{{ exam.avgScore }}점</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="exam.active ? 'bg-success' : 'bg-secondary'">
+                                        {{ exam.active ? '활성' : '비활성' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">⋮</button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="#" @click="editExam(exam)">✏️ 수정</a></li>
+                                            <li><a class="dropdown-item" href="#" @click="viewResults(exam)">📊 결과 보기</a></li>
+                                            <li><a class="dropdown-item" href="#" @click="duplicateExam(exam)">📑 복사</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" @click="deleteExam(exam)">🗑️ 삭제</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 과제 탭 -->
+    <div v-if="activeTab === 'assignments'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>과제명</th>
+                                <th>강좌</th>
+                                <th>마감일</th>
+                                <th class="text-center">제출</th>
+                                <th class="text-center">채점 대기</th>
+                                <th class="text-center">상태</th>
+                                <th style="width: 100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="assignment in assignments" :key="assignment.id">
+                                <td>
+                                    <div class="fw-medium">{{ assignment.title }}</div>
+                                </td>
+                                <td>{{ assignment.course }}</td>
+                                <td>{{ assignment.dueDate }}</td>
+                                <td class="text-center">{{ assignment.submitted }}/{{ assignment.total }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning text-dark" v-if="assignment.pendingGrade > 0">
+                                        {{ assignment.pendingGrade }}
+                                    </span>
+                                    <span v-else>-</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getAssignmentStatusClass(assignment.status)">
+                                        {{ assignment.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">⋮</button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="#" @click="editAssignment(assignment)">✏️ 수정</a></li>
+                                            <li><a class="dropdown-item" href="#" @click="gradeAssignment(assignment)">📋 채점하기</a></li>
+                                            <li><a class="dropdown-item" href="#" @click="viewSubmissions(assignment)">📥 제출물 보기</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" @click="deleteAssignment(assignment)">🗑️ 삭제</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문제은행 탭 -->
+    <div v-if="activeTab === 'questionbank'">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <select class="form-select" v-model="questionFilters.category">
+                    <option value="">전체 카테고리</option>
+                    <option v-for="cat in questionCategories" :key="cat">{{ cat }}</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" v-model="questionFilters.type">
+                    <option value="">전체 유형</option>
+                    <option value="multiple">객관식</option>
+                    <option value="short">단답형</option>
+                    <option value="essay">서술형</option>
+                    <option value="truefalse">O/X</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control" placeholder="문제 검색..." v-model="questionSearch">
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th><input type="checkbox" class="form-check-input"></th>
+                                <th>문제</th>
+                                <th>카테고리</th>
+                                <th class="text-center">유형</th>
+                                <th class="text-center">난이도</th>
+                                <th class="text-center">사용 횟수</th>
+                                <th style="width: 100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="q in questions" :key="q.id">
+                                <td><input type="checkbox" class="form-check-input"></td>
+                                <td>
+                                    <div class="fw-medium text-truncate" style="max-width: 300px;">{{ q.question }}</div>
+                                </td>
+                                <td><span class="badge bg-light text-dark">{{ q.category }}</span></td>
+                                <td class="text-center">{{ getQuestionTypeText(q.type) }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getDifficultyClass(q.difficulty)">
+                                        {{ getDifficultyText(q.difficulty) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">{{ q.usageCount }}회</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">⋮</button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="#" @click="editQuestion(q)">✏️ 수정</a></li>
+                                            <li><a class="dropdown-item" href="#" @click="previewQuestion(q)">👁️ 미리보기</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" @click="deleteQuestion(q)">🗑️ 삭제</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

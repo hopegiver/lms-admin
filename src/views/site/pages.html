@@ -1,0 +1,108 @@
+<div class="pages-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">페이지</h4>
+            <p class="text-muted mb-0">사이트 페이지를 관리합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="openCreatePageModal">
+            <span class="me-1">+</span> 페이지 생성
+        </button>
+    </div>
+
+    <!-- 필터 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.status">
+                        <option value="">전체 상태</option>
+                        <option value="published">공개</option>
+                        <option value="draft">초안</option>
+                        <option value="private">비공개</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.type">
+                        <option value="">전체 유형</option>
+                        <option value="static">정적 페이지</option>
+                        <option value="landing">랜딩 페이지</option>
+                        <option value="policy">정책 페이지</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">🔍</span>
+                        <input type="text" class="form-control" placeholder="페이지명, URL 검색..." v-model="searchQuery">
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-outline-secondary" @click="resetFilters">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지 목록 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>페이지명</th>
+                            <th>URL</th>
+                            <th>유형</th>
+                            <th class="text-center">상태</th>
+                            <th class="text-center">조회수</th>
+                            <th>수정일</th>
+                            <th style="width: 100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="page in pages" :key="page.id">
+                            <td>
+                                <div class="fw-medium">{{ page.title }}</div>
+                                <div class="text-muted small">{{ page.description }}</div>
+                            </td>
+                            <td><code class="text-primary">{{ page.url }}</code></td>
+                            <td><span class="badge bg-light text-dark">{{ getTypeText(page.type) }}</span></td>
+                            <td class="text-center">
+                                <span class="badge" :class="getStatusBadgeClass(page.status)">
+                                    {{ getStatusText(page.status) }}
+                                </span>
+                            </td>
+                            <td class="text-center text-muted">{{ page.views }}</td>
+                            <td class="text-muted">{{ page.updatedAt }}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown">⋮</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" @click="editPage(page)">편집</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="previewPage(page)">미리보기</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="duplicatePage(page)">복제</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" @click="deletePage(page)">삭제</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted small">총 {{ pages.length }}건</div>
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>

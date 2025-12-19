@@ -1,0 +1,237 @@
+<div class="inquiries-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">문의 관리</h4>
+            <p class="text-muted mb-0">고객 문의를 확인하고 답변합니다</p>
+        </div>
+        <button class="btn btn-outline-secondary" @click="exportInquiries">
+            <span class="me-1">📥</span> 내보내기
+        </button>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">전체 문의</div>
+                            <div class="fs-4 fw-bold">{{ stats.total }}</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <span class="fs-4">💬</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">답변 대기</div>
+                            <div class="fs-4 fw-bold text-warning">{{ stats.pending }}</div>
+                        </div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                            <span class="fs-4">⏳</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">오늘 접수</div>
+                            <div class="fs-4 fw-bold text-info">{{ stats.today }}</div>
+                        </div>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                            <span class="fs-4">📩</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">평균 응답시간</div>
+                            <div class="fs-4 fw-bold text-success">{{ stats.avgResponseTime }}</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <span class="fs-4">⚡</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 필터 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.status">
+                        <option value="">전체 상태</option>
+                        <option value="pending">답변대기</option>
+                        <option value="answered">답변완료</option>
+                        <option value="closed">종료</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.category">
+                        <option value="">전체 유형</option>
+                        <option value="payment">결제/환불</option>
+                        <option value="course">강좌문의</option>
+                        <option value="tech">기술지원</option>
+                        <option value="account">계정문의</option>
+                        <option value="etc">기타</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.priority">
+                        <option value="">전체 우선순위</option>
+                        <option value="high">긴급</option>
+                        <option value="normal">일반</option>
+                        <option value="low">낮음</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">🔍</span>
+                        <input type="text" class="form-control" placeholder="제목, 작성자 검색..." v-model="searchQuery">
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-outline-secondary" @click="resetFilters">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문의 목록 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;"><input type="checkbox" class="form-check-input"></th>
+                            <th style="width: 80px;">우선순위</th>
+                            <th>제목</th>
+                            <th>유형</th>
+                            <th>작성자</th>
+                            <th class="text-center">상태</th>
+                            <th>접수일</th>
+                            <th style="width: 100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="inquiry in inquiries" :key="inquiry.id" @click="openInquiryDetail(inquiry)" style="cursor: pointer;">
+                            <td @click.stop><input type="checkbox" class="form-check-input"></td>
+                            <td>
+                                <span class="badge" :class="getPriorityBadgeClass(inquiry.priority)">
+                                    {{ getPriorityText(inquiry.priority) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-medium">{{ inquiry.title }}</div>
+                                <div class="text-muted small text-truncate" style="max-width: 300px;">{{ inquiry.preview }}</div>
+                            </td>
+                            <td><span class="badge bg-light text-dark">{{ getCategoryText(inquiry.category) }}</span></td>
+                            <td>
+                                <div>{{ inquiry.author }}</div>
+                                <div class="text-muted small">{{ inquiry.email }}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge" :class="getStatusBadgeClass(inquiry.status)">
+                                    {{ getStatusText(inquiry.status) }}
+                                </span>
+                            </td>
+                            <td>{{ inquiry.createdAt }}</td>
+                            <td @click.stop>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown">⋮</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" @click="openInquiryDetail(inquiry)">상세보기</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="replyInquiry(inquiry)">답변하기</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="#" @click="closeInquiry(inquiry)">문의 종료</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted small">총 {{ inquiries.length }}건</div>
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- 문의 상세 슬라이드 패널 -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="inquiryDetailPanel" style="width: 550px;">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title">문의 상세</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" v-if="selectedInquiry">
+        <!-- 문의 정보 -->
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="badge" :class="getPriorityBadgeClass(selectedInquiry.priority)">
+                    {{ getPriorityText(selectedInquiry.priority) }}
+                </span>
+                <span class="badge" :class="getStatusBadgeClass(selectedInquiry.status)">
+                    {{ getStatusText(selectedInquiry.status) }}
+                </span>
+            </div>
+            <h5 class="mb-3">{{ selectedInquiry.title }}</h5>
+            <div class="d-flex gap-3 text-muted small mb-3">
+                <span>{{ selectedInquiry.author }}</span>
+                <span>{{ selectedInquiry.email }}</span>
+                <span>{{ selectedInquiry.createdAt }}</span>
+            </div>
+            <div class="bg-light rounded p-3">
+                {{ selectedInquiry.content }}
+            </div>
+        </div>
+
+        <!-- 답변 영역 -->
+        <div class="mb-4">
+            <h6 class="mb-3">답변</h6>
+            <div v-if="selectedInquiry.reply" class="bg-primary bg-opacity-10 rounded p-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-medium">관리자</span>
+                    <span class="text-muted small">{{ selectedInquiry.replyDate }}</span>
+                </div>
+                <div>{{ selectedInquiry.reply }}</div>
+            </div>
+            <div v-else>
+                <textarea class="form-control mb-2" rows="5" placeholder="답변을 입력하세요..." v-model="replyContent"></textarea>
+                <button class="btn btn-primary" @click="submitReply">답변 등록</button>
+            </div>
+        </div>
+    </div>
+</div>

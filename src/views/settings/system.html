@@ -1,0 +1,184 @@
+<div class="system-settings-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">시스템</h4>
+            <p class="text-muted mb-0">시스템 정보와 유지보수 도구</p>
+        </div>
+    </div>
+
+    <!-- 시스템 정보 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">🖥️</div>
+                    <div class="text-muted small">서버 상태</div>
+                    <div class="fw-bold text-success">정상</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">💾</div>
+                    <div class="text-muted small">데이터베이스</div>
+                    <div class="fw-bold text-success">정상</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">📦</div>
+                    <div class="text-muted small">저장소 사용량</div>
+                    <div class="fw-bold">{{ systemInfo.storageUsed }} / {{ systemInfo.storageTotal }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">📝</div>
+                    <div class="text-muted small">버전</div>
+                    <div class="fw-bold">{{ systemInfo.version }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- 시스템 정보 상세 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">시스템 정보</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width: 200px;">애플리케이션 버전</td>
+                                <td class="fw-medium">{{ systemInfo.version }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">서버 환경</td>
+                                <td class="fw-medium">{{ systemInfo.environment }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Node.js 버전</td>
+                                <td class="fw-medium">{{ systemInfo.nodeVersion }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">데이터베이스</td>
+                                <td class="fw-medium">{{ systemInfo.database }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">서버 업타임</td>
+                                <td class="fw-medium">{{ systemInfo.uptime }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">마지막 배포</td>
+                                <td class="fw-medium">{{ systemInfo.lastDeploy }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 유지보수 도구 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">유지보수 도구</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <h6 class="mb-2">캐시 관리</h6>
+                                <p class="text-muted small mb-3">시스템 캐시를 삭제하여 최신 데이터를 불러옵니다</p>
+                                <button class="btn btn-outline-primary btn-sm" @click="clearCache">캐시 삭제</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <h6 class="mb-2">데이터베이스 백업</h6>
+                                <p class="text-muted small mb-3">현재 데이터베이스를 백업합니다</p>
+                                <button class="btn btn-outline-primary btn-sm" @click="backupDatabase">백업 생성</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <h6 class="mb-2">임시 파일 정리</h6>
+                                <p class="text-muted small mb-3">사용되지 않는 임시 파일을 삭제합니다</p>
+                                <button class="btn btn-outline-primary btn-sm" @click="cleanupTempFiles">정리하기</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <h6 class="mb-2">검색 인덱스 재구축</h6>
+                                <p class="text-muted small mb-3">검색 성능 향상을 위해 인덱스를 재구축합니다</p>
+                                <button class="btn btn-outline-primary btn-sm" @click="rebuildSearchIndex">재구축</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 로그 뷰어 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">최근 시스템 로그</h6>
+                    <button class="btn btn-sm btn-outline-secondary" @click="refreshLogs">새로고침</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="bg-dark text-light p-3 font-monospace small" style="max-height: 300px; overflow-y: auto;">
+                        <div v-for="log in logs" :key="log.id" class="mb-1">
+                            <span class="text-muted">{{ log.timestamp }}</span>
+                            <span class="ms-2" :class="getLogLevelClass(log.level)">[{{ log.level }}]</span>
+                            <span class="ms-2">{{ log.message }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- 예약 작업 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">예약 작업 (Cron Jobs)</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center" v-for="job in cronJobs" :key="job.id">
+                        <div>
+                            <div class="fw-medium">{{ job.name }}</div>
+                            <div class="text-muted small">{{ job.schedule }}</div>
+                        </div>
+                        <span class="badge" :class="job.enabled ? 'bg-success' : 'bg-secondary'">
+                            {{ job.enabled ? '활성' : '비활성' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 백업 목록 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">최근 백업</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item" v-for="backup in backups" :key="backup.id">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-medium">{{ backup.name }}</div>
+                                <div class="text-muted small">{{ backup.size }}</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" @click="downloadBackup(backup)">다운로드</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

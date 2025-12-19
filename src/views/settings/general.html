@@ -1,0 +1,181 @@
+<div class="general-settings-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">기본 설정</h4>
+            <p class="text-muted mb-0">사이트 기본 정보를 설정합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="saveSettings">
+            <span class="me-1">💾</span> 저장
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- 사이트 정보 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">사이트 정보</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">사이트명</label>
+                            <input type="text" class="form-control" v-model="settings.siteName">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">사이트 URL</label>
+                            <input type="url" class="form-control" v-model="settings.siteUrl">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">사이트 설명</label>
+                            <textarea class="form-control" rows="2" v-model="settings.siteDescription"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 운영자 정보 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">운영자 정보</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">회사/운영자명</label>
+                            <input type="text" class="form-control" v-model="settings.companyName">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">대표자명</label>
+                            <input type="text" class="form-control" v-model="settings.ceoName">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">사업자등록번호</label>
+                            <input type="text" class="form-control" v-model="settings.businessNumber" placeholder="000-00-00000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">통신판매업신고</label>
+                            <input type="text" class="form-control" v-model="settings.salesNumber">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">사업장 주소</label>
+                            <input type="text" class="form-control" v-model="settings.address">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 연락처 정보 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">연락처 정보</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">대표 이메일</label>
+                            <input type="email" class="form-control" v-model="settings.email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">대표 전화번호</label>
+                            <input type="tel" class="form-control" v-model="settings.phone">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">고객센터 운영시간</label>
+                            <input type="text" class="form-control" v-model="settings.supportHours" placeholder="평일 09:00 ~ 18:00">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">카카오톡 상담</label>
+                            <input type="text" class="form-control" v-model="settings.kakaoId" placeholder="@카카오아이디">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 지역/시간 설정 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">지역/시간 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">기본 언어</label>
+                            <select class="form-select" v-model="settings.defaultLanguage">
+                                <option value="ko">한국어</option>
+                                <option value="en">English</option>
+                                <option value="ja">日本語</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">시간대</label>
+                            <select class="form-select" v-model="settings.timezone">
+                                <option value="Asia/Seoul">Asia/Seoul (UTC+9)</option>
+                                <option value="America/New_York">America/New_York (UTC-5)</option>
+                                <option value="Europe/London">Europe/London (UTC+0)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">날짜 형식</label>
+                            <select class="form-select" v-model="settings.dateFormat">
+                                <option value="YYYY-MM-DD">2024-12-19</option>
+                                <option value="YYYY.MM.DD">2024.12.19</option>
+                                <option value="MM/DD/YYYY">12/19/2024</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">통화</label>
+                            <select class="form-select" v-model="settings.currency">
+                                <option value="KRW">KRW (₩)</option>
+                                <option value="USD">USD ($)</option>
+                                <option value="JPY">JPY (¥)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상태 정보 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">사이트 상태</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="siteActive" v-model="settings.isActive">
+                            <label class="form-check-label" for="siteActive">사이트 활성화</label>
+                        </div>
+                        <div class="text-muted small mt-1">비활성화 시 점검 페이지가 표시됩니다</div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="allowSignup" v-model="settings.allowSignup">
+                            <label class="form-check-label" for="allowSignup">회원가입 허용</label>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="maintenanceMode" v-model="settings.maintenanceMode">
+                            <label class="form-check-label" for="maintenanceMode">점검 모드</label>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-muted small">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>마지막 저장</span>
+                            <span>{{ settings.lastSaved }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>수정자</span>
+                            <span>관리자</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

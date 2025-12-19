@@ -1,0 +1,137 @@
+<div class="seo-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">SEO</h4>
+            <p class="text-muted mb-0">검색엔진 최적화 설정을 관리합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="saveSEO">
+            <span class="me-1">💾</span> 저장
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- 기본 메타 정보 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">기본 메타 정보</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">사이트 제목</label>
+                        <input type="text" class="form-control" v-model="seo.siteTitle" placeholder="사이트 제목을 입력하세요">
+                        <div class="form-text">검색 결과에 표시될 사이트 제목입니다 (50-60자 권장)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">사이트 설명</label>
+                        <textarea class="form-control" rows="3" v-model="seo.siteDescription" placeholder="사이트 설명을 입력하세요"></textarea>
+                        <div class="form-text">검색 결과에 표시될 설명입니다 (150-160자 권장)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">키워드</label>
+                        <input type="text" class="form-control" v-model="seo.keywords" placeholder="키워드를 쉼표로 구분하여 입력">
+                        <div class="form-text">관련 키워드를 쉼표(,)로 구분하여 입력하세요</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 소셜 미디어 (Open Graph) -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">소셜 미디어 설정 (Open Graph)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">OG 제목</label>
+                        <input type="text" class="form-control" v-model="seo.ogTitle" placeholder="소셜 공유 시 표시될 제목">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">OG 설명</label>
+                        <textarea class="form-control" rows="2" v-model="seo.ogDescription" placeholder="소셜 공유 시 표시될 설명"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">OG 이미지</label>
+                        <div class="border rounded p-4 text-center bg-light mb-2">
+                            <img v-if="seo.ogImage" :src="seo.ogImage" alt="OG Image" style="max-width: 300px; max-height: 150px;">
+                            <div v-else class="text-muted">1200x630 픽셀 권장</div>
+                        </div>
+                        <input type="file" class="form-control" accept="image/*" @change="uploadOGImage">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 로봇 설정 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">검색 로봇 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">robots.txt</label>
+                        <textarea class="form-control font-monospace" rows="6" v-model="seo.robotsTxt"></textarea>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="indexSite" v-model="seo.allowIndexing">
+                        <label class="form-check-label" for="indexSite">검색엔진 색인 허용</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="followLinks" v-model="seo.allowFollow">
+                        <label class="form-check-label" for="followLinks">링크 추적 허용</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 사이트맵 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">사이트맵</h6>
+                    <button class="btn btn-sm btn-outline-primary" @click="generateSitemap">사이트맵 생성</button>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">사이트맵 URL</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" v-model="seo.sitemapUrl" readonly>
+                            <button class="btn btn-outline-secondary" @click="copySitemapUrl">복사</button>
+                        </div>
+                    </div>
+                    <div class="text-muted small">
+                        마지막 생성: {{ seo.sitemapLastGenerated }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 미리보기 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">검색 결과 미리보기</h6>
+                </div>
+                <div class="card-body">
+                    <div class="google-preview p-3 border rounded">
+                        <div class="text-primary mb-1" style="font-size: 18px;">{{ seo.siteTitle || '사이트 제목' }}</div>
+                        <div class="text-success small mb-1">{{ seo.siteUrl }}</div>
+                        <div class="text-muted small">{{ seo.siteDescription || '사이트 설명이 여기에 표시됩니다...' }}</div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">소셜 미디어 미리보기</h6>
+                    <div class="social-preview border rounded overflow-hidden">
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                            <img v-if="seo.ogImage" :src="seo.ogImage" alt="Preview" class="img-fluid">
+                            <span v-else class="text-muted">이미지 미리보기</span>
+                        </div>
+                        <div class="p-3">
+                            <div class="text-muted small text-uppercase">{{ seo.siteUrl }}</div>
+                            <div class="fw-bold">{{ seo.ogTitle || seo.siteTitle || '제목' }}</div>
+                            <div class="text-muted small">{{ seo.ogDescription || seo.siteDescription || '설명' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,165 @@
+<div class="instructors-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">강사</h4>
+            <p class="text-muted mb-0">강사를 관리하고 담당 강좌를 배정합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="openCreateModal">
+            <span class="me-1">➕</span> 강사 등록
+        </button>
+    </div>
+
+    <!-- 필터 & 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <select class="form-select" v-model="filters.status">
+                        <option value="">전체 상태</option>
+                        <option value="active">활성</option>
+                        <option value="inactive">비활성</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">🔍</span>
+                        <input type="text" class="form-control" placeholder="이름, 이메일 검색..." v-model="searchQuery">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary w-100" @click="exportData">
+                        📥 내보내기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 강사 카드 그리드 -->
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4" v-for="instructor in instructors" :key="instructor.id">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                             style="width: 56px; height: 56px; font-size: 1.5rem;">
+                            {{ instructor.name.charAt(0) }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ instructor.name }}</h6>
+                            <p class="text-muted small mb-0">{{ instructor.email }}</p>
+                            <span class="badge mt-1" :class="instructor.status === 'active' ? 'bg-success' : 'bg-secondary'">
+                                {{ instructor.status === 'active' ? '활성' : '비활성' }}
+                            </span>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">⋮</button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" @click="viewDetail(instructor)">👤 상세보기</a></li>
+                                <li><a class="dropdown-item" href="#" @click="editInstructor(instructor)">✏️ 수정</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" @click="deleteInstructor(instructor)">🗑️ 삭제</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 text-center mb-3">
+                        <div class="col-4">
+                            <div class="bg-light rounded p-2">
+                                <div class="fs-5 fw-bold text-primary">{{ instructor.courseCount }}</div>
+                                <div class="text-muted small">담당 강좌</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-light rounded p-2">
+                                <div class="fs-5 fw-bold text-success">{{ instructor.studentCount }}</div>
+                                <div class="text-muted small">수강생</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-light rounded p-2">
+                                <div class="fs-5 fw-bold text-warning">{{ instructor.rating }}</div>
+                                <div class="text-muted small">평점</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="text-muted small">이번 달 수익</span>
+                        <span class="fw-bold">{{ instructor.monthlyRevenue }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-center mt-4">
+        <nav>
+            <ul class="pagination">
+                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- 강사 상세 모달 -->
+    <div class="modal fade" id="instructorDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" v-if="selectedInstructor">
+                <div class="modal-header">
+                    <h5 class="modal-title">강사 정보</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center border-end">
+                            <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3"
+                                 style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                {{ selectedInstructor.name.charAt(0) }}
+                            </div>
+                            <h5>{{ selectedInstructor.name }}</h5>
+                            <p class="text-muted">{{ selectedInstructor.email }}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <h6 class="mb-3">담당 강좌</h6>
+                            <div class="list-group list-group-flush mb-3">
+                                <div class="list-group-item d-flex justify-content-between align-items-center"
+                                     v-for="course in selectedInstructor.courses" :key="course.id">
+                                    <div>
+                                        <div>{{ course.title }}</div>
+                                        <small class="text-muted">수강생 {{ course.students }}명</small>
+                                    </div>
+                                    <span class="badge bg-primary">{{ course.revenue }}</span>
+                                </div>
+                            </div>
+
+                            <h6 class="mb-3">수익 현황</h6>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="bg-light rounded p-3 text-center">
+                                        <div class="text-muted small">이번 달</div>
+                                        <div class="fs-5 fw-bold">{{ selectedInstructor.monthlyRevenue }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-light rounded p-3 text-center">
+                                        <div class="text-muted small">총 수익</div>
+                                        <div class="fs-5 fw-bold">{{ selectedInstructor.totalRevenue }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button type="button" class="btn btn-primary" @click="editInstructor(selectedInstructor)">수정</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

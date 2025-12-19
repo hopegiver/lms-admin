@@ -1,0 +1,269 @@
+<div class="settlements-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">정산</h4>
+            <p class="text-muted mb-0">강사 정산을 관리합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="exportSettlements">
+                <span class="me-1">📥</span> 내역 다운로드
+            </button>
+            <button class="btn btn-primary" @click="processSettlement">
+                <span class="me-1">💰</span> 일괄 정산
+            </button>
+        </div>
+    </div>
+
+    <!-- 정산 요약 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">이번달 매출</div>
+                            <div class="fs-4 fw-bold">{{ stats.monthlyRevenue }}</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <span class="fs-4">💵</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">정산 예정</div>
+                            <div class="fs-4 fw-bold text-warning">{{ stats.pendingSettlement }}</div>
+                        </div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                            <span class="fs-4">⏳</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">정산 완료</div>
+                            <div class="fs-4 fw-bold text-success">{{ stats.completedSettlement }}</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <span class="fs-4">✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">플랫폼 수수료</div>
+                            <div class="fs-4 fw-bold">{{ stats.platformFee }}</div>
+                        </div>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                            <span class="fs-4">📊</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'pending' }" href="#" @click.prevent="activeTab = 'pending'">
+                정산 대기 <span class="badge bg-warning ms-1">{{ pendingList.length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'completed' }" href="#" @click.prevent="activeTab = 'completed'">
+                정산 완료
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'instructors' }" href="#" @click.prevent="activeTab = 'instructors'">
+                강사별 현황
+            </a>
+        </li>
+    </ul>
+
+    <!-- 정산 대기 탭 -->
+    <div v-if="activeTab === 'pending'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th><input type="checkbox" class="form-check-input"></th>
+                                <th>강사</th>
+                                <th>정산기간</th>
+                                <th class="text-end">매출액</th>
+                                <th class="text-end">수수료(20%)</th>
+                                <th class="text-end">정산금액</th>
+                                <th class="text-center">상태</th>
+                                <th style="width: 100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in pendingList" :key="item.id">
+                                <td><input type="checkbox" class="form-check-input"></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-2"
+                                             style="width: 36px; height: 36px;">
+                                            {{ item.instructor.charAt(0) }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">{{ item.instructor }}</div>
+                                            <div class="text-muted small">{{ item.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ item.period }}</td>
+                                <td class="text-end">{{ item.revenue }}</td>
+                                <td class="text-end text-muted">{{ item.fee }}</td>
+                                <td class="text-end fw-bold text-primary">{{ item.settlement }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning">대기</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" @click="processOne(item)">정산</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 정산 완료 탭 -->
+    <div v-if="activeTab === 'completed'">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-3">
+                        <select class="form-select" v-model="completedFilter.instructor">
+                            <option value="">전체 강사</option>
+                            <option v-for="ins in instructorList" :key="ins">{{ ins }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">📅</span>
+                            <input type="month" class="form-control" v-model="completedFilter.month">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>정산번호</th>
+                                <th>강사</th>
+                                <th>정산기간</th>
+                                <th class="text-end">정산금액</th>
+                                <th>계좌정보</th>
+                                <th>정산일</th>
+                                <th style="width: 80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in completedList" :key="item.id">
+                                <td><span class="fw-medium">{{ item.settlementNo }}</span></td>
+                                <td>{{ item.instructor }}</td>
+                                <td>{{ item.period }}</td>
+                                <td class="text-end fw-bold">{{ item.amount }}</td>
+                                <td>
+                                    <div class="small">{{ item.bank }}</div>
+                                    <div class="text-muted small">{{ item.account }}</div>
+                                </td>
+                                <td>{{ item.settledDate }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-link text-muted" @click="viewDetail(item)">상세</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 강사별 현황 탭 -->
+    <div v-if="activeTab === 'instructors'">
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4" v-for="instructor in instructorStats" :key="instructor.id">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
+                                 style="width: 48px; height: 48px; font-size: 1.2rem;">
+                                {{ instructor.name.charAt(0) }}
+                            </div>
+                            <div>
+                                <div class="fw-bold">{{ instructor.name }}</div>
+                                <div class="text-muted small">{{ instructor.courses }}개 강좌</div>
+                            </div>
+                        </div>
+                        <div class="row g-2 text-center">
+                            <div class="col-4">
+                                <div class="bg-light rounded p-2">
+                                    <div class="text-muted small">총 매출</div>
+                                    <div class="fw-bold small">{{ instructor.totalRevenue }}</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light rounded p-2">
+                                    <div class="text-muted small">정산완료</div>
+                                    <div class="fw-bold small text-success">{{ instructor.settled }}</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light rounded p-2">
+                                    <div class="text-muted small">미정산</div>
+                                    <div class="fw-bold small text-warning">{{ instructor.pending }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-sm btn-outline-secondary" @click="viewInstructorDetail(instructor)">상세보기</button>
+                            <button class="btn btn-sm btn-outline-primary" @click="editCommission(instructor)">수수료 설정</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-center mt-4" v-if="activeTab !== 'instructors'">
+        <nav>
+            <ul class="pagination">
+                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>

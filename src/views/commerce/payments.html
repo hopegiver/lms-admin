@@ -1,0 +1,299 @@
+<div class="payments-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">결제</h4>
+            <p class="text-muted mb-0">결제 내역과 정산을 관리합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="exportPayments">
+                <span class="me-1">📥</span> 내역 다운로드
+            </button>
+        </div>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">이번달 결제</div>
+                            <div class="fs-4 fw-bold">{{ stats.monthlyPayments }}</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <span class="fs-4">💳</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 small">
+                        <span class="text-success">▲ 12%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">결제 건수</div>
+                            <div class="fs-4 fw-bold">{{ stats.totalCount }}</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <span class="fs-4">📊</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 small">
+                        <span class="text-success">▲ 8%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">환불 금액</div>
+                            <div class="fs-4 fw-bold text-danger">{{ stats.refundAmount }}</div>
+                        </div>
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                            <span class="fs-4">↩️</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 small">
+                        <span class="text-muted">환불율 {{ stats.refundRate }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">평균 결제금액</div>
+                            <div class="fs-4 fw-bold">{{ stats.avgAmount }}</div>
+                        </div>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                            <span class="fs-4">📈</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'transactions' }" href="#" @click.prevent="activeTab = 'transactions'">
+                결제 내역
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'refunds' }" href="#" @click.prevent="activeTab = 'refunds'">
+                환불 내역 <span class="badge bg-danger ms-1">{{ refunds.length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'methods' }" href="#" @click.prevent="activeTab = 'methods'">
+                결제수단 통계
+            </a>
+        </li>
+    </ul>
+
+    <!-- 결제 내역 탭 -->
+    <div v-if="activeTab === 'transactions'">
+        <!-- 필터 -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-2">
+                        <select class="form-select" v-model="filters.status">
+                            <option value="">전체 상태</option>
+                            <option value="success">성공</option>
+                            <option value="failed">실패</option>
+                            <option value="pending">대기</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" v-model="filters.method">
+                            <option value="">결제수단</option>
+                            <option value="card">신용카드</option>
+                            <option value="bank">계좌이체</option>
+                            <option value="virtual">가상계좌</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">📅</span>
+                            <input type="date" class="form-control" v-model="filters.startDate">
+                            <input type="date" class="form-control" v-model="filters.endDate">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">🔍</span>
+                            <input type="text" class="form-control" placeholder="결제ID, 구매자..." v-model="searchQuery">
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-outline-secondary w-100" @click="resetFilters">초기화</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 결제 목록 -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>결제ID</th>
+                                <th>주문번호</th>
+                                <th>구매자</th>
+                                <th class="text-end">금액</th>
+                                <th>결제수단</th>
+                                <th class="text-center">상태</th>
+                                <th>결제일시</th>
+                                <th style="width: 80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="payment in transactions" :key="payment.id">
+                                <td><span class="fw-medium">{{ payment.paymentId }}</span></td>
+                                <td><a href="#" class="text-primary">{{ payment.orderNo }}</a></td>
+                                <td>{{ payment.buyer }}</td>
+                                <td class="text-end fw-bold">{{ payment.amount }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2">{{ getMethodIcon(payment.method) }}</span>
+                                        {{ getMethodText(payment.method) }}
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getStatusBadgeClass(payment.status)">
+                                        {{ getStatusText(payment.status) }}
+                                    </span>
+                                </td>
+                                <td>{{ payment.paymentDate }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-link text-muted" @click="viewPaymentDetail(payment)">
+                                        상세
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 환불 내역 탭 -->
+    <div v-if="activeTab === 'refunds'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>환불ID</th>
+                                <th>주문번호</th>
+                                <th>구매자</th>
+                                <th class="text-end">환불금액</th>
+                                <th>환불사유</th>
+                                <th class="text-center">상태</th>
+                                <th>요청일</th>
+                                <th>처리일</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="refund in refunds" :key="refund.id">
+                                <td><span class="fw-medium">{{ refund.refundId }}</span></td>
+                                <td><a href="#" class="text-primary">{{ refund.orderNo }}</a></td>
+                                <td>{{ refund.buyer }}</td>
+                                <td class="text-end fw-bold text-danger">{{ refund.amount }}</td>
+                                <td>{{ refund.reason }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="refund.status === 'completed' ? 'bg-success' : 'bg-warning'">
+                                        {{ refund.status === 'completed' ? '완료' : '처리중' }}
+                                    </span>
+                                </td>
+                                <td>{{ refund.requestDate }}</td>
+                                <td>{{ refund.processDate || '-' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결제수단 통계 탭 -->
+    <div v-if="activeTab === 'methods'">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">결제수단별 비율</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-column gap-3">
+                            <div v-for="method in paymentMethodStats" :key="method.name">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>{{ method.icon }} {{ method.name }}</span>
+                                    <span class="fw-medium">{{ method.percentage }}%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar" :class="method.color" :style="{ width: method.percentage + '%' }"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">결제수단별 금액</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0"
+                                 v-for="method in paymentMethodStats" :key="method.name">
+                                <div>
+                                    <span class="me-2">{{ method.icon }}</span>
+                                    {{ method.name }}
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold">{{ method.amount }}</div>
+                                    <div class="text-muted small">{{ method.count }}건</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-center mt-4" v-if="activeTab !== 'methods'">
+        <nav>
+            <ul class="pagination">
+                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>

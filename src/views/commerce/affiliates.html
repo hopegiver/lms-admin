@@ -1,0 +1,320 @@
+<div class="affiliates-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">제휴</h4>
+            <p class="text-muted mb-0">제휴 파트너와 추천인 프로그램을 관리합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="openPartnerModal">
+            <span class="me-1">🤝</span> 파트너 등록
+        </button>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">활성 파트너</div>
+                            <div class="fs-4 fw-bold">{{ stats.activePartners }}</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <span class="fs-4">🤝</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">제휴 매출</div>
+                            <div class="fs-4 fw-bold text-success">{{ stats.affiliateRevenue }}</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <span class="fs-4">💰</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 small">
+                        <span class="text-success">▲ 15%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">추천 가입</div>
+                            <div class="fs-4 fw-bold">{{ stats.referralSignups }}</div>
+                        </div>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                            <span class="fs-4">👥</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">지급 커미션</div>
+                            <div class="fs-4 fw-bold text-warning">{{ stats.paidCommission }}</div>
+                        </div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                            <span class="fs-4">💸</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'partners' }" href="#" @click.prevent="activeTab = 'partners'">
+                제휴 파트너
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'referrals' }" href="#" @click.prevent="activeTab = 'referrals'">
+                추천인 프로그램
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'commissions' }" href="#" @click.prevent="activeTab = 'commissions'">
+                커미션 내역
+            </a>
+        </li>
+    </ul>
+
+    <!-- 제휴 파트너 탭 -->
+    <div v-if="activeTab === 'partners'">
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4" v-for="partner in partners" :key="partner.id">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <span class="badge" :class="partner.status === 'active' ? 'bg-success' : 'bg-secondary'">
+                            {{ partner.status === 'active' ? '활성' : '비활성' }}
+                        </span>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown">⋮</button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" @click="editPartner(partner)">수정</a></li>
+                                <li><a class="dropdown-item" href="#" @click="viewPartnerStats(partner)">통계보기</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" @click="deactivatePartner(partner)">비활성화</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded bg-light d-flex align-items-center justify-content-center me-3"
+                                 style="width: 48px; height: 48px;">
+                                <span class="fs-4">🏢</span>
+                            </div>
+                            <div>
+                                <div class="fw-bold">{{ partner.name }}</div>
+                                <div class="text-muted small">{{ partner.type }}</div>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="text-muted small">커미션율</div>
+                                <div class="fw-medium">{{ partner.commission }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">계약기간</div>
+                                <div class="fw-medium">{{ partner.contractPeriod }}</div>
+                            </div>
+                        </div>
+                        <div class="bg-light rounded p-2">
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">이번달 매출</span>
+                                <span class="fw-bold">{{ partner.monthlyRevenue }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center small text-muted">
+                            <span>코드: <code>{{ partner.code }}</code></span>
+                            <span>{{ partner.referrals }}명 유입</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 추천인 프로그램 탭 -->
+    <div v-if="activeTab === 'referrals'">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">추천인 현황</h6>
+                        <button class="btn btn-sm btn-outline-primary" @click="editReferralProgram">설정</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>추천인</th>
+                                        <th class="text-center">추천수</th>
+                                        <th class="text-end">총 적립금</th>
+                                        <th class="text-center">등급</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="referrer in topReferrers" :key="referrer.id">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-2"
+                                                     style="width: 32px; height: 32px;">
+                                                    {{ referrer.name.charAt(0) }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">{{ referrer.name }}</div>
+                                                    <div class="text-muted small">{{ referrer.email }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">{{ referrer.referrals }}명</td>
+                                        <td class="text-end fw-bold">{{ referrer.earnings }}</td>
+                                        <td class="text-center">
+                                            <span class="badge" :class="getRankBadgeClass(referrer.rank)">{{ referrer.rank }}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">프로그램 설정</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">추천인 혜택</label>
+                            <div class="fw-medium">{{ referralProgram.referrerReward }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">피추천인 혜택</label>
+                            <div class="fw-medium">{{ referralProgram.refereeReward }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">최소 구매조건</label>
+                            <div class="fw-medium">{{ referralProgram.minPurchase }}</div>
+                        </div>
+                        <div>
+                            <label class="form-label text-muted small">유효기간</label>
+                            <div class="fw-medium">{{ referralProgram.validPeriod }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 커미션 내역 탭 -->
+    <div v-if="activeTab === 'commissions'">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-2">
+                        <select class="form-select" v-model="commissionFilter.type">
+                            <option value="">전체 유형</option>
+                            <option value="partner">제휴 파트너</option>
+                            <option value="referral">추천인</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" v-model="commissionFilter.status">
+                            <option value="">전체 상태</option>
+                            <option value="pending">지급대기</option>
+                            <option value="paid">지급완료</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">📅</span>
+                            <input type="date" class="form-control" v-model="commissionFilter.startDate">
+                            <input type="date" class="form-control" v-model="commissionFilter.endDate">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">🔍</span>
+                            <input type="text" class="form-control" placeholder="검색..." v-model="commissionFilter.query">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>유형</th>
+                                <th>파트너/추천인</th>
+                                <th>주문번호</th>
+                                <th class="text-end">주문금액</th>
+                                <th class="text-end">커미션</th>
+                                <th class="text-center">상태</th>
+                                <th>발생일</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="commission in commissions" :key="commission.id">
+                                <td>
+                                    <span class="badge" :class="commission.type === 'partner' ? 'bg-primary' : 'bg-info'">
+                                        {{ commission.type === 'partner' ? '제휴' : '추천' }}
+                                    </span>
+                                </td>
+                                <td>{{ commission.source }}</td>
+                                <td><a href="#" class="text-primary">{{ commission.orderNo }}</a></td>
+                                <td class="text-end">{{ commission.orderAmount }}</td>
+                                <td class="text-end fw-bold text-success">{{ commission.commission }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="commission.status === 'paid' ? 'bg-success' : 'bg-warning'">
+                                        {{ commission.status === 'paid' ? '지급완료' : '지급대기' }}
+                                    </span>
+                                </td>
+                                <td>{{ commission.createdAt }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-center mt-4" v-if="activeTab === 'commissions'">
+        <nav>
+            <ul class="pagination">
+                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>

@@ -1,0 +1,209 @@
+<div class="products-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">상품</h4>
+            <p class="text-muted mb-0">판매 상품을 관리합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="openCategoryModal">
+                <span class="me-1">📁</span> 카테고리
+            </button>
+            <button class="btn btn-primary" @click="openCreateModal">
+                <span class="me-1">➕</span> 상품 등록
+            </button>
+        </div>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">전체 상품</div>
+                            <div class="fs-4 fw-bold">{{ stats.total }}</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <span class="fs-4">📦</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">판매중</div>
+                            <div class="fs-4 fw-bold text-success">{{ stats.active }}</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <span class="fs-4">✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">품절</div>
+                            <div class="fs-4 fw-bold text-danger">{{ stats.soldOut }}</div>
+                        </div>
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                            <span class="fs-4">🚫</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">이번달 매출</div>
+                            <div class="fs-4 fw-bold">{{ stats.monthlyRevenue }}</div>
+                        </div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                            <span class="fs-4">💰</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'courses' }" href="#" @click.prevent="activeTab = 'courses'">
+                강좌 상품 <span class="badge bg-primary ms-1">{{ courseProducts.length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'packages' }" href="#" @click.prevent="activeTab = 'packages'">
+                패키지 <span class="badge bg-secondary ms-1">{{ packageProducts.length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'subscriptions' }" href="#" @click.prevent="activeTab = 'subscriptions'">
+                구독권 <span class="badge bg-secondary ms-1">{{ subscriptionProducts.length }}</span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- 필터 & 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.status">
+                        <option value="">전체 상태</option>
+                        <option value="active">판매중</option>
+                        <option value="inactive">판매중지</option>
+                        <option value="soldout">품절</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.category">
+                        <option value="">전체 카테고리</option>
+                        <option v-for="cat in categories" :key="cat">{{ cat }}</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">🔍</span>
+                        <input type="text" class="form-control" placeholder="상품명 검색..." v-model="searchQuery">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" v-model="sortBy">
+                        <option value="newest">최신순</option>
+                        <option value="sales">판매순</option>
+                        <option value="price_high">높은가격순</option>
+                        <option value="price_low">낮은가격순</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-outline-secondary" @click="resetFilters">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 상품 목록 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th><input type="checkbox" class="form-check-input"></th>
+                            <th>상품</th>
+                            <th>카테고리</th>
+                            <th class="text-end">정가</th>
+                            <th class="text-end">판매가</th>
+                            <th class="text-center">판매량</th>
+                            <th class="text-center">상태</th>
+                            <th style="width: 120px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="product in currentProducts" :key="product.id">
+                            <td><input type="checkbox" class="form-check-input"></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded bg-light d-flex align-items-center justify-content-center me-3"
+                                         style="width: 48px; height: 48px;">
+                                        <span class="fs-5">{{ getProductIcon(product.type) }}</span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">{{ product.name }}</div>
+                                        <div class="text-muted small">{{ product.instructor || product.courses + '개 강좌' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-light text-dark">{{ product.category }}</span></td>
+                            <td class="text-end text-muted text-decoration-line-through">{{ product.originalPrice }}</td>
+                            <td class="text-end fw-bold text-primary">{{ product.price }}</td>
+                            <td class="text-center">{{ product.sales }}건</td>
+                            <td class="text-center">
+                                <span class="badge" :class="getStatusBadgeClass(product.status)">
+                                    {{ getStatusText(product.status) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-primary" @click="editProduct(product)">수정</button>
+                                    <button class="btn btn-sm btn-outline-secondary" @click="toggleStatus(product)">
+                                        {{ product.status === 'active' ? '중지' : '활성' }}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted small">총 {{ currentProducts.length }}개 상품</div>
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>

@@ -1,0 +1,250 @@
+<div class="progress-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">학습 현황</h4>
+            <p class="text-muted mb-0">학습자의 진도, 성적, 출석, 수료 현황을 확인합니다</p>
+        </div>
+        <button class="btn btn-outline-primary" @click="exportReport">
+            📊 리포트 내보내기
+        </button>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'progress' }" href="#" @click.prevent="activeTab = 'progress'">
+                📈 진도 관리
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'grades' }" href="#" @click.prevent="activeTab = 'grades'">
+                📋 성적 관리
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'attendance' }" href="#" @click.prevent="activeTab = 'attendance'">
+                📅 출석 관리
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'completion' }" href="#" @click.prevent="activeTab = 'completion'">
+                🎓 수료 관리
+            </a>
+        </li>
+    </ul>
+
+    <!-- 진도 관리 탭 -->
+    <div v-if="activeTab === 'progress'">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <select class="form-select" v-model="filters.course">
+                    <option value="">전체 강좌</option>
+                    <option v-for="c in courseList" :key="c">{{ c }}</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" v-model="filters.progressRange">
+                    <option value="">전체 진도율</option>
+                    <option value="0-25">0% ~ 25%</option>
+                    <option value="26-50">26% ~ 50%</option>
+                    <option value="51-75">51% ~ 75%</option>
+                    <option value="76-100">76% ~ 100%</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control" placeholder="학습자 검색..." v-model="searchQuery">
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>학습자</th>
+                                <th>강좌</th>
+                                <th>진도율</th>
+                                <th class="text-center">완료 차시</th>
+                                <th class="text-center">총 학습시간</th>
+                                <th>최근 학습일</th>
+                                <th style="width: 80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in progressList" :key="item.id">
+                                <td>
+                                    <div class="fw-medium">{{ item.learner }}</div>
+                                    <small class="text-muted">{{ item.email }}</small>
+                                </td>
+                                <td>{{ item.course }}</td>
+                                <td style="width: 200px;">
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                            <div class="progress-bar" :class="getProgressColor(item.progress)"
+                                                 :style="{ width: item.progress + '%' }"></div>
+                                        </div>
+                                        <span class="small fw-medium">{{ item.progress }}%</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">{{ item.completedLessons }}/{{ item.totalLessons }}</td>
+                                <td class="text-center">{{ item.studyTime }}</td>
+                                <td>{{ item.lastStudyDate }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @click="viewDetail(item)">상세</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 성적 관리 탭 -->
+    <div v-if="activeTab === 'grades'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>학습자</th>
+                                <th>강좌</th>
+                                <th class="text-center">시험 점수</th>
+                                <th class="text-center">과제 점수</th>
+                                <th class="text-center">출석 점수</th>
+                                <th class="text-center">총점</th>
+                                <th class="text-center">등급</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="grade in gradeList" :key="grade.id">
+                                <td>
+                                    <div class="fw-medium">{{ grade.learner }}</div>
+                                </td>
+                                <td>{{ grade.course }}</td>
+                                <td class="text-center">{{ grade.examScore }}</td>
+                                <td class="text-center">{{ grade.assignmentScore }}</td>
+                                <td class="text-center">{{ grade.attendanceScore }}</td>
+                                <td class="text-center fw-bold">{{ grade.totalScore }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getGradeClass(grade.grade)">{{ grade.grade }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 출석 관리 탭 -->
+    <div v-if="activeTab === 'attendance'">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <select class="form-select" v-model="filters.course">
+                    <option value="">전체 강좌</option>
+                    <option v-for="c in courseList" :key="c">{{ c }}</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="date" class="form-control" v-model="filters.date">
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>학습자</th>
+                                <th>강좌</th>
+                                <th class="text-center">출석일수</th>
+                                <th class="text-center">지각</th>
+                                <th class="text-center">결석</th>
+                                <th class="text-center">출석률</th>
+                                <th style="width: 100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="att in attendanceList" :key="att.id">
+                                <td><div class="fw-medium">{{ att.learner }}</div></td>
+                                <td>{{ att.course }}</td>
+                                <td class="text-center text-success">{{ att.present }}일</td>
+                                <td class="text-center text-warning">{{ att.late }}일</td>
+                                <td class="text-center text-danger">{{ att.absent }}일</td>
+                                <td class="text-center fw-bold">{{ att.rate }}%</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-secondary" @click="editAttendance(att)">수정</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수료 관리 탭 -->
+    <div v-if="activeTab === 'completion'">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <select class="form-select" v-model="filters.course">
+                    <option value="">전체 강좌</option>
+                    <option v-for="c in courseList" :key="c">{{ c }}</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" v-model="filters.completionStatus">
+                    <option value="">전체</option>
+                    <option value="completed">수료</option>
+                    <option value="pending">수료 예정</option>
+                    <option value="failed">미수료</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>학습자</th>
+                                <th>강좌</th>
+                                <th class="text-center">진도율</th>
+                                <th class="text-center">총점</th>
+                                <th class="text-center">수료 여부</th>
+                                <th>수료일</th>
+                                <th style="width: 120px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="comp in completionList" :key="comp.id">
+                                <td><div class="fw-medium">{{ comp.learner }}</div></td>
+                                <td>{{ comp.course }}</td>
+                                <td class="text-center">{{ comp.progress }}%</td>
+                                <td class="text-center">{{ comp.totalScore }}점</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getCompletionClass(comp.status)">
+                                        {{ getCompletionText(comp.status) }}
+                                    </span>
+                                </td>
+                                <td>{{ comp.completionDate || '-' }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @click="issueCertificate(comp)"
+                                            :disabled="comp.status !== 'completed'">
+                                        🏆 수료증
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

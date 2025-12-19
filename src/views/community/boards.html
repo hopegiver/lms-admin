@@ -1,0 +1,187 @@
+<div class="boards-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">게시판</h4>
+            <p class="text-muted mb-0">게시판을 관리하고 게시글을 모니터링합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="openCreateBoardModal">
+            <span class="me-1">+</span> 게시판 생성
+        </button>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">전체 게시판</div>
+                            <div class="fs-4 fw-bold">{{ stats.totalBoards }}</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <span class="fs-4">📋</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">전체 게시글</div>
+                            <div class="fs-4 fw-bold">{{ stats.totalPosts }}</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <span class="fs-4">📝</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">오늘 게시글</div>
+                            <div class="fs-4 fw-bold text-info">{{ stats.todayPosts }}</div>
+                        </div>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                            <span class="fs-4">📰</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">신고된 글</div>
+                            <div class="fs-4 fw-bold text-danger">{{ stats.reportedPosts }}</div>
+                        </div>
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                            <span class="fs-4">🚨</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게시판 목록 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h6 class="mb-0">게시판 목록</h6>
+                </div>
+                <div class="col-auto">
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-white">🔍</span>
+                        <input type="text" class="form-control" placeholder="게시판 검색..." v-model="searchQuery">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;"></th>
+                            <th>게시판명</th>
+                            <th>슬러그</th>
+                            <th class="text-center">게시글</th>
+                            <th class="text-center">댓글</th>
+                            <th class="text-center">상태</th>
+                            <th>생성일</th>
+                            <th style="width: 100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="board in boards" :key="board.id">
+                            <td class="text-center">
+                                <span class="fs-5">{{ board.icon }}</span>
+                            </td>
+                            <td>
+                                <div class="fw-medium">{{ board.name }}</div>
+                                <div class="text-muted small">{{ board.description }}</div>
+                            </td>
+                            <td><code class="text-muted">/{{ board.slug }}</code></td>
+                            <td class="text-center">{{ board.postsCount }}</td>
+                            <td class="text-center">{{ board.commentsCount }}</td>
+                            <td class="text-center">
+                                <span class="badge" :class="board.isActive ? 'bg-success' : 'bg-secondary'">
+                                    {{ board.isActive ? '활성' : '비활성' }}
+                                </span>
+                            </td>
+                            <td>{{ board.createdAt }}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown">⋮</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" @click="viewPosts(board)">게시글 보기</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="editBoard(board)">수정</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="toggleBoardStatus(board)">
+                                            {{ board.isActive ? '비활성화' : '활성화' }}
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" @click="deleteBoard(board)">삭제</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 최근 게시글 -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">최근 게시글</h6>
+            <a href="#" class="text-decoration-none small">전체보기 →</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>제목</th>
+                            <th>게시판</th>
+                            <th>작성자</th>
+                            <th class="text-center">조회</th>
+                            <th class="text-center">댓글</th>
+                            <th>작성일</th>
+                            <th style="width: 80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="post in recentPosts" :key="post.id">
+                            <td>
+                                <div class="fw-medium">{{ post.title }}</div>
+                                <span v-if="post.isNotice" class="badge bg-danger me-1">공지</span>
+                                <span v-if="post.isNew" class="badge bg-info">NEW</span>
+                            </td>
+                            <td><span class="badge bg-light text-dark">{{ post.boardName }}</span></td>
+                            <td>{{ post.author }}</td>
+                            <td class="text-center text-muted">{{ post.views }}</td>
+                            <td class="text-center text-muted">{{ post.comments }}</td>
+                            <td class="text-muted">{{ post.createdAt }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary" @click="viewPost(post)">보기</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

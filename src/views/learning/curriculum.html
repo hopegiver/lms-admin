@@ -1,0 +1,135 @@
+<div class="curriculum-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">커리큘럼</h4>
+            <p class="text-muted mb-0">강좌의 차시와 콘텐츠를 구성합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="importScorm">
+                📥 SCORM/xAPI 가져오기
+            </button>
+            <button class="btn btn-primary" @click="addSection">
+                <span class="me-1">➕</span> 섹션 추가
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- 강좌 선택 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">📚 강좌 선택</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="p-3 border-bottom">
+                        <input type="text" class="form-control" placeholder="강좌 검색..." v-model="courseSearch">
+                    </div>
+                    <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                        <a href="#" class="list-group-item list-group-item-action"
+                           v-for="course in filteredCourses" :key="course.id"
+                           :class="{ 'active': selectedCourse?.id === course.id }"
+                           @click.prevent="selectCourse(course)">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-medium">{{ course.title }}</div>
+                                    <small class="text-muted">{{ course.sections }}개 섹션 · {{ course.lessons }}개 차시</small>
+                                </div>
+                                <span class="badge" :class="course.status === 'published' ? 'bg-success' : 'bg-warning'">
+                                    {{ course.status === 'published' ? '공개' : '비공개' }}
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 커리큘럼 편집 -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm" v-if="selectedCourse">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">📋 {{ selectedCourse.title }} - 커리큘럼</h6>
+                    <button class="btn btn-sm btn-outline-primary" @click="previewCurriculum">👁️ 미리보기</button>
+                </div>
+                <div class="card-body p-0">
+                    <!-- 섹션 목록 -->
+                    <div class="curriculum-sections">
+                        <div class="section-item border-bottom" v-for="(section, sIndex) in curriculum" :key="section.id">
+                            <!-- 섹션 헤더 -->
+                            <div class="section-header d-flex align-items-center p-3 bg-light">
+                                <span class="me-2 cursor-grab">⋮⋮</span>
+                                <span class="me-2" @click="toggleSection(section)" style="cursor: pointer;">
+                                    {{ section.expanded ? '▼' : '▶' }}
+                                </span>
+                                <input type="text" class="form-control form-control-sm border-0 bg-transparent fw-bold"
+                                       v-model="section.title" style="max-width: 300px;">
+                                <span class="badge bg-secondary ms-2">{{ section.lessons.length }}개 차시</span>
+                                <div class="ms-auto d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" @click="addLesson(section)">
+                                        ➕ 차시 추가
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @click="deleteSection(section)">🗑️</button>
+                                </div>
+                            </div>
+
+                            <!-- 차시 목록 -->
+                            <div class="section-lessons" v-if="section.expanded">
+                                <div class="lesson-item d-flex align-items-center p-3 border-bottom"
+                                     v-for="(lesson, lIndex) in section.lessons" :key="lesson.id">
+                                    <span class="me-2 cursor-grab text-muted">⋮⋮</span>
+                                    <span class="me-3 text-muted small">{{ sIndex + 1 }}-{{ lIndex + 1 }}</span>
+                                    <span class="me-2 fs-5">{{ getLessonIcon(lesson.type) }}</span>
+                                    <div class="flex-grow-1">
+                                        <input type="text" class="form-control form-control-sm border-0"
+                                               v-model="lesson.title" placeholder="차시 제목">
+                                    </div>
+                                    <span class="badge bg-light text-dark me-2">{{ lesson.duration }}</span>
+                                    <div class="form-check form-switch me-2">
+                                        <input class="form-check-input" type="checkbox" v-model="lesson.preview" title="무료 미리보기">
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown">⋮</button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="#" @click="editLesson(lesson)">✏️ 수정</a></li>
+                                            <li><a class="dropdown-item" href="#" @click="uploadContent(lesson)">📤 콘텐츠 업로드</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" @click="deleteLesson(section, lesson)">🗑️ 삭제</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 빈 상태 -->
+                    <div class="text-center py-5 text-muted" v-if="curriculum.length === 0">
+                        <span class="fs-1">📋</span>
+                        <p class="mt-2 mb-3">아직 커리큘럼이 없습니다</p>
+                        <button class="btn btn-primary" @click="addSection">섹션 추가하기</button>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">총 {{ getTotalLessons() }}개 차시 · {{ getTotalDuration() }}</span>
+                        <button class="btn btn-primary" @click="saveCurriculum">💾 저장</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 강좌 미선택 상태 -->
+            <div class="card border-0 shadow-sm" v-else>
+                <div class="card-body text-center py-5 text-muted">
+                    <span class="fs-1">👈</span>
+                    <p class="mt-2">왼쪽에서 강좌를 선택하세요</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.cursor-grab { cursor: grab; }
+.cursor-grab:active { cursor: grabbing; }
+</style>

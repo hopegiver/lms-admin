@@ -1,0 +1,239 @@
+<div class="payment-settings-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">결제 설정</h4>
+            <p class="text-muted mb-0">결제 수단 및 정책을 설정합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="saveSettings">
+            <span class="me-1">💾</span> 저장
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- 결제 수단 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">결제 수단</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="cardPayment" v-model="settings.enableCard">
+                                    <label class="form-check-label" for="cardPayment">
+                                        <span class="me-2">💳</span> 신용/체크카드
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="bankTransfer" v-model="settings.enableBank">
+                                    <label class="form-check-label" for="bankTransfer">
+                                        <span class="me-2">🏦</span> 계좌이체
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="virtualAccount" v-model="settings.enableVirtualAccount">
+                                    <label class="form-check-label" for="virtualAccount">
+                                        <span class="me-2">📄</span> 가상계좌
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="phonePayment" v-model="settings.enablePhone">
+                                    <label class="form-check-label" for="phonePayment">
+                                        <span class="me-2">📱</span> 휴대폰결제
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="kakaoPay" v-model="settings.enableKakaoPay">
+                                    <label class="form-check-label" for="kakaoPay">
+                                        <span class="me-2">💛</span> 카카오페이
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="naverPay" v-model="settings.enableNaverPay">
+                                    <label class="form-check-label" for="naverPay">
+                                        <span class="me-2">💚</span> 네이버페이
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PG사 설정 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">PG사 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">PG사 선택</label>
+                            <select class="form-select" v-model="settings.pgProvider">
+                                <option value="inicis">KG이니시스</option>
+                                <option value="nice">나이스페이</option>
+                                <option value="toss">토스페이먼츠</option>
+                                <option value="kakao">카카오페이</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">환경</label>
+                            <select class="form-select" v-model="settings.pgEnvironment">
+                                <option value="sandbox">테스트 (Sandbox)</option>
+                                <option value="production">운영 (Production)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상점 ID (MID)</label>
+                            <input type="text" class="form-control" v-model="settings.merchantId">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">API 키</label>
+                            <input type="password" class="form-control" v-model="settings.apiKey">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 환불 정책 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">환불 정책</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">환불 가능 기간</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" v-model="settings.refundDays">
+                                <span class="input-group-text">일</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">환불 가능 진도율</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" v-model="settings.refundProgress">
+                                <span class="input-group-text">% 이하</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">환불 수수료</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" v-model="settings.refundFee">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div class="form-text">결제 금액에서 차감되는 수수료 비율</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">환불 안내 문구</label>
+                            <textarea class="form-control" rows="3" v-model="settings.refundPolicy"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 쿠폰 설정 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">쿠폰/할인 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="enableCoupon" v-model="settings.enableCoupon">
+                                <label class="form-check-label" for="enableCoupon">쿠폰 사용 활성화</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">쿠폰 중복 사용</label>
+                            <select class="form-select" v-model="settings.couponStackable" :disabled="!settings.enableCoupon">
+                                <option value="none">불가</option>
+                                <option value="limited">최대 2개</option>
+                                <option value="unlimited">제한 없음</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">최대 할인율</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" v-model="settings.maxDiscount" :disabled="!settings.enableCoupon">
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">결제 수단 상태</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span>💳 신용/체크카드</span>
+                            <span class="badge" :class="settings.enableCard ? 'bg-success' : 'bg-secondary'">
+                                {{ settings.enableCard ? '활성' : '비활성' }}
+                            </span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span>🏦 계좌이체</span>
+                            <span class="badge" :class="settings.enableBank ? 'bg-success' : 'bg-secondary'">
+                                {{ settings.enableBank ? '활성' : '비활성' }}
+                            </span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span>📄 가상계좌</span>
+                            <span class="badge" :class="settings.enableVirtualAccount ? 'bg-success' : 'bg-secondary'">
+                                {{ settings.enableVirtualAccount ? '활성' : '비활성' }}
+                            </span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span>📱 휴대폰결제</span>
+                            <span class="badge" :class="settings.enablePhone ? 'bg-success' : 'bg-secondary'">
+                                {{ settings.enablePhone ? '활성' : '비활성' }}
+                            </span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span>💛 카카오페이</span>
+                            <span class="badge" :class="settings.enableKakaoPay ? 'bg-success' : 'bg-secondary'">
+                                {{ settings.enableKakaoPay ? '활성' : '비활성' }}
+                            </span>
+                        </li>
+                        <li class="d-flex justify-content-between align-items-center py-2">
+                            <span>💚 네이버페이</span>
+                            <span class="badge" :class="settings.enableNaverPay ? 'bg-success' : 'bg-secondary'">
+                                {{ settings.enableNaverPay ? '활성' : '비활성' }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,172 @@
+<div class="notifications-settings-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">알림 설정</h4>
+            <p class="text-muted mb-0">이메일, SMS, 푸시 알림을 설정합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="saveSettings">
+            <span class="me-1">💾</span> 저장
+        </button>
+    </div>
+
+    <!-- 알림 채널 -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="fs-1 mb-3">📧</div>
+                    <h6 class="mb-2">이메일</h6>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" v-model="settings.emailEnabled">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="fs-1 mb-3">📱</div>
+                    <h6 class="mb-2">SMS</h6>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" v-model="settings.smsEnabled">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="fs-1 mb-3">🔔</div>
+                    <h6 class="mb-2">푸시 알림</h6>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" v-model="settings.pushEnabled">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 이메일 설정 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="mb-0">📧 이메일 설정</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">발신자 이름</label>
+                    <input type="text" class="form-control" v-model="settings.emailFromName">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">발신자 이메일</label>
+                    <input type="email" class="form-control" v-model="settings.emailFrom">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">SMTP 서버</label>
+                    <input type="text" class="form-control" v-model="settings.smtpHost">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">포트</label>
+                    <input type="number" class="form-control" v-model="settings.smtpPort">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">보안</label>
+                    <select class="form-select" v-model="settings.smtpSecurity">
+                        <option value="none">없음</option>
+                        <option value="tls">TLS</option>
+                        <option value="ssl">SSL</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">SMTP 사용자</label>
+                    <input type="text" class="form-control" v-model="settings.smtpUser">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">SMTP 비밀번호</label>
+                    <input type="password" class="form-control" v-model="settings.smtpPassword">
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-outline-secondary" @click="testEmail">테스트 이메일 발송</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SMS 설정 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="mb-0">📱 SMS 설정</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">SMS 발송 서비스</label>
+                    <select class="form-select" v-model="settings.smsProvider">
+                        <option value="aligo">알리고</option>
+                        <option value="coolsms">CoolSMS</option>
+                        <option value="naver">네이버 클라우드</option>
+                        <option value="kakao">카카오 알림톡</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">발신 번호</label>
+                    <input type="tel" class="form-control" v-model="settings.smsFrom">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">API 키</label>
+                    <input type="password" class="form-control" v-model="settings.smsApiKey">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">API Secret</label>
+                    <input type="password" class="form-control" v-model="settings.smsApiSecret">
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-outline-secondary" @click="testSMS">테스트 SMS 발송</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림 템플릿 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">알림 템플릿</h6>
+            <button class="btn btn-sm btn-outline-primary" @click="addTemplate">+ 템플릿 추가</button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>알림 유형</th>
+                            <th>제목</th>
+                            <th class="text-center">이메일</th>
+                            <th class="text-center">SMS</th>
+                            <th class="text-center">푸시</th>
+                            <th style="width: 100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="template in templates" :key="template.id">
+                            <td><span class="badge bg-light text-dark">{{ template.type }}</span></td>
+                            <td>{{ template.title }}</td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input" v-model="template.email">
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input" v-model="template.sms">
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input" v-model="template.push">
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary" @click="editTemplate(template)">수정</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

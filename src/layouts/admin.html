@@ -1,0 +1,120 @@
+<div class="admin-layout">
+    <!-- Left Menu (Dynamic Include) -->
+    <aside class="sidebar bg-dark text-white d-flex flex-column" style="position: fixed; left: 0; top: 0; width: 250px; height: 100vh; z-index: 1040;">
+        <DynamicInclude page="components/leftmenu"></DynamicInclude>
+    </aside>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="main-content bg-body-tertiary" style="margin-left: 250px; min-height: 100vh;">
+        <!-- 상단 헤더바 -->
+        <header class="content-header bg-white border-bottom px-4 d-flex justify-content-between align-items-center sticky-top" style="height: 60px;">
+            <div class="d-flex align-items-center">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="#/dashboard" class="text-decoration-none">홈</a></li>
+                        <li class="breadcrumb-item" v-if="currentMenuName">{{ currentMenuName }}</li>
+                        <li class="breadcrumb-item active" v-if="currentSubmenuName">{{ currentSubmenuName }}</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- 검색 (Command Palette) -->
+                <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" @click="openCommandPalette">
+                    <span>🔍</span>
+                    <span class="d-none d-md-inline">검색</span>
+                    <kbd class="ms-2 d-none d-lg-inline">Ctrl+K</kbd>
+                </button>
+                <!-- 알림 -->
+                <button class="btn btn-link text-dark position-relative p-1">
+                    <span class="fs-5">🔔</span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">3</span>
+                </button>
+                <!-- 프로필 -->
+                <div class="dropdown">
+                    <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center gap-2 p-1" type="button" data-bs-toggle="dropdown">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <span class="small">관</span>
+                        </div>
+                        <span class="d-none d-md-inline">관리자</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#/settings/general">내 정보</a></li>
+                        <li><a class="dropdown-item" href="#/settings/general">설정</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" @click="handleLogout" role="button">로그아웃</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- 페이지 콘텐츠 -->
+        <div class="content-body p-4">
+            {{ content }}
+        </div>
+    </main>
+
+    <!-- Command Palette 모달 -->
+    <div class="modal fade" id="commandPaletteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body p-0">
+                    <div class="p-3 border-bottom">
+                        <input
+                            type="text"
+                            class="form-control form-control-lg border-0 shadow-none"
+                            placeholder="🔍 검색..."
+                            v-model="searchQuery"
+                            @input="filterCommands"
+                        >
+                    </div>
+                    <div class="command-list" style="max-height: 300px; overflow-y: auto;">
+                        <div class="p-2">
+                            <div class="text-muted small px-2 py-1">페이지</div>
+                            <a
+                                v-for="cmd in filteredCommands"
+                                :key="cmd.path"
+                                class="d-flex align-items-center px-3 py-2 text-decoration-none text-dark rounded hover-bg-light"
+                                :href="'#' + cmd.path"
+                                @click="closeCommandPalette"
+                            >
+                                <span class="me-2">{{ cmd.icon }}</span>
+                                {{ cmd.name }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-layout {
+    min-height: 100vh;
+}
+
+.sidebar .dynamic-include {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    transition: margin-left 0.3s ease;
+}
+
+.hover-bg-light:hover {
+    background-color: #f8f9fa;
+}
+
+.content-body {
+    min-height: calc(100vh - 65px);
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+</style>

@@ -1,0 +1,159 @@
+<div class="courses-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">강좌</h4>
+            <p class="text-muted mb-0">강좌를 생성하고 관리합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="openCategoryModal">
+                📁 카테고리 관리
+            </button>
+            <button class="btn btn-primary" @click="openCreateWizard">
+                <span class="me-1">➕</span> 강좌 만들기
+            </button>
+        </div>
+    </div>
+
+    <!-- 필터 & 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.status">
+                        <option value="">전체 상태</option>
+                        <option value="published">판매중</option>
+                        <option value="draft">준비중</option>
+                        <option value="closed">판매종료</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.category">
+                        <option value="">전체 카테고리</option>
+                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.instructor">
+                        <option value="">전체 강사</option>
+                        <option v-for="inst in instructors" :key="inst.id" :value="inst.id">{{ inst.name }}</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">🔍</span>
+                        <input type="text" class="form-control" placeholder="강좌명 검색..." v-model="searchQuery">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="dropdown w-100">
+                        <button class="btn btn-outline-secondary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            내보내기
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" @click="exportData('excel')">📊 Excel</a></li>
+                            <li><a class="dropdown-item" href="#" @click="exportData('csv')">📄 CSV</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 강좌 테이블 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" class="form-check-input" v-model="selectAll" @change="toggleSelectAll">
+                            </th>
+                            <th>강좌명</th>
+                            <th>카테고리</th>
+                            <th>강사</th>
+                            <th class="text-center">수강생</th>
+                            <th class="text-center">평점</th>
+                            <th class="text-end">가격</th>
+                            <th class="text-center">상태</th>
+                            <th style="width: 100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="course in courses" :key="course.id">
+                            <td>
+                                <input type="checkbox" class="form-check-input" v-model="selectedIds" :value="course.id">
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
+                                         style="width: 48px; height: 48px;">
+                                        <span class="fs-4">📚</span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">{{ course.title }}</div>
+                                        <small class="text-muted">{{ course.lessons }}개 차시 · {{ course.duration }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-light text-dark">{{ course.category }}</span></td>
+                            <td>{{ course.instructor }}</td>
+                            <td class="text-center">{{ course.students }}명</td>
+                            <td class="text-center">
+                                <span class="text-warning">★</span> {{ course.rating }}
+                            </td>
+                            <td class="text-end">{{ course.price }}</td>
+                            <td class="text-center">
+                                <span class="badge" :class="getStatusClass(course.status)">
+                                    {{ getStatusText(course.status) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">⋮</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" @click="editCourse(course)">✏️ 수정</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="manageCurriculum(course)">📋 커리큘럼</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="copyCourse(course)">📑 복사</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="previewCourse(course)">👁️ 미리보기</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" @click="deleteCourse(course)">🗑️ 삭제</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 선택된 항목 액션바 -->
+        <div class="card-footer bg-white border-top py-2" v-if="selectedIds.length > 0">
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted">{{ selectedIds.length }}개 선택됨</span>
+                <button class="btn btn-sm btn-outline-secondary" @click="bulkAction('publish')">판매 시작</button>
+                <button class="btn btn-sm btn-outline-secondary" @click="bulkAction('close')">판매 종료</button>
+                <button class="btn btn-sm btn-outline-danger" @click="bulkAction('delete')">삭제</button>
+            </div>
+        </div>
+        <!-- 페이지네이션 -->
+        <div class="card-footer bg-white border-top">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">총 {{ totalCount }}개 강좌</div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                            <a class="page-link" href="#" @click.prevent="currentPage--">이전</a>
+                        </li>
+                        <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }">
+                            <a class="page-link" href="#" @click.prevent="currentPage = page">{{ page }}</a>
+                        </li>
+                        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                            <a class="page-link" href="#" @click.prevent="currentPage++">다음</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>

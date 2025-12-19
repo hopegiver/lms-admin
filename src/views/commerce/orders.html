@@ -1,0 +1,290 @@
+<div class="orders-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">주문</h4>
+            <p class="text-muted mb-0">주문 내역을 관리합니다</p>
+        </div>
+        <button class="btn btn-outline-secondary" @click="exportOrders">
+            <span class="me-1">📥</span> 엑셀 다운로드
+        </button>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">오늘 주문</div>
+                            <div class="fs-4 fw-bold">{{ stats.today }}</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <span class="fs-4">📋</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">처리 대기</div>
+                            <div class="fs-4 fw-bold text-warning">{{ stats.pending }}</div>
+                        </div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                            <span class="fs-4">⏳</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">이번달 매출</div>
+                            <div class="fs-4 fw-bold text-success">{{ stats.monthlyRevenue }}</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <span class="fs-4">💰</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">환불 요청</div>
+                            <div class="fs-4 fw-bold text-danger">{{ stats.refundRequests }}</div>
+                        </div>
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                            <span class="fs-4">↩️</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 필터 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.status">
+                        <option value="">전체 상태</option>
+                        <option value="pending">결제대기</option>
+                        <option value="completed">결제완료</option>
+                        <option value="cancelled">취소</option>
+                        <option value="refunded">환불완료</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.paymentMethod">
+                        <option value="">결제수단</option>
+                        <option value="card">신용카드</option>
+                        <option value="bank">계좌이체</option>
+                        <option value="virtual">가상계좌</option>
+                        <option value="phone">휴대폰</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">📅</span>
+                        <input type="date" class="form-control" v-model="filters.startDate">
+                        <input type="date" class="form-control" v-model="filters.endDate">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">🔍</span>
+                        <input type="text" class="form-control" placeholder="주문번호, 구매자명..." v-model="searchQuery">
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-outline-secondary" @click="resetFilters">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 주문 목록 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th><input type="checkbox" class="form-check-input"></th>
+                            <th>주문번호</th>
+                            <th>구매자</th>
+                            <th>상품</th>
+                            <th class="text-end">결제금액</th>
+                            <th>결제수단</th>
+                            <th class="text-center">상태</th>
+                            <th>주문일시</th>
+                            <th style="width: 100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="order in orders" :key="order.id" @click="openOrderDetail(order)" style="cursor: pointer;">
+                            <td @click.stop><input type="checkbox" class="form-check-input"></td>
+                            <td><span class="fw-medium text-primary">{{ order.orderNo }}</span></td>
+                            <td>
+                                <div>{{ order.buyer }}</div>
+                                <div class="text-muted small">{{ order.email }}</div>
+                            </td>
+                            <td>
+                                <div>{{ order.product }}</div>
+                                <div class="text-muted small" v-if="order.additionalItems">외 {{ order.additionalItems }}건</div>
+                            </td>
+                            <td class="text-end fw-bold">{{ order.amount }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ getPaymentMethodText(order.paymentMethod) }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge" :class="getStatusBadgeClass(order.status)">
+                                    {{ getStatusText(order.status) }}
+                                </span>
+                            </td>
+                            <td>{{ order.orderDate }}</td>
+                            <td @click.stop>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown">⋮</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" @click="openOrderDetail(order)">상세보기</a></li>
+                                        <li><a class="dropdown-item" href="#" @click="resendReceipt(order)">영수증 재발송</a></li>
+                                        <li v-if="order.status === 'completed'"><hr class="dropdown-divider"></li>
+                                        <li v-if="order.status === 'completed'">
+                                            <a class="dropdown-item text-danger" href="#" @click="processRefund(order)">환불처리</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted small">총 {{ orders.length }}건</div>
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- 주문 상세 슬라이드 패널 -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="orderDetailPanel" style="width: 500px;">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title">주문 상세</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" v-if="selectedOrder">
+        <!-- 주문 정보 -->
+        <div class="mb-4">
+            <h6 class="mb-3">주문 정보</h6>
+            <div class="row g-3">
+                <div class="col-6">
+                    <label class="form-label text-muted small">주문번호</label>
+                    <div class="fw-medium">{{ selectedOrder.orderNo }}</div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-muted small">주문일시</label>
+                    <div>{{ selectedOrder.orderDate }}</div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-muted small">결제수단</label>
+                    <div>{{ getPaymentMethodText(selectedOrder.paymentMethod) }}</div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-muted small">상태</label>
+                    <div>
+                        <span class="badge" :class="getStatusBadgeClass(selectedOrder.status)">
+                            {{ getStatusText(selectedOrder.status) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 구매자 정보 -->
+        <div class="mb-4">
+            <h6 class="mb-3">구매자 정보</h6>
+            <div class="row g-3">
+                <div class="col-6">
+                    <label class="form-label text-muted small">이름</label>
+                    <div>{{ selectedOrder.buyer }}</div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-muted small">이메일</label>
+                    <div>{{ selectedOrder.email }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 주문 상품 -->
+        <div class="mb-4">
+            <h6 class="mb-3">주문 상품</h6>
+            <div class="list-group">
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-medium">{{ selectedOrder.product }}</div>
+                        <div class="text-muted small">강좌</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">{{ selectedOrder.amount }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 결제 내역 -->
+        <div class="mb-4">
+            <h6 class="mb-3">결제 내역</h6>
+            <div class="bg-light rounded p-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">상품 금액</span>
+                    <span>{{ selectedOrder.amount }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">할인</span>
+                    <span class="text-danger">-₩0</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">최종 결제금액</span>
+                    <span class="fw-bold text-primary">{{ selectedOrder.amount }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 액션 버튼 -->
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary flex-fill" @click="resendReceipt(selectedOrder)">
+                영수증 재발송
+            </button>
+            <button class="btn btn-danger flex-fill" v-if="selectedOrder.status === 'completed'"
+                    @click="processRefund(selectedOrder)">
+                환불처리
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,164 @@
+<div class="design-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">디자인</h4>
+            <p class="text-muted mb-0">사이트 테마와 디자인을 설정합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="saveDesign">
+            <span class="me-1">💾</span> 저장
+        </button>
+    </div>
+
+    <div class="row">
+        <!-- 테마 설정 -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">테마 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label">기본 색상</label>
+                            <div class="d-flex gap-2">
+                                <input type="color" class="form-control form-control-color" v-model="design.primaryColor">
+                                <input type="text" class="form-control" v-model="design.primaryColor" style="width: 120px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">보조 색상</label>
+                            <div class="d-flex gap-2">
+                                <input type="color" class="form-control form-control-color" v-model="design.secondaryColor">
+                                <input type="text" class="form-control" v-model="design.secondaryColor" style="width: 120px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">글꼴</label>
+                            <select class="form-select" v-model="design.fontFamily">
+                                <option value="Pretendard">Pretendard</option>
+                                <option value="Noto Sans KR">Noto Sans KR</option>
+                                <option value="Spoqa Han Sans">Spoqa Han Sans</option>
+                                <option value="IBM Plex Sans KR">IBM Plex Sans KR</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">기본 글꼴 크기</label>
+                            <select class="form-select" v-model="design.fontSize">
+                                <option value="14px">작게 (14px)</option>
+                                <option value="16px">보통 (16px)</option>
+                                <option value="18px">크게 (18px)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">모서리 둥글기</label>
+                            <select class="form-select" v-model="design.borderRadius">
+                                <option value="0">각진 모서리</option>
+                                <option value="4px">약간 둥글게</option>
+                                <option value="8px">둥글게</option>
+                                <option value="16px">많이 둥글게</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">그림자 스타일</label>
+                            <select class="form-select" v-model="design.shadowStyle">
+                                <option value="none">없음</option>
+                                <option value="soft">부드럽게</option>
+                                <option value="medium">보통</option>
+                                <option value="strong">강하게</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 로고 설정 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">로고 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label">메인 로고</label>
+                            <div class="border rounded p-4 text-center bg-light mb-2">
+                                <img v-if="design.logo" :src="design.logo" alt="로고" style="max-height: 60px;">
+                                <div v-else class="text-muted">로고 없음</div>
+                            </div>
+                            <input type="file" class="form-control" accept="image/*" @change="uploadLogo">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">파비콘</label>
+                            <div class="border rounded p-4 text-center bg-light mb-2">
+                                <img v-if="design.favicon" :src="design.favicon" alt="파비콘" style="max-height: 32px;">
+                                <div v-else class="text-muted">파비콘 없음</div>
+                            </div>
+                            <input type="file" class="form-control" accept="image/*" @change="uploadFavicon">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 레이아웃 설정 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">레이아웃 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label">헤더 스타일</label>
+                            <select class="form-select" v-model="design.headerStyle">
+                                <option value="fixed">고정 헤더</option>
+                                <option value="static">일반 헤더</option>
+                                <option value="transparent">투명 헤더</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">푸터 스타일</label>
+                            <select class="form-select" v-model="design.footerStyle">
+                                <option value="full">전체 너비</option>
+                                <option value="contained">컨테이너 너비</option>
+                                <option value="minimal">최소 푸터</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">최대 너비</label>
+                            <select class="form-select" v-model="design.maxWidth">
+                                <option value="1200px">1200px</option>
+                                <option value="1400px">1400px</option>
+                                <option value="1600px">1600px</option>
+                                <option value="100%">전체 너비</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 미리보기 -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">미리보기</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="preview-box p-3" :style="previewStyle">
+                        <div class="preview-header p-2 mb-3 rounded" :style="{ backgroundColor: design.primaryColor, color: '#fff' }">
+                            헤더
+                        </div>
+                        <div class="preview-content">
+                            <div class="preview-card p-3 mb-2 rounded" :style="cardStyle">
+                                <div class="fw-bold mb-1">카드 제목</div>
+                                <div class="text-muted small">카드 내용입니다</div>
+                            </div>
+                            <button class="btn btn-sm w-100" :style="{ backgroundColor: design.primaryColor, color: '#fff', borderRadius: design.borderRadius }">
+                                버튼
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

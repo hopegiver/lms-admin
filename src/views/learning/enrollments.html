@@ -1,0 +1,243 @@
+<div class="enrollments-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">수강 관리</h4>
+            <p class="text-muted mb-0">수강 신청을 승인하고 수강생을 배정합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="openBulkAssign">
+                👥 일괄 배정
+            </button>
+            <button class="btn btn-primary" @click="openAssignModal">
+                <span class="me-1">➕</span> 수강 배정
+            </button>
+        </div>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-4 fw-bold text-warning">{{ stats.pending }}</div>
+                    <div class="text-muted small">승인 대기</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-4 fw-bold text-primary">{{ stats.active }}</div>
+                    <div class="text-muted small">수강중</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-4 fw-bold text-success">{{ stats.completed }}</div>
+                    <div class="text-muted small">수료 완료</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-4 fw-bold text-danger">{{ stats.expired }}</div>
+                    <div class="text-muted small">기간 만료</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'pending' }" href="#" @click.prevent="activeTab = 'pending'">
+                승인 대기 <span class="badge bg-warning text-dark ms-1">{{ stats.pending }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'all' }" href="#" @click.prevent="activeTab = 'all'">
+                전체 수강
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'voucher' }" href="#" @click.prevent="activeTab = 'voucher'">
+                수강권 관리
+            </a>
+        </li>
+    </ul>
+
+    <!-- 승인 대기 탭 -->
+    <div v-if="activeTab === 'pending'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th><input type="checkbox" class="form-check-input"></th>
+                                <th>신청자</th>
+                                <th>강좌</th>
+                                <th>신청일</th>
+                                <th>결제 상태</th>
+                                <th style="width: 150px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="req in pendingRequests" :key="req.id">
+                                <td><input type="checkbox" class="form-check-input"></td>
+                                <td>
+                                    <div class="fw-medium">{{ req.learner }}</div>
+                                    <small class="text-muted">{{ req.email }}</small>
+                                </td>
+                                <td>{{ req.course }}</td>
+                                <td>{{ req.requestDate }}</td>
+                                <td>
+                                    <span class="badge" :class="req.paid ? 'bg-success' : 'bg-warning text-dark'">
+                                        {{ req.paid ? '결제완료' : '결제대기' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-success me-1" @click="approve(req)">승인</button>
+                                    <button class="btn btn-sm btn-outline-danger" @click="reject(req)">거절</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 전체 수강 탭 -->
+    <div v-if="activeTab === 'all'">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <select class="form-select" v-model="filters.course">
+                            <option value="">전체 강좌</option>
+                            <option v-for="c in courseList" :key="c">{{ c }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" v-model="filters.status">
+                            <option value="">전체 상태</option>
+                            <option value="active">수강중</option>
+                            <option value="completed">수료</option>
+                            <option value="expired">만료</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" placeholder="학습자 검색..." v-model="searchQuery">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>학습자</th>
+                                <th>강좌</th>
+                                <th class="text-center">진도율</th>
+                                <th>수강 기간</th>
+                                <th class="text-center">상태</th>
+                                <th style="width: 100px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="enroll in enrollments" :key="enroll.id">
+                                <td>
+                                    <div class="fw-medium">{{ enroll.learner }}</div>
+                                    <small class="text-muted">{{ enroll.email }}</small>
+                                </td>
+                                <td>{{ enroll.course }}</td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <div class="progress me-2" style="width: 60px; height: 6px;">
+                                            <div class="progress-bar" :style="{ width: enroll.progress + '%' }"></div>
+                                        </div>
+                                        <span class="small">{{ enroll.progress }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="small">{{ enroll.startDate }} ~ {{ enroll.endDate }}</div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getEnrollStatusClass(enroll.status)">
+                                        {{ getEnrollStatusText(enroll.status) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">⋮</button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="#" @click="extendPeriod(enroll)">📅 기간 연장</a></li>
+                                            <li><a class="dropdown-item" href="#" @click="resetProgress(enroll)">🔄 진도 초기화</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" @click="cancelEnroll(enroll)">❌ 수강 취소</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수강권 관리 탭 -->
+    <div v-if="activeTab === 'voucher'">
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary" @click="createVoucher">
+                <span class="me-1">🎫</span> 수강권 발급
+            </button>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>수강권 코드</th>
+                                <th>강좌</th>
+                                <th>수강 기간</th>
+                                <th>발급일</th>
+                                <th>만료일</th>
+                                <th class="text-center">사용 여부</th>
+                                <th style="width: 80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="voucher in vouchers" :key="voucher.id">
+                                <td><code>{{ voucher.code }}</code></td>
+                                <td>{{ voucher.course }}</td>
+                                <td>{{ voucher.duration }}</td>
+                                <td>{{ voucher.issuedDate }}</td>
+                                <td>{{ voucher.expiryDate }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="voucher.used ? 'bg-secondary' : 'bg-success'">
+                                        {{ voucher.used ? '사용됨' : '미사용' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" @click="deleteVoucher(voucher)" :disabled="voucher.used">
+                                        삭제
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

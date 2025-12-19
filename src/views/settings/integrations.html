@@ -1,0 +1,169 @@
+<div class="integrations-settings-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">연동 설정</h4>
+            <p class="text-muted mb-0">외부 서비스 연동을 관리합니다</p>
+        </div>
+    </div>
+
+    <!-- 연동 서비스 목록 -->
+    <div class="row g-4">
+        <!-- Google Analytics -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4">📊</span>
+                        <h6 class="mb-0">Google Analytics</h6>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" v-model="integrations.googleAnalytics.enabled">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">사이트 트래픽과 사용자 행동을 분석합니다</p>
+                    <div class="mb-3">
+                        <label class="form-label">Tracking ID</label>
+                        <input type="text" class="form-control" v-model="integrations.googleAnalytics.trackingId" placeholder="G-XXXXXXXXXX" :disabled="!integrations.googleAnalytics.enabled">
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" @click="saveIntegration('googleAnalytics')" :disabled="!integrations.googleAnalytics.enabled">저장</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Facebook Pixel -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4">📘</span>
+                        <h6 class="mb-0">Facebook Pixel</h6>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" v-model="integrations.facebookPixel.enabled">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Facebook 광고 전환 추적 및 리마케팅</p>
+                    <div class="mb-3">
+                        <label class="form-label">Pixel ID</label>
+                        <input type="text" class="form-control" v-model="integrations.facebookPixel.pixelId" placeholder="000000000000000" :disabled="!integrations.facebookPixel.enabled">
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" @click="saveIntegration('facebookPixel')" :disabled="!integrations.facebookPixel.enabled">저장</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slack -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4">💬</span>
+                        <h6 class="mb-0">Slack</h6>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" v-model="integrations.slack.enabled">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">주문, 문의 등 알림을 Slack으로 전송합니다</p>
+                    <div class="mb-3">
+                        <label class="form-label">Webhook URL</label>
+                        <input type="url" class="form-control" v-model="integrations.slack.webhookUrl" placeholder="https://hooks.slack.com/services/..." :disabled="!integrations.slack.enabled">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" @click="saveIntegration('slack')" :disabled="!integrations.slack.enabled">저장</button>
+                        <button class="btn btn-sm btn-outline-secondary" @click="testSlack" :disabled="!integrations.slack.enabled">테스트</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AWS S3 -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4">☁️</span>
+                        <h6 class="mb-0">AWS S3</h6>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" v-model="integrations.awsS3.enabled">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">파일 및 미디어 저장소로 S3를 사용합니다</p>
+                    <div class="mb-2">
+                        <label class="form-label">Bucket Name</label>
+                        <input type="text" class="form-control form-control-sm" v-model="integrations.awsS3.bucket" :disabled="!integrations.awsS3.enabled">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Region</label>
+                        <input type="text" class="form-control form-control-sm" v-model="integrations.awsS3.region" :disabled="!integrations.awsS3.enabled">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Access Key</label>
+                        <input type="password" class="form-control form-control-sm" v-model="integrations.awsS3.accessKey" :disabled="!integrations.awsS3.enabled">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Secret Key</label>
+                        <input type="password" class="form-control form-control-sm" v-model="integrations.awsS3.secretKey" :disabled="!integrations.awsS3.enabled">
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" @click="saveIntegration('awsS3')" :disabled="!integrations.awsS3.enabled">저장</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vimeo -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4">🎬</span>
+                        <h6 class="mb-0">Vimeo</h6>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" v-model="integrations.vimeo.enabled">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">동영상 호스팅 및 스트리밍</p>
+                    <div class="mb-3">
+                        <label class="form-label">Access Token</label>
+                        <input type="password" class="form-control" v-model="integrations.vimeo.accessToken" :disabled="!integrations.vimeo.enabled">
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" @click="saveIntegration('vimeo')" :disabled="!integrations.vimeo.enabled">저장</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zoom -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4">📹</span>
+                        <h6 class="mb-0">Zoom</h6>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" v-model="integrations.zoom.enabled">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">실시간 화상 강의 연동</p>
+                    <div class="mb-2">
+                        <label class="form-label">Client ID</label>
+                        <input type="text" class="form-control form-control-sm" v-model="integrations.zoom.clientId" :disabled="!integrations.zoom.enabled">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Client Secret</label>
+                        <input type="password" class="form-control form-control-sm" v-model="integrations.zoom.clientSecret" :disabled="!integrations.zoom.enabled">
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" @click="saveIntegration('zoom')" :disabled="!integrations.zoom.enabled">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
