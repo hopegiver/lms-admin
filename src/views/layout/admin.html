@@ -29,19 +29,14 @@
                         <div v-else class="accordion-item bg-transparent border-0">
                             <h2 class="accordion-header">
                                 <button
-                                    :class="['accordion-button', 'nav-link', 'text-white-50', 'px-3', 'py-2', 'bg-transparent', 'border-0', 'shadow-none', 'w-100', expandedMenuId === menu.id ? '' : 'collapsed']"
+                                    :class="['accordion-button', expandedMenuId === menu.id ? '' : 'collapsed']"
                                     type="button"
                                     data-bs-toggle="collapse"
                                     :data-bs-target="'#menu-' + menu.id"
                                     :aria-expanded="expandedMenuId === menu.id ? 'true' : 'false'"
                                     :aria-controls="'menu-' + menu.id"
                                 >
-                                    <span class="d-flex justify-content-between align-items-center w-100">
-                                        <span><span class="me-2">{{ menu.icon }}</span> {{ menu.name }}</span>
-                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" class="menu-arrow">
-                                            <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </span>
+                                    <span class="me-2">{{ menu.icon }}</span> {{ menu.name }}
                                 </button>
                             </h2>
                             <div :id="'menu-' + menu.id" :class="['accordion-collapse', 'collapse', expandedMenuId === menu.id ? 'show' : '']" data-bs-parent="#sidebar-accordion">
@@ -105,94 +100,3 @@
     </main>
 
 </div>
-
-<style>
-.admin-layout {
-    min-height: 100vh;
-}
-
-.sidebar-inner {
-    width: 100%;
-    height: 100%;
-}
-
-.sidebar-nav::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sidebar-nav::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
-    border-radius: 4px;
-}
-
-.sidebar-nav .nav-link {
-    border-radius: 6px;
-    margin: 2px 8px;
-    transition: all 0.2s ease;
-}
-
-.sidebar-nav .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #fff !important;
-}
-
-.sidebar-nav .nav-link.active {
-    background-color: var(--bs-primary);
-    color: #fff !important;
-}
-
-.accordion-button {
-    border-radius: 6px;
-    margin: 2px 8px;
-    transition: all 0.2s ease;
-}
-
-.accordion-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #fff !important;
-}
-
-.accordion-button:focus {
-    box-shadow: none;
-}
-
-.accordion-button::after {
-    display: none;
-}
-
-.menu-arrow {
-    transition: transform 0.2s ease;
-}
-
-.accordion-button:not(.collapsed) .menu-arrow {
-    transform: rotate(180deg);
-}
-
-.sidebar-nav .submenu-list {
-    margin-left: 0;
-    padding-left: 0;
-}
-
-.sidebar-nav .submenu-list .nav-link {
-    font-size: 0.9rem;
-    padding-left: 2.5rem;
-}
-
-.main-content {
-    transition: margin-left 0.3s ease;
-}
-
-.hover-bg-light:hover {
-    background-color: #f8f9fa;
-}
-
-.content-body {
-    min-height: calc(100vh - 65px);
-}
-
-@media (max-width: 768px) {
-    .main-content {
-        margin-left: 0 !important;
-    }
-}
-</style>
