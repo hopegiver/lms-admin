@@ -1,10 +1,10 @@
 export default {
-    name: 'AdminLayout',
+    name: 'adminLayout',
+    layout: null,
     data() {
         return {
-            searchQuery: '',
-            filteredCommands: [],
-            menus: [
+            expandedMenuId: '',
+            sidebarMenus: [
                 { id: 'dashboard', name: '대시보드', icon: '📊', path: '/dashboard' },
                 { id: 'users', name: '사용자', icon: '👥', path: '/users/learners' },
                 { id: 'learning', name: '학습 관리', icon: '📚', path: '/learning/courses' },
@@ -13,7 +13,7 @@ export default {
                 { id: 'site', name: '사이트', icon: '🌐', path: '/site/pages' },
                 { id: 'settings', name: '설정', icon: '⚙️', path: '/settings/general' }
             ],
-            submenus: {
+            sidebarSubmenus: {
                 dashboard: [],
                 users: [
                     { id: 'learners', name: '학습자', icon: '👤', path: '/users/learners' },
@@ -31,7 +31,7 @@ export default {
                 ],
                 commerce: [
                     { id: 'products', name: '상품', icon: '📦', path: '/commerce/products' },
-                    { id: 'orders', name: '주문', icon: '🧾', path: '/commerce/orders' },
+                    { id: 'orders', name: '주문', icon: '🧾', path: '/commerce/orders', badge: 3 },
                     { id: 'payments', name: '결제', icon: '💳', path: '/commerce/payments' },
                     { id: 'promotions', name: '프로모션', icon: '🎫', path: '/commerce/promotions' },
                     { id: 'settlements', name: '정산', icon: '💰', path: '/commerce/settlements' },
@@ -39,7 +39,7 @@ export default {
                 ],
                 community: [
                     { id: 'boards', name: '게시판', icon: '📋', path: '/community/boards' },
-                    { id: 'inquiries', name: '문의 관리', icon: '💬', path: '/community/inquiries' }
+                    { id: 'inquiries', name: '문의 관리', icon: '💬', path: '/community/inquiries', badge: 12 }
                 ],
                 site: [
                     { id: 'pages', name: '페이지', icon: '📄', path: '/site/pages' },
@@ -58,89 +58,24 @@ export default {
                     { id: 'permissions', name: '권한 관리', icon: '🔐', path: '/settings/permissions' },
                     { id: 'system', name: '시스템', icon: '🖥️', path: '/settings/system' }
                 ]
-            },
-            allCommands: []
-        }
-    },
-    computed: {
-        currentMenuName() {
-            const path = window.location.hash.replace('#', '') || '/dashboard';
-            const parts = path.split('/').filter(Boolean);
-            if (parts.length >= 1) {
-                const menu = this.menus.find(m => m.id === parts[0]);
-                return menu ? menu.name : '';
             }
-            return '';
-        },
-        currentSubmenuName() {
-            const path = window.location.hash.replace('#', '') || '/dashboard';
-            const parts = path.split('/').filter(Boolean);
-            if (parts.length >= 2) {
-                const submenus = this.submenus[parts[0]] || [];
-                const sub = submenus.find(s => s.id === parts[1]);
-                return sub ? sub.name : '';
-            }
-            return '';
         }
     },
     mounted() {
-        this.buildCommandList();
-        this.setupKeyboardShortcuts();
+        // 현재 라우트에서 메뉴 ID 추출
+        const path = this.$router ? this.$router.getCurrentRoute() : '';
+
+        if (path) {
+            const parts = path.split('/').filter(Boolean);
+            if (parts.length >= 1) {
+                this.expandedMenuId = parts[0];
+            }
+        }
     },
     methods: {
-        buildCommandList() {
-            this.allCommands = [];
-            this.menus.forEach(menu => {
-                if (menu.id === 'dashboard') {
-                    this.allCommands.push({
-                        name: menu.name,
-                        icon: menu.icon,
-                        path: menu.path
-                    });
-                } else {
-                    const subs = this.submenus[menu.id] || [];
-                    subs.forEach(sub => {
-                        this.allCommands.push({
-                            name: `${menu.name} > ${sub.name}`,
-                            icon: sub.icon,
-                            path: sub.path
-                        });
-                    });
-                }
-            });
-            this.filteredCommands = this.allCommands;
-        },
-        filterCommands() {
-            const query = this.searchQuery.toLowerCase();
-            if (!query) {
-                this.filteredCommands = this.allCommands;
-            } else {
-                this.filteredCommands = this.allCommands.filter(cmd =>
-                    cmd.name.toLowerCase().includes(query)
-                );
-            }
-        },
-        openCommandPalette() {
-            const modal = new bootstrap.Modal(document.getElementById('commandPaletteModal'));
-            modal.show();
-            this.searchQuery = '';
-            this.filteredCommands = this.allCommands;
-        },
-        closeCommandPalette() {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('commandPaletteModal'));
-            if (modal) modal.hide();
-        },
-        setupKeyboardShortcuts() {
-            document.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                    e.preventDefault();
-                    this.openCommandPalette();
-                }
-            });
-        },
         handleLogout() {
             if (confirm('로그아웃 하시겠습니까?')) {
-                this.navigateTo('/');
+                this.navigateTo('/dashboard');
             }
         }
     }

@@ -1,0 +1,198 @@
+<div class="admin-layout">
+    <!-- Left Menu -->
+    <aside class="sidebar bg-dark text-white d-flex flex-column" style="position: fixed; left: 0; top: 0; width: 250px; height: 100vh; z-index: 1040;">
+        <div class="sidebar-inner d-flex flex-column h-100">
+            <!-- 로고 영역 -->
+            <div class="sidebar-brand px-3 py-3 border-bottom border-secondary flex-shrink-0" style="height: 60px;">
+                <a href="/dashboard" @click.prevent="navigateTo('/dashboard')" class="text-white text-decoration-none d-flex align-items-center">
+                    <span class="fs-4 me-2">📚</span>
+                    <span class="fs-5 fw-bold">LMS Admin</span>
+                </a>
+            </div>
+
+            <!-- 메뉴 영역 -->
+            <nav class="sidebar-nav flex-grow-1 py-3" style="overflow-y: auto;">
+                <div class="accordion accordion-flush" id="sidebar-accordion">
+                    <template v-for="(menu, index) in sidebarMenus" :key="menu.id">
+                        <!-- 서브메뉴가 없는 메뉴 (대시보드) -->
+                        <div v-if="!sidebarSubmenus[menu.id] || sidebarSubmenus[menu.id].length === 0" class="accordion-item bg-transparent border-0">
+                            <a
+                                class="nav-link text-white-50 px-3 py-2"
+                                :href="menu.path"
+                                @click.prevent="navigateTo(menu.path)"
+                            >
+                                <span class="me-2">{{ menu.icon }}</span> {{ menu.name }}
+                            </a>
+                        </div>
+
+                        <!-- 서브메뉴가 있는 메뉴 -->
+                        <div v-else class="accordion-item bg-transparent border-0">
+                            <h2 class="accordion-header">
+                                <button
+                                    :class="['accordion-button', 'nav-link', 'text-white-50', 'px-3', 'py-2', 'bg-transparent', 'border-0', 'shadow-none', 'w-100', expandedMenuId === menu.id ? '' : 'collapsed']"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    :data-bs-target="'#menu-' + menu.id"
+                                    :aria-expanded="expandedMenuId === menu.id ? 'true' : 'false'"
+                                    :aria-controls="'menu-' + menu.id"
+                                >
+                                    <span class="d-flex justify-content-between align-items-center w-100">
+                                        <span><span class="me-2">{{ menu.icon }}</span> {{ menu.name }}</span>
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" class="menu-arrow">
+                                            <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                </button>
+                            </h2>
+                            <div :id="'menu-' + menu.id" :class="['accordion-collapse', 'collapse', expandedMenuId === menu.id ? 'show' : '']" data-bs-parent="#sidebar-accordion">
+                                <div class="accordion-body p-0">
+                                    <ul class="nav flex-column">
+                                        <li v-for="sub in sidebarSubmenus[menu.id]" :key="sub.id" class="nav-item">
+                                            <a
+                                                class="nav-link text-white-50 ps-5 py-1"
+                                                :href="sub.path"
+                                                @click.prevent="navigateTo(sub.path)"
+                                            >
+                                                <span class="me-1">•</span> {{ sub.name }}
+                                                <span v-if="sub.badge" class="badge bg-danger ms-2">{{ sub.badge }}</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="main-content bg-body-tertiary" style="margin-left: 250px; min-height: 100vh;">
+        <!-- 상단 헤더바 -->
+        <header class="content-header bg-white border-bottom px-4 d-flex justify-content-between align-items-center sticky-top" style="height: 60px;">
+            <div class="d-flex align-items-center">
+                <h5 class="mb-0">LMS 관리</h5>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- 알림 -->
+                <button class="btn btn-link text-dark position-relative p-1">
+                    <span class="fs-5">🔔</span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">3</span>
+                </button>
+                <!-- 프로필 -->
+                <div class="dropdown">
+                    <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center gap-2 p-1" type="button" data-bs-toggle="dropdown">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <span class="small">관</span>
+                        </div>
+                        <span class="d-none d-md-inline">관리자</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/settings/general" @click.prevent="navigateTo('/settings/general')">내 정보</a></li>
+                        <li><a class="dropdown-item" href="/settings/general" @click.prevent="navigateTo('/settings/general')">설정</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" @click="handleLogout" role="button">로그아웃</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- 페이지 콘텐츠 -->
+        <div class="content-body p-4">
+            {{ content }}
+        </div>
+    </main>
+
+</div>
+
+<style>
+.admin-layout {
+    min-height: 100vh;
+}
+
+.sidebar-inner {
+    width: 100%;
+    height: 100%;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+}
+
+.sidebar-nav .nav-link {
+    border-radius: 6px;
+    margin: 2px 8px;
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff !important;
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: var(--bs-primary);
+    color: #fff !important;
+}
+
+.accordion-button {
+    border-radius: 6px;
+    margin: 2px 8px;
+    transition: all 0.2s ease;
+}
+
+.accordion-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff !important;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+}
+
+.accordion-button::after {
+    display: none;
+}
+
+.menu-arrow {
+    transition: transform 0.2s ease;
+}
+
+.accordion-button:not(.collapsed) .menu-arrow {
+    transform: rotate(180deg);
+}
+
+.sidebar-nav .submenu-list {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.sidebar-nav .submenu-list .nav-link {
+    font-size: 0.9rem;
+    padding-left: 2.5rem;
+}
+
+.main-content {
+    transition: margin-left 0.3s ease;
+}
+
+.hover-bg-light:hover {
+    background-color: #f8f9fa;
+}
+
+.content-body {
+    min-height: calc(100vh - 65px);
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+</style>
