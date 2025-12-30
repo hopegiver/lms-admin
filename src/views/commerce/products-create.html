@@ -28,10 +28,11 @@
                         <div class="col-md-6">
                             <label class="form-label">상품 유형 <span class="text-danger">*</span></label>
                             <select class="form-select" v-model="form.type" @change="onTypeChange">
-                                <option value="">선택</option>
-                                <option value="course">강좌</option>
-                                <option value="bundle">번들</option>
-                                <option value="subscription">구독</option>
+                                <option value="course">📚 강좌</option>
+                                <option value="package">📦 패키지</option>
+                                <option value="subscription">🔄 구독권</option>
+                                <option value="book">📖 도서</option>
+                                <option value="general">🛍️ 일반상품</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -51,27 +52,107 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm mb-4" v-if="form.type === 'course' || form.type === 'bundle'">
+            <!-- 강좌 상품 선택 -->
+            <div class="card border-0 shadow-sm mb-4" v-if="form.type === 'course'">
                 <div class="card-header bg-white border-bottom">
                     <h5 class="mb-0">강좌 선택</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label">{{ form.type === 'course' ? '강좌' : '포함할 강좌' }} <span class="text-danger">*</span></label>
-                        <select class="form-select" v-model="selectedCourse" @change="addCourse" :disabled="form.type === 'course' && form.courses.length > 0">
-                            <option value="">선택</option>
+                        <label class="form-label">강좌 <span class="text-danger">*</span></label>
+                        <select class="form-select" v-model="form.courseId">
+                            <option :value="null">강좌를 선택하세요</option>
+                            <option v-for="course in availableCourses" :key="course.id" :value="course.id">
+                                {{ course.name }} ({{ course.instructor }})
+                            </option>
+                        </select>
+                        <div class="form-text">학습 관리 메뉴에서 생성한 강좌를 선택하여 판매 상품으로 등록합니다.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 패키지 강좌 선택 -->
+            <div class="card border-0 shadow-sm mb-4" v-if="form.type === 'package'">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">패키지 구성</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">포함할 강좌 <span class="text-danger">*</span></label>
+                        <select class="form-select" v-model="selectedCourse" @change="addCourse">
+                            <option value="">강좌를 선택하세요</option>
                             <option v-for="course in availableCourses" :key="course.id" :value="course.id">
                                 {{ course.name }}
                             </option>
                         </select>
                     </div>
                     <div v-if="form.courses.length > 0">
-                        <label class="form-label small text-muted">선택된 강좌</label>
+                        <label class="form-label small text-muted">선택된 강좌 ({{ form.courses.length }}개)</label>
                         <div class="list-group">
                             <div class="list-group-item d-flex justify-content-between align-items-center" v-for="courseId in form.courses" :key="courseId">
                                 <span>{{ getCourseNameById(courseId) }}</span>
                                 <button class="btn btn-sm btn-outline-danger" @click="removeCourse(courseId)">제거</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 도서 정보 -->
+            <div class="card border-0 shadow-sm mb-4" v-if="form.type === 'book'">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">도서 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">저자 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.author" placeholder="예) 로버트 C. 마틴">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">출판사 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.publisher" placeholder="예) 인사이트">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">ISBN</label>
+                            <input type="text" class="form-control" v-model="form.isbn" placeholder="978-89-xxxxx-xx-x">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">카테고리 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.category">
+                                <option value="">선택</option>
+                                <option v-for="cat in productCategories.book" :key="cat">{{ cat }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">재고 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" v-model="form.stock" placeholder="0" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 일반상품 정보 -->
+            <div class="card border-0 shadow-sm mb-4" v-if="form.type === 'general'">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">상품 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">브랜드 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.brand" placeholder="예) LMS Store">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">카테고리 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.category">
+                                <option value="">선택</option>
+                                <option v-for="cat in productCategories.general" :key="cat">{{ cat }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">재고 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" v-model="form.stock" placeholder="0" min="0">
                         </div>
                     </div>
                 </div>

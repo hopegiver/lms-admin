@@ -5,22 +5,35 @@ export default {
         return {
             form: {
                 name: '',
-                type: '',
+                type: 'course',
                 status: 'draft',
                 description: '',
+                courseId: null,
                 courses: [],
                 price: '',
                 salePrice: '',
-                thumbnail: ''
+                thumbnail: '',
+                // 도서 관련 필드
+                author: '',
+                publisher: '',
+                isbn: '',
+                stock: '',
+                // 일반상품 관련 필드
+                brand: '',
+                category: ''
             },
             selectedCourse: '',
             availableCourses: [
-                { id: 1, name: 'React 완벽 가이드' },
-                { id: 2, name: 'Vue.js 마스터 클래스' },
-                { id: 3, name: 'Node.js 백엔드 개발' },
-                { id: 4, name: 'Python 데이터 분석' },
-                { id: 5, name: 'JavaScript 기초부터 심화까지' }
-            ]
+                { id: 1, name: 'React 완벽 가이드', instructor: '김개발' },
+                { id: 2, name: 'Vue.js 마스터 클래스', instructor: '이프론트' },
+                { id: 3, name: 'Node.js 백엔드 개발', instructor: '박노드' },
+                { id: 4, name: 'Python 데이터 분석', instructor: '최파이썬' },
+                { id: 5, name: 'JavaScript 기초부터 심화까지', instructor: '정자바' }
+            ],
+            productCategories: {
+                book: ['IT', '경영', '자기계발', '인문', '과학'],
+                general: ['의류', '문구/잡화', '전자기기', '가방/케이스', '기타']
+            }
         }
     },
     methods: {
@@ -73,8 +86,30 @@ export default {
                 alert('상품 유형을 선택해주세요.');
                 return false;
             }
-            if ((this.form.type === 'course' || this.form.type === 'bundle') && this.form.courses.length === 0) {
+            if (this.form.type === 'course' && !this.form.courseId) {
                 alert('강좌를 선택해주세요.');
+                return false;
+            }
+            if (this.form.type === 'package' && this.form.courses.length === 0) {
+                alert('패키지에 포함할 강좌를 선택해주세요.');
+                return false;
+            }
+            if (this.form.type === 'book') {
+                if (!this.form.author) {
+                    alert('저자를 입력해주세요.');
+                    return false;
+                }
+                if (!this.form.publisher) {
+                    alert('출판사를 입력해주세요.');
+                    return false;
+                }
+            }
+            if (this.form.type === 'general' && !this.form.brand) {
+                alert('브랜드를 입력해주세요.');
+                return false;
+            }
+            if ((this.form.type === 'book' || this.form.type === 'general') && !this.form.stock) {
+                alert('재고를 입력해주세요.');
                 return false;
             }
             if (!this.form.price) {

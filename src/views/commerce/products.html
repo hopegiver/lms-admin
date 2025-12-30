@@ -83,17 +83,27 @@
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
             <a class="nav-link" :class="{ active: activeTab === 'courses' }" href="#" @click.prevent="activeTab = 'courses'">
-                강좌 상품 <span class="badge bg-primary ms-1">{{ courseProducts.length }}</span>
+                📚 강좌 <span class="badge bg-primary ms-1">{{ courseProducts.length }}</span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" :class="{ active: activeTab === 'packages' }" href="#" @click.prevent="activeTab = 'packages'">
-                패키지 <span class="badge bg-secondary ms-1">{{ packageProducts.length }}</span>
+                📦 패키지 <span class="badge bg-secondary ms-1">{{ packageProducts.length }}</span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" :class="{ active: activeTab === 'subscriptions' }" href="#" @click.prevent="activeTab = 'subscriptions'">
-                구독권 <span class="badge bg-secondary ms-1">{{ subscriptionProducts.length }}</span>
+                🔄 구독권 <span class="badge bg-secondary ms-1">{{ subscriptionProducts.length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'books' }" href="#" @click.prevent="activeTab = 'books'">
+                📖 도서 <span class="badge bg-secondary ms-1">{{ bookProducts.length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: activeTab === 'general' }" href="#" @click.prevent="activeTab = 'general'">
+                🛍️ 일반상품 <span class="badge bg-secondary ms-1">{{ generalProducts.length }}</span>
             </a>
         </li>
     </ul>
@@ -149,6 +159,7 @@
                             <th>카테고리</th>
                             <th class="text-end">정가</th>
                             <th class="text-end">판매가</th>
+                            <th class="text-center" v-if="activeTab === 'books' || activeTab === 'general'">재고</th>
                             <th class="text-center">판매량</th>
                             <th class="text-center">상태</th>
                             <th style="width: 120px;"></th>
@@ -165,13 +176,23 @@
                                     </div>
                                     <div>
                                         <div class="fw-medium" @click="viewDetail(product)" style="cursor: pointer;">{{ product.name }}</div>
-                                        <div class="text-muted small">{{ product.instructor || product.courses + '개 강좌' }}</div>
+                                        <div class="text-muted small">
+                                            <span v-if="product.courseId">강좌 ID: {{ product.courseId }}</span>
+                                            <span v-else-if="product.courses">{{ product.courses }}개 강좌</span>
+                                            <span v-else-if="product.author">{{ product.author }}</span>
+                                            <span v-else-if="product.brand">{{ product.brand }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
                             <td><span class="badge bg-light text-dark">{{ product.category }}</span></td>
                             <td class="text-end text-muted text-decoration-line-through">{{ product.originalPrice }}</td>
                             <td class="text-end fw-bold text-primary">{{ product.price }}</td>
+                            <td class="text-center" v-if="activeTab === 'books' || activeTab === 'general'">
+                                <span :class="product.stock > 0 ? 'text-success' : 'text-danger'">
+                                    {{ product.stock }}개
+                                </span>
+                            </td>
                             <td class="text-center">{{ product.sales }}건</td>
                             <td class="text-center">
                                 <span class="badge" :class="getStatusBadgeClass(product.status)">

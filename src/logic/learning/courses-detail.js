@@ -51,8 +51,6 @@ export default {
                     students: 1250,
                     rating: 4.9,
                     reviewCount: 342,
-                    price: '₩99,000',
-                    salePrice: '₩79,000',
                     status: 'published',
                     description: 'React를 처음 시작하는 분들을 위한 완벽한 가이드입니다. 기초부터 고급 개념까지 단계별로 학습합니다.',
                     thumbnail: 'https://via.placeholder.com/800x400?text=React+Course'

@@ -7,14 +7,14 @@ export default {
             searchQuery: '',
             sortBy: 'newest',
             filters: { status: '', category: '' },
-            stats: { total: 89, active: 72, soldOut: 5, monthlyRevenue: '₩45,230,000' },
-            categories: ['개발', '디자인', '마케팅', '비즈니스', '자격증'],
+            stats: { total: 156, active: 128, soldOut: 8, monthlyRevenue: '₩67,450,000' },
+            categories: ['개발', '디자인', '마케팅', '비즈니스', '자격증', 'IT', '경영', '자기계발'],
             courseProducts: [
-                { id: 1, type: 'course', name: 'React 완벽 가이드 2024', instructor: '김리액트', category: '개발', originalPrice: '₩199,000', price: '₩149,000', sales: 1234, status: 'active' },
-                { id: 2, type: 'course', name: 'Python 데이터 분석 마스터', instructor: '이파이썬', category: '개발', originalPrice: '₩179,000', price: '₩129,000', sales: 892, status: 'active' },
-                { id: 3, type: 'course', name: 'UI/UX 디자인 실무', instructor: '박디자인', category: '디자인', originalPrice: '₩159,000', price: '₩119,000', sales: 567, status: 'active' },
-                { id: 4, type: 'course', name: 'AWS 클라우드 입문', instructor: '최클라우드', category: '개발', originalPrice: '₩149,000', price: '₩99,000', sales: 445, status: 'soldout' },
-                { id: 5, type: 'course', name: '디지털 마케팅 전략', instructor: '정마케팅', category: '마케팅', originalPrice: '₩129,000', price: '₩89,000', sales: 334, status: 'inactive' }
+                { id: 1, type: 'course', name: 'React 완벽 가이드 2024', courseId: 1, category: '개발', originalPrice: '₩199,000', price: '₩149,000', sales: 1234, status: 'active' },
+                { id: 2, type: 'course', name: 'Python 데이터 분석 마스터', courseId: 2, category: '개발', originalPrice: '₩179,000', price: '₩129,000', sales: 892, status: 'active' },
+                { id: 3, type: 'course', name: 'UI/UX 디자인 실무', courseId: 3, category: '디자인', originalPrice: '₩159,000', price: '₩119,000', sales: 567, status: 'active' },
+                { id: 4, type: 'course', name: 'AWS 클라우드 입문', courseId: 4, category: '개발', originalPrice: '₩149,000', price: '₩99,000', sales: 445, status: 'soldout' },
+                { id: 5, type: 'course', name: '디지털 마케팅 전략', courseId: 5, category: '마케팅', originalPrice: '₩129,000', price: '₩89,000', sales: 334, status: 'inactive' }
             ],
             packageProducts: [
                 { id: 101, type: 'package', name: '프론트엔드 올인원 패키지', courses: 5, category: '개발', originalPrice: '₩599,000', price: '₩399,000', sales: 234, status: 'active' },
@@ -25,6 +25,20 @@ export default {
                 { id: 201, type: 'subscription', name: '월간 구독권', courses: 89, category: '전체', originalPrice: '₩49,000', price: '₩39,000', sales: 567, status: 'active' },
                 { id: 202, type: 'subscription', name: '연간 구독권', courses: 89, category: '전체', originalPrice: '₩468,000', price: '₩299,000', sales: 234, status: 'active' },
                 { id: 203, type: 'subscription', name: '팀 구독권 (5인)', courses: 89, category: '전체', originalPrice: '₩199,000', price: '₩149,000', sales: 89, status: 'active' }
+            ],
+            bookProducts: [
+                { id: 301, type: 'book', name: '클린 코드', author: '로버트 C. 마틴', publisher: '인사이트', category: 'IT', originalPrice: '₩33,000', price: '₩29,700', sales: 456, stock: 50, status: 'active' },
+                { id: 302, type: 'book', name: '이펙티브 자바', author: '조슈아 블로크', publisher: '인사이트', category: 'IT', originalPrice: '₩36,000', price: '₩32,400', sales: 389, stock: 30, status: 'active' },
+                { id: 303, type: 'book', name: '리팩터링 2판', author: '마틴 파울러', publisher: '한빛미디어', category: 'IT', originalPrice: '₩38,000', price: '₩34,200', sales: 234, stock: 0, status: 'soldout' },
+                { id: 304, type: 'book', name: '객체지향의 사실과 오해', author: '조영호', publisher: '위키북스', category: 'IT', originalPrice: '₩25,000', price: '₩22,500', sales: 567, stock: 120, status: 'active' },
+                { id: 305, type: 'book', name: 'DDD Start!', author: '최범균', publisher: '지앤선', category: 'IT', originalPrice: '₩30,000', price: '₩27,000', sales: 298, stock: 45, status: 'active' }
+            ],
+            generalProducts: [
+                { id: 401, type: 'general', name: 'LMS 로고 티셔츠', brand: 'LMS Store', category: '의류', originalPrice: '₩35,000', price: '₩29,000', sales: 123, stock: 200, status: 'active' },
+                { id: 402, type: 'general', name: '개발자 머그컵', brand: 'LMS Store', category: '문구/잡화', originalPrice: '₩15,000', price: '₩12,000', sales: 345, stock: 150, status: 'active' },
+                { id: 403, type: 'general', name: '코딩 스티커 세트', brand: 'LMS Store', category: '문구/잡화', originalPrice: '₩8,000', price: '₩6,000', sales: 678, stock: 500, status: 'active' },
+                { id: 404, type: 'general', name: 'USB 메모리 32GB', brand: 'SanDisk', category: '전자기기', originalPrice: '₩20,000', price: '₩16,000', sales: 234, stock: 80, status: 'active' },
+                { id: 405, type: 'general', name: '노트북 파우치', brand: 'LMS Store', category: '가방/케이스', originalPrice: '₩45,000', price: '₩39,000', sales: 156, stock: 0, status: 'soldout' }
             ]
         }
     },
@@ -32,12 +46,15 @@ export default {
         currentProducts() {
             if (this.activeTab === 'courses') return this.courseProducts;
             if (this.activeTab === 'packages') return this.packageProducts;
-            return this.subscriptionProducts;
+            if (this.activeTab === 'subscriptions') return this.subscriptionProducts;
+            if (this.activeTab === 'books') return this.bookProducts;
+            if (this.activeTab === 'general') return this.generalProducts;
+            return this.courseProducts;
         }
     },
     methods: {
         getProductIcon(type) {
-            return { 'course': '📚', 'package': '📦', 'subscription': '🔄' }[type] || '📦';
+            return { 'course': '📚', 'package': '📦', 'subscription': '🔄', 'book': '📖', 'general': '🛍️' }[type] || '📦';
         },
         getStatusBadgeClass(status) {
             return {
