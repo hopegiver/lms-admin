@@ -34,7 +34,17 @@ export default {
             },
             availableContents: [],
             availableExams: [],
-            availableAssignments: []
+            availableAssignments: [],
+            certificateTemplates: [],
+            completionSettings: {
+                certificateTemplateId: null,
+                completionType: 'auto', // 'auto' or 'manual'
+                progressRequired: 100,
+                scoreRequired: 0,
+                requireAllLessons: true,
+                requireExams: false,
+                requireAssignments: false
+            }
         }
     },
     async mounted() {
@@ -138,6 +148,25 @@ export default {
                     { id: 3, title: '날씨 앱 프로젝트', dueDate: '14일', points: 150 },
                     { id: 4, title: '최종 포트폴리오 프로젝트', dueDate: '30일', points: 200 }
                 ];
+
+                // 수료증 템플릿 목록
+                this.certificateTemplates = [
+                    { id: 1, name: '기본 수료증', orientation: 'horizontal' },
+                    { id: 2, name: '프리미엄 수료증', orientation: 'horizontal' },
+                    { id: 3, name: '세로형 수료증', orientation: 'vertical' },
+                    { id: 4, name: '미니멀 수료증', orientation: 'horizontal' }
+                ];
+
+                // 수료 설정 (이 강좌의 현재 설정)
+                this.completionSettings = {
+                    certificateTemplateId: 1,
+                    completionType: 'auto',
+                    progressRequired: 100,
+                    scoreRequired: 70,
+                    requireAllLessons: true,
+                    requireExams: true,
+                    requireAssignments: false
+                };
             } catch (error) {
                 alert('강좌 정보를 불러오는데 실패했습니다.');
                 console.error(error);
@@ -548,6 +577,66 @@ export default {
                 'assignment': '📋'
             };
             return icons[contentType] || '';
+        },
+
+        // 수료 설정 저장
+        saveCompletionSettings() {
+            if (this.completionSettings.certificateTemplateId === null) {
+                alert('수료증 템플릿을 선택해주세요.');
+                return;
+            }
+
+            if (this.completionSettings.progressRequired < 0 || this.completionSettings.progressRequired > 100) {
+                alert('진도율은 0~100 사이의 값이어야 합니다.');
+                return;
+            }
+
+            if (this.completionSettings.scoreRequired < 0 || this.completionSettings.scoreRequired > 100) {
+                alert('총점은 0~100 사이의 값이어야 합니다.');
+                return;
+            }
+
+            // 실제로는 API 호출
+            alert('수료 설정이 저장되었습니다.');
+        },
+
+        // 총점 계산 로직 설명 모달 열기
+        showScoreCalculationInfo() {
+            const message = `총점 계산 방식:
+
+1. 시험 점수: 연동된 모든 시험의 평균 점수
+2. 과제 점수: 연동된 모든 과제의 평균 점수
+3. 최종 총점 = (시험 평균 × 0.6) + (과제 평균 × 0.4)
+
+예시:
+- 시험 3개: 80점, 90점, 70점 → 평균 80점
+- 과제 2개: 85점, 95점 → 평균 90점
+- 최종 총점 = (80 × 0.6) + (90 × 0.4) = 84점
+
+※ 시험/과제 비율은 설정에서 조정 가능합니다.`;
+            alert(message);
+        },
+
+        // 수료 처리 방식 설명 모달 열기
+        showCompletionProcessInfo() {
+            const message = `수료 처리 방식:
+
+[자동 수료]
+- 수료 기준(진도율, 총점)을 충족하면 자동으로 수료 처리
+- 수료번호 자동 생성 (형식: CERT-YYYY-XXXXXX)
+- 수료증 즉시 발급 가능
+
+[수동 수료]
+- 관리자가 수강 관리에서 수동으로 수료 처리
+- 기준 충족 여부와 관계없이 처리 가능
+- 수료번호 자동 생성
+- 특별한 경우에 사용 권장
+
+수료번호 예시:
+- CERT-2024-000001
+- CERT-2024-000002
+- ...`;
+            alert(message);
         }
     }
 }

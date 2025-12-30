@@ -1,0 +1,162 @@
+<div class="certificates-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">수료증 템플릿</h4>
+            <p class="text-muted mb-0">수료증 템플릿을 관리하고 강좌에 적용할 수 있습니다</p>
+        </div>
+        <button class="btn btn-primary" @click="createTemplate">
+            <span class="me-1">➕</span> 새 템플릿 만들기
+        </button>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">전체 템플릿</div>
+                            <div class="fs-4 fw-bold">{{ templates.length }}</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <span class="fs-4">🎓</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">사용 중</div>
+                            <div class="fs-4 fw-bold text-success">{{ templates.filter(t => t.usageCount > 0).length }}</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <span class="fs-4">✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">가로형</div>
+                            <div class="fs-4 fw-bold">{{ templates.filter(t => t.orientation === 'horizontal').length }}</div>
+                        </div>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                            <span class="fs-4">📄</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">세로형</div>
+                            <div class="fs-4 fw-bold">{{ templates.filter(t => t.orientation === 'vertical').length }}</div>
+                        </div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                            <span class="fs-4">📃</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 필터 & 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">🔍</span>
+                        <input type="text" class="form-control" placeholder="템플릿명 또는 설명 검색..." v-model="searchQuery">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" v-model="sortBy">
+                        <option value="newest">최신순</option>
+                        <option value="oldest">오래된순</option>
+                        <option value="name">이름순</option>
+                        <option value="usage">사용순</option>
+                    </select>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button class="btn btn-outline-secondary" @click="resetFilters">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 템플릿 카드 그리드 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4 col-xl-3" v-for="template in filteredTemplates" :key="template.id">
+            <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" @click="viewTemplate(template)">
+                <div class="position-absolute top-0 end-0 m-2">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" @click.stop>
+                            ⋮
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" @click.stop="viewTemplate(template)">👁️ 미리보기</a></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="editTemplate(template)">✏️ 수정</a></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="duplicateTemplate(template)">📋 복제</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#"
+                                   @click.stop="deleteTemplate(template)"
+                                   :class="{ disabled: template.usageCount > 0 }">🗑️ 삭제</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 템플릿 미리보기 영역 -->
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3 position-relative"
+                         :class="template.orientation === 'horizontal' ? 'ratio ratio-4x3' : 'ratio ratio-3x4'"
+                         :style="template.backgroundImage ? `background-image: url(${template.backgroundImage}); background-size: cover; background-position: center;` : ''">
+                        <div v-if="!template.backgroundImage" class="text-center">
+                            <span style="font-size: 3rem;">🎓</span>
+                            <div class="small text-muted mt-2">{{ getOrientationText(template.orientation) }}</div>
+                        </div>
+                        <div v-else class="position-absolute top-0 start-0 m-2">
+                            <span class="badge bg-dark bg-opacity-75">{{ getOrientationText(template.orientation) }}</span>
+                        </div>
+                    </div>
+
+                    <h6 class="card-title fw-bold mb-2">{{ template.name }}</h6>
+                    <p class="text-muted small mb-3" style="min-height: 40px;">{{ template.description }}</p>
+
+                    <div class="mb-3">
+                        <span class="badge bg-light text-dark me-1">{{ template.size }}</span>
+                        <span class="badge bg-light text-dark me-1">{{ template.fields.length }}개 필드</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">💼 {{ template.usageCount }}개 강좌</span>
+                        <span class="text-muted small">🕒 {{ template.updatedAt }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 빈 상태 -->
+    <div v-if="filteredTemplates.length === 0" class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <div class="mb-3" style="font-size: 4rem; opacity: 0.3;">🎓</div>
+            <h5 class="text-muted mb-3">검색 결과가 없습니다</h5>
+            <p class="text-muted mb-4">다른 검색어로 시도해보세요</p>
+            <button class="btn btn-outline-secondary" @click="resetFilters">필터 초기화</button>
+        </div>
+    </div>
+</div>

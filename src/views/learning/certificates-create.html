@@ -1,0 +1,273 @@
+<div class="certificates-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">{{ mode === 'create' ? '새 수료증 템플릿' : '수료증 템플릿 수정' }}</h4>
+            <p class="text-muted mb-0">수료증 템플릿을 디자인하고 필드를 배치합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="togglePreview">
+                <span class="me-1">👁️</span> {{ previewMode ? '편집 모드' : '미리보기' }}
+            </button>
+            <button class="btn btn-outline-secondary" @click="cancel">취소</button>
+            <button class="btn btn-primary" @click="save">
+                <span class="me-1">💾</span> {{ mode === 'create' ? '생성' : '수정' }}
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- 왼쪽: 설정 패널 -->
+        <div class="col-lg-4" v-if="!previewMode">
+            <!-- 기본 정보 -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">📋 기본 정보</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">템플릿 이름 *</label>
+                        <input type="text" class="form-control" v-model="form.name" placeholder="예: 기본 수료증">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">설명</label>
+                        <textarea class="form-control" v-model="form.description" rows="2" placeholder="템플릿 설명"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">용지 방향</label>
+                        <select class="form-select" v-model="form.orientation">
+                            <option value="horizontal">가로형 (Landscape)</option>
+                            <option value="vertical">세로형 (Portrait)</option>
+                        </select>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">용지 크기</label>
+                        <select class="form-select" v-model="form.size">
+                            <option value="A4">A4 (210 × 297 mm)</option>
+                            <option value="Letter">Letter (216 × 279 mm)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 디자인 설정 -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">🎨 디자인</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">배경 이미지</label>
+                        <div v-if="form.backgroundImage" class="mb-2">
+                            <img :src="form.backgroundImage" alt="Background" class="img-thumbnail w-100">
+                            <button class="btn btn-sm btn-outline-danger w-100 mt-2" @click="removeBackgroundImage">
+                                이미지 제거
+                            </button>
+                        </div>
+                        <button v-else class="btn btn-outline-secondary w-100" @click="uploadBackgroundImage">
+                            <span class="me-1">📁</span> 이미지 업로드
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">배경색</label>
+                        <input type="color" class="form-control form-control-color w-100" v-model="form.backgroundColor">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">테두리 스타일</label>
+                        <select class="form-select" v-model="form.borderStyle">
+                            <option value="none">없음</option>
+                            <option value="solid">실선</option>
+                            <option value="dashed">점선</option>
+                            <option value="dotted">점</option>
+                            <option value="double">이중선</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" v-if="form.borderStyle !== 'none'">
+                        <label class="form-label">테두리 색상</label>
+                        <input type="color" class="form-control form-control-color w-100" v-model="form.borderColor">
+                    </div>
+                    <div class="mb-0" v-if="form.borderStyle !== 'none'">
+                        <label class="form-label">테두리 두께 (px)</label>
+                        <input type="number" class="form-control" v-model.number="form.borderWidth" min="1" max="10">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 필드 추가 -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">➕ 필드 추가</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button v-for="field in availableFields" :key="field.type"
+                                class="btn btn-outline-primary btn-sm text-start"
+                                @click="addField(field)">
+                            <span class="me-2">{{ field.icon }}</span>{{ field.label }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 필드 상세 설정 -->
+            <div class="card border-0 shadow-sm" v-if="selectedField">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">⚙️ 필드 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">필드 타입</label>
+                        <input type="text" class="form-control" :value="selectedField.label" disabled>
+                    </div>
+                    <div class="mb-3" v-if="selectedField.type === 'text'">
+                        <label class="form-label">텍스트 내용</label>
+                        <input type="text" class="form-control" v-model="selectedField.customText" placeholder="표시할 텍스트">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">X 위치 (%)</label>
+                            <input type="number" class="form-control" v-model.number="selectedField.x" min="0" max="100">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Y 위치 (%)</label>
+                            <input type="number" class="form-control" v-model.number="selectedField.y" min="0" max="100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">글꼴 크기 (px)</label>
+                        <input type="number" class="form-control" v-model.number="selectedField.fontSize" min="8" max="72">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">글꼴 굵기</label>
+                        <select class="form-select" v-model="selectedField.fontWeight">
+                            <option value="normal">보통</option>
+                            <option value="bold">굵게</option>
+                        </select>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">글꼴 색상</label>
+                        <input type="color" class="form-control form-control-color w-100" v-model="selectedField.color">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽: 미리보기 및 필드 목록 -->
+        <div :class="previewMode ? 'col-12' : 'col-lg-8'">
+            <!-- 미리보기 캔버스 -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">🖼️ 미리보기</h6>
+                </div>
+                <div class="card-body p-4 bg-light">
+                    <div class="certificate-preview mx-auto"
+                         :class="form.orientation === 'horizontal' ? 'certificate-horizontal' : 'certificate-vertical'"
+                         :style="{
+                             backgroundColor: form.backgroundColor,
+                             borderStyle: form.borderStyle,
+                             borderColor: form.borderColor,
+                             borderWidth: form.borderWidth + 'px',
+                             backgroundImage: form.backgroundImage ? `url(${form.backgroundImage})` : 'none',
+                             backgroundSize: 'cover',
+                             backgroundPosition: 'center'
+                         }">
+                        <!-- 필드 표시 -->
+                        <div v-for="(field, index) in form.fields" :key="index"
+                             class="certificate-field"
+                             :class="{ 'certificate-field-selected': selectedField === field }"
+                             :style="{
+                                 left: field.x + '%',
+                                 top: field.y + '%',
+                                 fontSize: field.fontSize + 'px',
+                                 fontWeight: field.fontWeight,
+                                 color: field.color
+                             }"
+                             @click="selectField(field)">
+                            <span v-if="field.type === 'studentName'">홍길동</span>
+                            <span v-else-if="field.type === 'courseName'">Vue.js 완벽 마스터 과정</span>
+                            <span v-else-if="field.type === 'instructor'">김강사</span>
+                            <span v-else-if="field.type === 'completionDate'">2024년 3월 25일</span>
+                            <span v-else-if="field.type === 'certificateNumber'">CERT-2024-000001</span>
+                            <span v-else-if="field.type === 'issueDate'">2024년 3월 25일</span>
+                            <span v-else-if="field.type === 'organization'">한국온라인교육원</span>
+                            <span v-else-if="field.type === 'signature'">_______________</span>
+                            <span v-else-if="field.type === 'text'">{{ field.customText || '사용자 정의 텍스트' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 필드 목록 -->
+            <div class="card border-0 shadow-sm" v-if="!previewMode">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">📝 필드 목록 ({{ form.fields.length }}개)</h6>
+                </div>
+                <div class="card-body">
+                    <div v-if="form.fields.length === 0" class="text-center py-4 text-muted">
+                        좌측에서 필드를 추가해주세요
+                    </div>
+                    <div v-else class="list-group">
+                        <div v-for="(field, index) in form.fields" :key="index"
+                             class="list-group-item d-flex justify-content-between align-items-center"
+                             :class="{ 'active': selectedField === field }"
+                             @click="selectField(field)"
+                             style="cursor: pointer;">
+                            <div>
+                                <span class="me-2">{{ getFieldIcon(field.type) }}</span>
+                                <strong>{{ field.label }}</strong>
+                                <span class="text-muted small ms-2">
+                                    (X: {{ field.x }}%, Y: {{ field.y }}%, {{ field.fontSize }}px)
+                                </span>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-outline-secondary" @click.stop="moveFieldUp(index)" :disabled="index === 0">▲</button>
+                                <button class="btn btn-sm btn-outline-secondary" @click.stop="moveFieldDown(index)" :disabled="index === form.fields.length - 1">▼</button>
+                                <button class="btn btn-sm btn-outline-danger" @click.stop="removeField(index)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.certificate-preview {
+    position: relative;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.certificate-horizontal {
+    width: 100%;
+    max-width: 800px;
+    aspect-ratio: 297 / 210;
+}
+
+.certificate-vertical {
+    width: 100%;
+    max-width: 600px;
+    aspect-ratio: 210 / 297;
+}
+
+.certificate-field {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.certificate-field:hover {
+    background: rgba(13, 110, 253, 0.1);
+    outline: 2px solid rgba(13, 110, 253, 0.3);
+}
+
+.certificate-field-selected {
+    background: rgba(13, 110, 253, 0.15);
+    outline: 2px solid rgba(13, 110, 253, 0.5);
+}
+</style>

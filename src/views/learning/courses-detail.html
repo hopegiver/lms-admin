@@ -32,6 +32,9 @@
             <a class="nav-link" :class="{ active: currentTab === 'curriculum' }" href="#" @click.prevent="currentTab = 'curriculum'">커리큘럼</a>
         </li>
         <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'completion' }" href="#" @click.prevent="currentTab = 'completion'">수료 설정</a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" :class="{ active: currentTab === 'students' }" href="#" @click.prevent="currentTab = 'students'">수강생</a>
         </li>
         <li class="nav-item">
@@ -311,6 +314,167 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 수료 설정 탭 -->
+    <div v-if="currentTab === 'completion'">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">🎓 수료증 템플릿 선택</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label">수료증 템플릿 *</label>
+                        <select class="form-select" v-model="completionSettings.certificateTemplateId">
+                            <option :value="null">템플릿을 선택하세요</option>
+                            <option v-for="template in certificateTemplates" :key="template.id" :value="template.id">
+                                {{ template.name }} ({{ template.orientation === 'horizontal' ? '가로형' : '세로형' }})
+                            </option>
+                        </select>
+                        <div class="form-text">수료 시 발급될 수료증 템플릿을 선택합니다.</div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-outline-primary w-100" @click="navigateTo('/learning/certificates')">
+                            <span class="me-1">⚙️</span> 템플릿 관리
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">📋 수료 기준 설정</h5>
+                <button class="btn btn-sm btn-outline-info" @click="showScoreCalculationInfo">
+                    <span class="me-1">ℹ️</span> 총점 계산 방식
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">진도율 기준 (%)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" v-model.number="completionSettings.progressRequired" min="0" max="100">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="form-text">수료에 필요한 최소 진도율 (0~100)</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">총점 기준 (점)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" v-model.number="completionSettings.scoreRequired" min="0" max="100">
+                            <span class="input-group-text">점</span>
+                        </div>
+                        <div class="form-text">수료에 필요한 최소 총점 (0~100)</div>
+                    </div>
+                    <div class="col-12">
+                        <hr>
+                        <h6 class="mb-3">추가 수료 요건</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="requireAllLessons" v-model="completionSettings.requireAllLessons">
+                            <label class="form-check-label" for="requireAllLessons">
+                                모든 차시 수강 필수
+                            </label>
+                        </div>
+                        <div class="form-text small">모든 차시를 100% 수강해야 수료 가능</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="requireExams" v-model="completionSettings.requireExams">
+                            <label class="form-check-label" for="requireExams">
+                                시험 통과 필수
+                            </label>
+                        </div>
+                        <div class="form-text small">연동된 모든 시험을 통과해야 수료 가능</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="requireAssignments" v-model="completionSettings.requireAssignments">
+                            <label class="form-check-label" for="requireAssignments">
+                                과제 제출 필수
+                            </label>
+                        </div>
+                        <div class="form-text small">연동된 모든 과제를 제출해야 수료 가능</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">⚙️ 수료 처리 방식</h5>
+                <button class="btn btn-sm btn-outline-info" @click="showCompletionProcessInfo">
+                    <span class="me-1">ℹ️</span> 처리 방식 설명
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">수료 처리 방식</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" id="completionTypeAuto" value="auto" v-model="completionSettings.completionType">
+                            <label class="form-check-label" for="completionTypeAuto">
+                                <strong>자동 수료</strong>
+                                <div class="text-muted small">수료 기준을 충족하면 자동으로 수료 처리됩니다.</div>
+                            </label>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="radio" id="completionTypeManual" value="manual" v-model="completionSettings.completionType">
+                            <label class="form-check-label" for="completionTypeManual">
+                                <strong>수동 수료</strong>
+                                <div class="text-muted small">관리자가 수강 관리에서 수동으로 수료 처리합니다.</div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="alert alert-info mb-0">
+                            <strong>📌 수료번호 자동 생성</strong><br>
+                            수료 처리 시 수료번호가 자동으로 생성됩니다. (형식: CERT-YYYY-XXXXXX)<br>
+                            예시: CERT-2024-000001, CERT-2024-000002, ...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 현재 설정 요약 -->
+        <div class="card border-0 shadow-sm bg-light mb-4">
+            <div class="card-body">
+                <h6 class="mb-3">📊 현재 수료 기준 요약</h6>
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <div class="small text-muted">진도율</div>
+                        <div class="fw-bold">{{ completionSettings.progressRequired }}% 이상</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="small text-muted">총점</div>
+                        <div class="fw-bold">{{ completionSettings.scoreRequired }}점 이상</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="small text-muted">추가 요건</div>
+                        <div class="fw-bold">
+                            <span v-if="completionSettings.requireAllLessons">✓ 전체 수강 </span>
+                            <span v-if="completionSettings.requireExams">✓ 시험 </span>
+                            <span v-if="completionSettings.requireAssignments">✓ 과제 </span>
+                            <span v-if="!completionSettings.requireAllLessons && !completionSettings.requireExams && !completionSettings.requireAssignments">없음</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="small text-muted">처리 방식</div>
+                        <div class="fw-bold">{{ completionSettings.completionType === 'auto' ? '자동 수료' : '수동 수료' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end">
+            <button class="btn btn-primary" @click="saveCompletionSettings">
+                <span class="me-1">💾</span> 수료 설정 저장
+            </button>
         </div>
     </div>
 
