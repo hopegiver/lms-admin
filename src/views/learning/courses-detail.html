@@ -163,60 +163,6 @@
                     </div>
                 </div>
 
-                <!-- 차시 추가/수정 폼 -->
-                <div v-if="lessonFormVisible" class="card bg-info bg-opacity-10 border border-info mb-3">
-                    <div class="card-body">
-                        <h6 class="mb-3">{{ lessonFormMode === 'add' ? '새 차시 추가' : '차시 수정' }}</h6>
-                        <div class="row g-3">
-                            <div class="col-md-8">
-                                <label class="form-label">차시명 <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" v-model="lessonForm.title" placeholder="예) React Hooks 완벽 가이드">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">소요시간 <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" v-model="lessonForm.duration" placeholder="예) 25분">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">콘텐츠 타입</label>
-                                <select class="form-select" v-model="lessonForm.type">
-                                    <option value="video">동영상</option>
-                                    <option value="document">문서</option>
-                                    <option value="quiz">퀴즈</option>
-                                    <option value="assignment">과제</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">공개 여부</label>
-                                <select class="form-select" v-model="lessonForm.isPublic">
-                                    <option value="true">공개</option>
-                                    <option value="false">비공개</option>
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">설명</label>
-                                <textarea class="form-control" rows="2" v-model="lessonForm.description" placeholder="차시에 대한 간단한 설명"></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">콘텐츠 URL</label>
-                                <input type="text" class="form-control" v-model="lessonForm.contentUrl" placeholder="동영상 또는 문서 URL">
-                            </div>
-                            <div class="col-12">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" v-model="lessonForm.isFree" id="lessonIsFree">
-                                    <label class="form-check-label" for="lessonIsFree">
-                                        무료 미리보기 허용
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-end gap-2 mt-3">
-                            <button class="btn btn-outline-secondary btn-sm" @click="cancelLessonForm">취소</button>
-                            <button class="btn btn-primary btn-sm" @click="saveLessonForm">
-                                {{ lessonFormMode === 'add' ? '추가' : '수정' }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- 섹션 목록 -->
                 <div v-if="sections.length === 0" class="text-center text-muted py-5">
@@ -313,7 +259,10 @@
                                                             <span>⏱️ {{ lesson.duration }}</span>
                                                             <span v-if="lesson.description" class="ms-3">{{ lesson.description }}</span>
                                                         </div>
-                                                        <div v-if="lesson.contentUrl" class="small text-muted mt-1">
+                                                        <div v-if="lesson.contentId && lesson.contentType" class="small text-success mt-1">
+                                                            <span>{{ getContentTypeIcon(lesson.contentType) }} {{ getLinkedContentName(lesson) }}</span>
+                                                        </div>
+                                                        <div v-else-if="lesson.contentUrl" class="small text-muted mt-1">
                                                             <span>🔗 {{ lesson.contentUrl }}</span>
                                                         </div>
                                                     </div>
@@ -445,6 +394,111 @@
                     <div class="card-body">
                         <p class="text-muted">차트 영역 (추후 구현)</p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 차시 추가/수정 모달 -->
+    <div class="modal fade" id="lessonModal" tabindex="-1" v-if="lessonFormVisible">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ lessonFormMode === 'add' ? '새 차시 추가' : '차시 수정' }}</h5>
+                    <button type="button" class="btn-close" @click="cancelLessonForm"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">차시명 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="lessonForm.title" placeholder="예) React Hooks 완벽 가이드">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">소요시간 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="lessonForm.duration" placeholder="예) 25분">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">콘텐츠 타입</label>
+                            <select class="form-select" v-model="lessonForm.type">
+                                <option value="video">동영상</option>
+                                <option value="document">문서</option>
+                                <option value="quiz">퀴즈</option>
+                                <option value="assignment">과제</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">공개 여부</label>
+                            <select class="form-select" v-model="lessonForm.isPublic">
+                                <option value="true">공개</option>
+                                <option value="false">비공개</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="lessonForm.isFree" id="lessonIsFree">
+                                <label class="form-check-label" for="lessonIsFree">
+                                    무료 미리보기 허용
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">설명</label>
+                            <textarea class="form-control" rows="2" v-model="lessonForm.description" placeholder="차시에 대한 간단한 설명"></textarea>
+                        </div>
+
+                        <!-- 콘텐츠 연동 섹션 -->
+                        <div class="col-12">
+                            <hr>
+                            <h6 class="mb-3">콘텐츠 연동</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">연동 타입</label>
+                            <select class="form-select" v-model="lessonForm.contentType">
+                                <option :value="null">연동 안함 (외부 URL 사용)</option>
+                                <option value="content">콘텐츠</option>
+                                <option value="exam">시험</option>
+                                <option value="assignment">과제</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" v-if="lessonForm.contentType === 'content'">
+                            <label class="form-label">콘텐츠 선택</label>
+                            <select class="form-select" v-model="lessonForm.contentId">
+                                <option :value="null">선택하세요</option>
+                                <option v-for="content in availableContents" :key="content.id" :value="content.id">
+                                    {{ content.title }} ({{ content.type }}, {{ content.duration }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" v-if="lessonForm.contentType === 'exam'">
+                            <label class="form-label">시험 선택</label>
+                            <select class="form-select" v-model="lessonForm.contentId">
+                                <option :value="null">선택하세요</option>
+                                <option v-for="exam in availableExams" :key="exam.id" :value="exam.id">
+                                    {{ exam.title }} ({{ exam.questionCount }}문항, {{ exam.timeLimit }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" v-if="lessonForm.contentType === 'assignment'">
+                            <label class="form-label">과제 선택</label>
+                            <select class="form-select" v-model="lessonForm.contentId">
+                                <option :value="null">선택하세요</option>
+                                <option v-for="assignment in availableAssignments" :key="assignment.id" :value="assignment.id">
+                                    {{ assignment.title }} ({{ assignment.dueDate }}, {{ assignment.points }}점)
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-12" v-if="!lessonForm.contentType">
+                            <label class="form-label">외부 콘텐츠 URL</label>
+                            <input type="text" class="form-control" v-model="lessonForm.contentUrl" placeholder="동영상 또는 문서 URL">
+                            <div class="form-text">콘텐츠를 연동하지 않는 경우 외부 URL을 입력하세요.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @click="cancelLessonForm">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveLessonForm">
+                        {{ lessonFormMode === 'add' ? '추가' : '수정' }}
+                    </button>
                 </div>
             </div>
         </div>

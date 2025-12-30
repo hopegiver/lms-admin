@@ -28,8 +28,13 @@ export default {
                 isPublic: 'true',
                 description: '',
                 contentUrl: '',
-                isFree: false
-            }
+                isFree: false,
+                contentId: null,
+                contentType: null // 'content', 'exam', 'assignment'
+            },
+            availableContents: [],
+            availableExams: [],
+            availableAssignments: []
         }
     },
     async mounted() {
@@ -107,6 +112,31 @@ export default {
                     { id: 1, author: '홍길동', rating: 5, content: '정말 좋은 강의입니다!', date: '2024-12-20' },
                     { id: 2, author: '김철수', rating: 4, content: '설명이 자세해서 좋아요.', date: '2024-12-18' },
                     { id: 3, author: '이영희', rating: 5, content: '초보자도 따라하기 쉬워요.', date: '2024-12-15' }
+                ];
+
+                // 콘텐츠 목록
+                this.availableContents = [
+                    { id: 1, title: 'React 개요 영상', type: 'video', duration: '15분' },
+                    { id: 2, title: 'JSX 문법 설명 영상', type: 'video', duration: '20분' },
+                    { id: 3, title: 'React 공식 문서', type: 'document', duration: '10분' },
+                    { id: 4, title: 'Props와 State 영상', type: 'video', duration: '25분' },
+                    { id: 5, title: 'Hooks 가이드 영상', type: 'video', duration: '40분' }
+                ];
+
+                // 시험 목록
+                this.availableExams = [
+                    { id: 1, title: 'React 기초 이해도 테스트', questionCount: 10, timeLimit: '20분' },
+                    { id: 2, title: 'JSX 문법 퀴즈', questionCount: 5, timeLimit: '10분' },
+                    { id: 3, title: 'Hooks 활용 평가', questionCount: 15, timeLimit: '30분' },
+                    { id: 4, title: '최종 평가 시험', questionCount: 20, timeLimit: '40분' }
+                ];
+
+                // 과제 목록
+                this.availableAssignments = [
+                    { id: 1, title: 'TODO 앱 만들기', dueDate: '7일', points: 100 },
+                    { id: 2, title: '계산기 구현', dueDate: '5일', points: 80 },
+                    { id: 3, title: '날씨 앱 프로젝트', dueDate: '14일', points: 150 },
+                    { id: 4, title: '최종 포트폴리오 프로젝트', dueDate: '30일', points: 200 }
                 ];
             } catch (error) {
                 alert('강좌 정보를 불러오는데 실패했습니다.');
@@ -260,9 +290,16 @@ export default {
                 isPublic: 'true',
                 description: '',
                 contentUrl: '',
-                isFree: false
+                isFree: false,
+                contentId: null,
+                contentType: null
             };
             this.lessonFormVisible = true;
+            // Bootstrap 모달 열기
+            setTimeout(() => {
+                const modal = new bootstrap.Modal(document.getElementById('lessonModal'));
+                modal.show();
+            }, 100);
         },
 
         editLesson(sectionId, lesson) {
@@ -276,12 +313,28 @@ export default {
                 isPublic: lesson.isPublic ? 'true' : 'false',
                 description: lesson.description || '',
                 contentUrl: lesson.contentUrl || '',
-                isFree: lesson.isFree || false
+                isFree: lesson.isFree || false,
+                contentId: lesson.contentId || null,
+                contentType: lesson.contentType || null
             };
             this.lessonFormVisible = true;
+            // Bootstrap 모달 열기
+            setTimeout(() => {
+                const modal = new bootstrap.Modal(document.getElementById('lessonModal'));
+                modal.show();
+            }, 100);
         },
 
         cancelLessonForm() {
+            // Bootstrap 모달 닫기
+            const modalElement = document.getElementById('lessonModal');
+            if (modalElement) {
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+            }
+
             this.lessonFormVisible = false;
             this.lessonForm = {
                 id: null,
@@ -291,7 +344,9 @@ export default {
                 isPublic: 'true',
                 description: '',
                 contentUrl: '',
-                isFree: false
+                isFree: false,
+                contentId: null,
+                contentType: null
             };
         },
 
@@ -330,7 +385,9 @@ export default {
                     isPublic: this.lessonForm.isPublic === 'true',
                     description: this.lessonForm.description,
                     contentUrl: this.lessonForm.contentUrl,
-                    isFree: this.lessonForm.isFree
+                    isFree: this.lessonForm.isFree,
+                    contentId: this.lessonForm.contentId,
+                    contentType: this.lessonForm.contentType
                 });
                 alert('차시가 추가되었습니다.');
             } else {
@@ -345,7 +402,9 @@ export default {
                         isPublic: this.lessonForm.isPublic === 'true',
                         description: this.lessonForm.description,
                         contentUrl: this.lessonForm.contentUrl,
-                        isFree: this.lessonForm.isFree
+                        isFree: this.lessonForm.isFree,
+                        contentId: this.lessonForm.contentId,
+                        contentType: this.lessonForm.contentType
                     };
                     alert('차시가 수정되었습니다.');
                 }
@@ -464,6 +523,31 @@ export default {
                 });
             }
             return `${totalMinutes}분`;
+        },
+
+        getLinkedContentName(lesson) {
+            if (!lesson.contentId || !lesson.contentType) return null;
+
+            if (lesson.contentType === 'content') {
+                const content = this.availableContents.find(c => c.id === lesson.contentId);
+                return content ? content.title : null;
+            } else if (lesson.contentType === 'exam') {
+                const exam = this.availableExams.find(e => e.id === lesson.contentId);
+                return exam ? exam.title : null;
+            } else if (lesson.contentType === 'assignment') {
+                const assignment = this.availableAssignments.find(a => a.id === lesson.contentId);
+                return assignment ? assignment.title : null;
+            }
+            return null;
+        },
+
+        getContentTypeIcon(contentType) {
+            const icons = {
+                'content': '🎬',
+                'exam': '📝',
+                'assignment': '📋'
+            };
+            return icons[contentType] || '';
         }
     }
 }
