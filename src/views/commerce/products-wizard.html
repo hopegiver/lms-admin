@@ -1,0 +1,557 @@
+<div class="products-wizard-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">🪄 상품 간편 등록</h4>
+            <p class="text-muted mb-0">단계별로 안내에 따라 상품을 쉽게 등록하세요</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary me-2" @click="saveDraft">💾 임시 저장</button>
+            <button class="btn btn-outline-danger" @click="cancel">✕ 취소</button>
+        </div>
+    </div>
+
+    <!-- 진행 상황 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar" :style="{ width: progressPercentage + '%' }"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-3">
+                <div v-for="step in totalSteps" :key="step"
+                     class="wizard-step-indicator text-center"
+                     :class="{ 'active': step === currentStep, 'completed': step < currentStep }"
+                     @click="goToStep(step)"
+                     style="cursor: pointer; flex: 1;">
+                    <div class="step-number mb-1" style="font-size: 1.5rem;">{{ getStepIcon(step) }}</div>
+                    <div class="step-label small">{{ getStepTitle(step) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1단계: 기본 정보 -->
+    <div v-if="currentStep === 1" class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-4">📋 기본 정보</h5>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label class="form-label">상품명 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="basicInfo.name"
+                               placeholder="예: 프리미엄 무선 이어폰">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">카테고리 <span class="text-danger">*</span></label>
+                        <select class="form-select" v-model="basicInfo.category">
+                            <option value="">선택하세요</option>
+                            <option v-for="cat in categories" :key="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">간단한 설명</label>
+                        <input type="text" class="form-control" v-model="basicInfo.shortDescription"
+                               placeholder="한 줄로 상품을 설명하세요">
+                        <div class="form-text">상품 목록에 표시될 짧은 설명입니다</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">상세 설명 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" rows="6" v-model="basicInfo.description"
+                                  placeholder="상품의 특징, 장점, 사용 방법 등을 자세히 설명하세요"></textarea>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">대표 이미지</label>
+                        <div v-if="basicInfo.thumbnail" class="mb-2">
+                            <img :src="basicInfo.thumbnail" class="img-fluid rounded" alt="썸네일">
+                            <button class="btn btn-sm btn-outline-danger mt-2 w-100" @click="removeThumbnail">삭제</button>
+                        </div>
+                        <button v-else class="btn btn-outline-primary w-100" @click="uploadThumbnail">
+                            📷 이미지 업로드
+                        </button>
+                        <div class="form-text">권장 크기: 800x800px</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">추가 이미지</label>
+                        <div v-if="basicInfo.images.length > 0" class="mb-2">
+                            <div v-for="(img, idx) in basicInfo.images" :key="idx" class="d-flex align-items-center mb-2">
+                                <img :src="img" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                <button class="btn btn-sm btn-outline-danger ms-2" @click="removeImage(idx)">삭제</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-secondary w-100" @click="uploadImages">
+                            ➕ 이미지 추가
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2단계: 가격 설정 -->
+    <div v-if="currentStep === 2" class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-4">💰 가격 설정</h5>
+
+            <div class="mb-4">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="pricing.hasOptions" id="hasOptions">
+                    <label class="form-check-label" for="hasOptions">
+                        이 상품은 옵션이 있습니다 (예: 색상, 사이즈 등)
+                    </label>
+                </div>
+            </div>
+
+            <div v-if="!pricing.hasOptions">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">정가 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" v-model="pricing.basePrice" min="0" step="100">
+                                <span class="input-group-text">원</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">판매가 (할인가)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" v-model="pricing.salePrice" min="0" step="100">
+                                <span class="input-group-text">원</span>
+                            </div>
+                            <div v-if="discountPercentage > 0" class="form-text text-danger">
+                                {{ discountPercentage }}% 할인
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">판매 시작일</label>
+                            <input type="date" class="form-control" v-model="pricing.salesStart">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">판매 종료일</label>
+                            <input type="date" class="form-control" v-model="pricing.salesEnd">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" v-model="pricing.taxable" id="taxable">
+                        <label class="form-check-label" for="taxable">
+                            부가세 포함
+                        </label>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>최종 판매가:</strong> {{ formatPrice(totalPrice) }}원
+                </div>
+            </div>
+
+            <div v-else>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">상품 옵션</h6>
+                    <button class="btn btn-sm btn-primary" @click="showAddOptionForm">➕ 옵션 추가</button>
+                </div>
+
+                <div v-if="pricing.options.length === 0" class="alert alert-warning">
+                    옵션을 추가해주세요. (예: 색상, 사이즈, 용량 등)
+                </div>
+
+                <div v-else class="mb-3">
+                    <div v-for="(option, idx) in pricing.options" :key="idx" class="card border mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ option.name }}</h6>
+                                    <p class="small text-muted mb-1">{{ option.values.join(', ') }}</p>
+                                    <span v-if="option.priceModifier !== 0" class="badge bg-info">
+                                        {{ option.priceModifier > 0 ? '+' : '' }}{{ formatPrice(option.priceModifier) }}원
+                                    </span>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-secondary me-1" @click="editOption(idx)">수정</button>
+                                    <button class="btn btn-sm btn-outline-danger" @click="deleteOption(idx)">삭제</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 옵션 추가/수정 폼 -->
+                <div v-if="showOptionForm" class="card border-primary">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ editingOptionIndex !== null ? '옵션 수정' : '옵션 추가' }}</h6>
+                        <div class="mb-3">
+                            <label class="form-label">옵션명</label>
+                            <input type="text" class="form-control" v-model="tempOptionForm.name"
+                                   placeholder="예: 색상, 사이즈">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">옵션값 (쉼표로 구분)</label>
+                            <input type="text" class="form-control" v-model="tempOptionForm.values"
+                                   placeholder="예: 빨강, 파랑, 검정">
+                            <div class="form-text">쉼표(,)로 구분하여 입력하세요</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">가격 변동</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" v-model="tempOptionForm.priceModifier" step="100">
+                                <span class="input-group-text">원</span>
+                            </div>
+                            <div class="form-text">추가 금액(+) 또는 할인 금액(-)</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" @click="saveOptionForm">저장</button>
+                            <button class="btn btn-secondary" @click="cancelOptionForm">취소</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3단계: 재고 관리 -->
+    <div v-if="currentStep === 3" class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-4">📦 재고 관리</h5>
+
+            <div class="mb-4">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="inventory.trackInventory" id="trackInventory">
+                    <label class="form-check-label" for="trackInventory">
+                        재고 추적
+                    </label>
+                </div>
+                <div class="form-text">재고가 소진되면 자동으로 품절 처리됩니다</div>
+            </div>
+
+            <div v-if="inventory.trackInventory">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">SKU (상품 코드) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="inventory.sku"
+                                   placeholder="예: PROD-2024-001">
+                            <div class="form-text">고유한 상품 식별 코드</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">재고 수량 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" v-model="inventory.stock" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">재고 부족 알림 기준</label>
+                            <input type="number" class="form-control" v-model="inventory.lowStockThreshold" min="0">
+                            <div class="form-text">이 수량 이하로 떨어지면 알림</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">품절 시 예약 주문</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" v-model="inventory.allowBackorder" id="allowBackorder">
+                                <label class="form-check-label" for="allowBackorder">
+                                    허용
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">최소 구매 수량</label>
+                            <input type="number" class="form-control" v-model="inventory.minPurchaseQty" min="1">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">최대 구매 수량</label>
+                            <input type="number" class="form-control" v-model="inventory.maxPurchaseQty" min="1">
+                            <div class="form-text">비워두면 제한 없음</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="alert alert-info">
+                재고 추적을 하지 않습니다. 상품은 항상 구매 가능합니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- 4단계: 배송 설정 -->
+    <div v-if="currentStep === 4" class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-4">🚚 배송 설정</h5>
+
+            <div class="mb-4">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="shipping.requiresShipping" id="requiresShipping">
+                    <label class="form-check-label" for="requiresShipping">
+                        배송이 필요한 상품입니다
+                    </label>
+                </div>
+                <div class="form-text">디지털 상품이나 서비스는 체크 해제하세요</div>
+            </div>
+
+            <div v-if="shipping.requiresShipping">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">무게 (kg) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" v-model="shipping.weight" min="0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">배송 방법 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="shipping.shippingClass">
+                                <option v-for="sc in shippingClasses" :key="sc.value" :value="sc.value">
+                                    {{ sc.label }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">상품 크기 (cm)</label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="number" class="form-control" v-model="shipping.dimensions.length"
+                                   placeholder="길이" min="0" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="number" class="form-control" v-model="shipping.dimensions.width"
+                                   placeholder="너비" min="0" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="number" class="form-control" v-model="shipping.dimensions.height"
+                                   placeholder="높이" min="0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" v-model="shipping.freeShipping" id="freeShipping">
+                        <label class="form-check-label" for="freeShipping">
+                            무료 배송
+                        </label>
+                    </div>
+                </div>
+
+                <div v-if="!shipping.freeShipping" class="mb-3">
+                    <label class="form-label">배송비</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" v-model="shipping.shippingFee" min="0" step="100">
+                        <span class="input-group-text">원</span>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="alert alert-info">
+                배송이 필요하지 않은 상품입니다. (디지털 상품/서비스)
+            </div>
+        </div>
+    </div>
+
+    <!-- 5단계: SEO 설정 -->
+    <div v-if="currentStep === 5" class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-4">🔍 SEO 설정</h5>
+
+            <div class="mb-3">
+                <label class="form-label">URL 슬러그 <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text">/products/</span>
+                    <input type="text" class="form-control" v-model="seo.slug">
+                    <button class="btn btn-outline-secondary" @click="regenerateSlug">자동 생성</button>
+                </div>
+                <div class="form-text">검색엔진 친화적인 URL 주소</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">메타 제목 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" v-model="seo.metaTitle" maxlength="60">
+                <div class="form-text">{{ seo.metaTitle.length }}/60자 (검색 결과에 표시될 제목)</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">메타 설명</label>
+                <textarea class="form-control" rows="3" v-model="seo.metaDescription" maxlength="160"></textarea>
+                <div class="form-text">{{ seo.metaDescription.length }}/160자 (검색 결과에 표시될 설명)</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">메타 키워드</label>
+                <input type="text" class="form-control" v-model="seo.metaKeywords"
+                       placeholder="키워드1, 키워드2, 키워드3">
+                <div class="form-text">쉼표(,)로 구분하여 입력</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">OG 이미지 (소셜 미디어 공유용)</label>
+                <div v-if="seo.ogImage" class="mb-2">
+                    <img :src="seo.ogImage" class="img-fluid rounded" style="max-width: 300px;" alt="OG 이미지">
+                    <button class="btn btn-sm btn-outline-danger mt-2" @click="seo.ogImage = null">삭제</button>
+                </div>
+                <button v-else class="btn btn-outline-secondary" @click="alert('OG 이미지 업로드 기능은 추후 구현됩니다.')">
+                    📷 이미지 업로드
+                </button>
+                <div class="form-text">권장 크기: 1200x630px</div>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>미리보기</strong><br>
+                <div class="mt-2 p-3 bg-white rounded border">
+                    <div class="text-primary small">{{ seo.slug || 'product-slug' }}</div>
+                    <div class="fw-bold text-primary">{{ seo.metaTitle || '상품 제목' }}</div>
+                    <div class="text-muted small">{{ seo.metaDescription || '상품 설명이 여기에 표시됩니다.' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6단계: 최종 검토 -->
+    <div v-if="currentStep === 6" class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-4">✅ 최종 검토</h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3">📋 기본 정보</h6>
+                    <table class="table table-sm">
+                        <tr><th>상품명:</th><td>{{ basicInfo.name }}</td></tr>
+                        <tr><th>카테고리:</th><td>{{ basicInfo.category }}</td></tr>
+                        <tr><th>설명:</th><td>{{ basicInfo.description.substring(0, 100) }}...</td></tr>
+                    </table>
+
+                    <h6 class="mb-3 mt-4">💰 가격</h6>
+                    <table class="table table-sm">
+                        <tr v-if="!pricing.hasOptions">
+                            <th>정가:</th><td>{{ formatPrice(pricing.basePrice) }}원</td>
+                        </tr>
+                        <tr v-if="!pricing.hasOptions && pricing.salePrice">
+                            <th>판매가:</th><td class="text-danger">{{ formatPrice(pricing.salePrice) }}원</td>
+                        </tr>
+                        <tr v-if="pricing.hasOptions">
+                            <th>옵션:</th><td>{{ pricing.options.length }}개</td>
+                        </tr>
+                    </table>
+
+                    <h6 class="mb-3 mt-4">📦 재고</h6>
+                    <table class="table table-sm">
+                        <tr><th>재고 추적:</th><td>{{ inventory.trackInventory ? '예' : '아니오' }}</td></tr>
+                        <tr v-if="inventory.trackInventory">
+                            <th>SKU:</th><td>{{ inventory.sku }}</td>
+                        </tr>
+                        <tr v-if="inventory.trackInventory">
+                            <th>재고:</th><td>{{ inventory.stock }}개</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="col-md-6">
+                    <h6 class="mb-3">🚚 배송</h6>
+                    <table class="table table-sm">
+                        <tr><th>배송 필요:</th><td>{{ shipping.requiresShipping ? '예' : '아니오' }}</td></tr>
+                        <tr v-if="shipping.requiresShipping">
+                            <th>무게:</th><td>{{ shipping.weight }}kg</td>
+                        </tr>
+                        <tr v-if="shipping.requiresShipping">
+                            <th>배송비:</th><td>{{ shipping.freeShipping ? '무료' : formatPrice(shipping.shippingFee) + '원' }}</td>
+                        </tr>
+                    </table>
+
+                    <h6 class="mb-3 mt-4">🔍 SEO</h6>
+                    <table class="table table-sm">
+                        <tr><th>URL:</th><td>/products/{{ seo.slug }}</td></tr>
+                        <tr><th>메타 제목:</th><td>{{ seo.metaTitle }}</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" v-model="publishImmediately" id="publishImmediately">
+                <label class="form-check-label" for="publishImmediately">
+                    <strong>즉시 발행</strong> (체크 해제 시 임시 저장)
+                </label>
+            </div>
+
+            <div class="alert alert-warning mt-3">
+                <strong>주의:</strong> 모든 정보를 확인하셨나요? 발행 후에도 수정할 수 있습니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- 네비게이션 버튼 -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-outline-secondary" @click="prevStep" :disabled="currentStep === 1">
+                    ← 이전
+                </button>
+                <div>
+                    <button v-if="canSkipCurrentStep" class="btn btn-outline-secondary me-2" @click="skipStep">
+                        건너뛰기
+                    </button>
+                    <button v-if="currentStep < totalSteps" class="btn btn-primary" @click="nextStep" :disabled="!canProceed">
+                        다음 →
+                    </button>
+                    <button v-if="currentStep === totalSteps" class="btn btn-success" @click="completeProduct" :disabled="!canProceed">
+                        🎉 완료
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.wizard-step-indicator {
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+.wizard-step-indicator:hover {
+    background-color: #f8f9fa;
+}
+.wizard-step-indicator.active {
+    background-color: #0d6efd;
+    color: white;
+}
+.wizard-step-indicator.completed {
+    opacity: 0.6;
+}
+.wizard-step-indicator.active .step-number,
+.wizard-step-indicator.active .step-label {
+    color: white;
+}
+</style>

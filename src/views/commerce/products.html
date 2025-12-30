@@ -9,9 +9,28 @@
             <button class="btn btn-outline-secondary" @click="openCategoryModal">
                 <span class="me-1">📁</span> 카테고리
             </button>
-            <button class="btn btn-primary" @click="openCreateModal">
-                <span class="me-1">➕</span> 상품 등록
-            </button>
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <span class="me-1">➕</span> 상품 등록
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <button class="dropdown-item" type="button" @click="navigateTo('/commerce/products-wizard')">
+                            <span class="me-2">🪄</span>
+                            <strong>간편 등록</strong>
+                            <div class="small text-muted">단계별 마법사로 쉽게 등록 (추천)</div>
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <button class="dropdown-item" type="button" @click="openCreateModal">
+                            <span class="me-2">⚙️</span>
+                            <strong>직접 등록</strong>
+                            <div class="small text-muted">고급 사용자용</div>
+                        </button>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
