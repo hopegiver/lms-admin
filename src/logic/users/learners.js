@@ -139,10 +139,7 @@ export default {
             }
         },
         viewDetail(learner) {
-            this.selectedLearner = learner;
-            this.detailTab = 'info';
-            const offcanvas = new bootstrap.Offcanvas(document.getElementById('learnerDetailPanel'));
-            offcanvas.show();
+            this.navigateTo('/users/learners-detail', { id: learner.id });
         },
         editLearner(learner) {
             alert(`${learner.name} 수정 기능은 추후 구현 예정입니다.`);
@@ -153,7 +150,7 @@ export default {
             }
         },
         openCreateModal() {
-            alert('학습자 등록 모달은 추후 구현 예정입니다.');
+            this.navigateTo('/users/learners-create');
         },
         openImportModal() {
             alert('일괄 등록 모달은 추후 구현 예정입니다.');

@@ -1,0 +1,268 @@
+<div class="courses-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/learning/courses')" class="text-muted">
+                    ← 강좌 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ course?.title }}</h4>
+            <p class="text-muted mb-0">강좌 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="preview">
+                👁️ 미리보기
+            </button>
+            <button class="btn btn-outline-secondary" @click="edit">
+                ✏️ 수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteCourse">
+                🗑️ 삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'curriculum' }" href="#" @click.prevent="currentTab = 'curriculum'">커리큘럼</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'students' }" href="#" @click.prevent="currentTab = 'students'">수강생</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'reviews' }" href="#" @click.prevent="currentTab = 'reviews'">리뷰</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'stats' }" href="#" @click.prevent="currentTab = 'stats'">통계</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && course">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">강좌 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12" v-if="course.thumbnail">
+                                <img :src="course.thumbnail" class="img-fluid rounded" style="max-height: 300px;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">강좌명</label>
+                                <div class="fw-medium">{{ course.title }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">카테고리</label>
+                                <div class="fw-medium">{{ course.category }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">강사</label>
+                                <div class="fw-medium">{{ course.instructor }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">난이도</label>
+                                <div class="fw-medium">{{ getLevelText(course.level) }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">총 차시</label>
+                                <div class="fw-medium">{{ course.lessons }}개</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">총 시간</label>
+                                <div class="fw-medium">{{ course.duration }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(course.status)">
+                                        {{ getStatusText(course.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">설명</label>
+                                <div class="fw-medium">{{ course.description }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">가격 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">정가</label>
+                                <div class="fw-medium">{{ course.price }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">판매가</label>
+                                <div class="fw-medium text-primary fs-5">{{ course.salePrice || course.price }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">강좌 통계</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 수강생</span>
+                                <span class="fw-bold fs-5">{{ course.students }}명</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">평균 평점</span>
+                                <span class="fw-bold fs-5">
+                                    <span class="text-warning">★</span> {{ course.rating }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">리뷰 수</span>
+                                <span class="fw-bold">{{ course.reviewCount }}개</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 매출</span>
+                                <span class="fw-bold">₩12,350,000</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">평균 진도율</span>
+                                <span class="fw-bold">68%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 커리큘럼 탭 -->
+    <div v-if="currentTab === 'curriculum'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">커리큘럼</h5>
+                <button class="btn btn-sm btn-primary" @click="addLesson">
+                    ➕ 차시 추가
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item" v-for="(lesson, index) in curriculum" :key="lesson.id">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-light text-dark me-2">{{ index + 1 }}</span>
+                                <span class="fw-medium">{{ lesson.title }}</span>
+                                <small class="text-muted ms-2">{{ lesson.duration }}</small>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-secondary" @click="editLesson(lesson)">수정</button>
+                                <button class="btn btn-sm btn-outline-danger" @click="deleteLesson(lesson)">삭제</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수강생 탭 -->
+    <div v-if="currentTab === 'students'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>이름</th>
+                                <th>이메일</th>
+                                <th class="text-center">진도율</th>
+                                <th>등록일</th>
+                                <th class="text-center">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="student in students" :key="student.id">
+                                <td>{{ student.name }}</td>
+                                <td>{{ student.email }}</td>
+                                <td class="text-center">
+                                    <div class="progress" style="height: 8px; width: 100px; margin: 0 auto;">
+                                        <div class="progress-bar" :style="{ width: student.progress + '%' }"></div>
+                                    </div>
+                                    <small class="text-muted">{{ student.progress }}%</small>
+                                </td>
+                                <td>{{ student.enrolledAt }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="student.progress === 100 ? 'bg-success' : 'bg-primary'">
+                                        {{ student.progress === 100 ? '완료' : '진행중' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 리뷰 탭 -->
+    <div v-if="currentTab === 'reviews'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0" v-for="review in reviews" :key="review.id">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <span class="fw-medium">{{ review.author }}</span>
+                                <span class="ms-2 text-warning">{{ '★'.repeat(review.rating) }}</span>
+                            </div>
+                            <small class="text-muted">{{ review.date }}</small>
+                        </div>
+                        <p class="mb-0 text-muted">{{ review.content }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 통계 탭 -->
+    <div v-if="currentTab === 'stats'">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">수강생 증가 추이</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">차트 영역 (추후 구현)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">진도율 분포</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">차트 영역 (추후 구현)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

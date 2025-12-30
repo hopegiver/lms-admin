@@ -52,9 +52,9 @@ export default {
         toggleSelectAll() {
             this.selectedIds = this.selectAll ? this.courses.map(c => c.id) : [];
         },
-        openCreateWizard() { alert('강좌 생성 Wizard는 추후 구현 예정입니다.'); },
+        openCreateWizard() { this.navigateTo('/learning/courses-create'); },
         openCategoryModal() { alert('카테고리 관리 모달은 추후 구현 예정입니다.'); },
-        editCourse(course) { alert(`${course.title} 수정 기능은 추후 구현 예정입니다.`); },
+        editCourse(course) { this.navigateTo('/learning/courses-detail', { id: course.id }); },
         manageCurriculum(course) { this.navigateTo('/learning/curriculum', { courseId: course.id }); },
         copyCourse(course) { alert(`${course.title} 복사 기능은 추후 구현 예정입니다.`); },
         previewCourse(course) { alert(`${course.title} 미리보기 기능은 추후 구현 예정입니다.`); },
