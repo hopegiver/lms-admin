@@ -5,9 +5,50 @@
             <h4 class="mb-1">콘텐츠</h4>
             <p class="text-muted mb-0">미디어 라이브러리를 관리합니다</p>
         </div>
-        <button class="btn btn-primary" @click="openUploadModal">
-            <span class="me-1">📤</span> 업로드
-        </button>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <span class="me-1">➕</span> 콘텐츠 추가
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <button class="dropdown-item" type="button" @click="openUploadModal">
+                        <span class="me-2">📤</span>
+                        <strong>파일 업로드</strong>
+                        <div class="small text-muted">동영상, 문서, 이미지 파일 업로드</div>
+                    </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item" type="button" @click="openYoutubeModal">
+                        <span class="me-2">📺</span>
+                        <strong>YouTube 동영상</strong>
+                        <div class="small text-muted">YouTube URL로 동영상 가져오기</div>
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" type="button" @click="openVimeoModal">
+                        <span class="me-2">🎬</span>
+                        <strong>Vimeo 동영상</strong>
+                        <div class="small text-muted">Vimeo URL로 동영상 가져오기</div>
+                    </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item" type="button" @click="openYoutubeBatchModal">
+                        <span class="me-2">📺</span>
+                        <strong>YouTube 일괄 가져오기</strong>
+                        <div class="small text-muted">재생목록/채널에서 여러 동영상 가져오기</div>
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" type="button" @click="openVimeoBatchModal">
+                        <span class="me-2">🎬</span>
+                        <strong>Vimeo 일괄 가져오기</strong>
+                        <div class="small text-muted">쇼케이스/앨범에서 여러 동영상 가져오기</div>
+                    </button>
+                </li>
+            </ul>
+        </div>
     </div>
 
     <!-- 통계 -->
@@ -201,6 +242,349 @@
                 <li class="page-item"><a class="page-link" href="#">다음</a></li>
             </ul>
         </nav>
+    </div>
+
+    <!-- YouTube 단일 가져오기 모달 -->
+    <div class="modal fade" id="youtubeModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📺 YouTube 동영상 가져오기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">YouTube URL</label>
+                        <input type="text" class="form-control" v-model="youtubeForm.url"
+                               placeholder="https://www.youtube.com/watch?v=..."
+                               @input="debounceYoutubeExtract">
+                        <div class="form-text">동영상 URL을 입력하면 자동으로 정보를 가져옵니다</div>
+                    </div>
+
+                    <div v-if="youtubeForm.loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">동영상 정보를 가져오는 중...</p>
+                    </div>
+
+                    <div v-if="youtubeForm.videoData" class="card border-0 bg-light mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <img :src="youtubeForm.videoData.thumbnail" class="img-fluid rounded" alt="썸네일">
+                                </div>
+                                <div class="col-md-8">
+                                    <h6 class="fw-bold">{{ youtubeForm.videoData.title }}</h6>
+                                    <p class="small text-muted mb-2">{{ youtubeForm.videoData.description }}</p>
+                                    <div class="small">
+                                        <span class="badge bg-primary me-1">⏱️ {{ youtubeForm.videoData.duration }}</span>
+                                        <span class="badge bg-secondary me-1">👁️ {{ youtubeForm.videoData.views }}</span>
+                                        <span class="badge bg-success">📅 {{ youtubeForm.videoData.publishedAt }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="youtubeForm.videoData">
+                        <div class="mb-3">
+                            <label class="form-label">제목 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="youtubeForm.title">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">설명</label>
+                            <textarea class="form-control" rows="3" v-model="youtubeForm.description"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">강좌 배정</label>
+                            <select class="form-select" v-model="youtubeForm.course">
+                                <option value="">미배정</option>
+                                <option v-for="c in courseList" :key="c">{{ c }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveYoutubeVideo"
+                            :disabled="!youtubeForm.videoData || !youtubeForm.title">가져오기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vimeo 단일 가져오기 모달 -->
+    <div class="modal fade" id="vimeoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🎬 Vimeo 동영상 가져오기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Vimeo URL</label>
+                        <input type="text" class="form-control" v-model="vimeoForm.url"
+                               placeholder="https://vimeo.com/..."
+                               @input="debounceVimeoExtract">
+                        <div class="form-text">동영상 URL을 입력하면 자동으로 정보를 가져옵니다</div>
+                    </div>
+
+                    <div v-if="vimeoForm.loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">동영상 정보를 가져오는 중...</p>
+                    </div>
+
+                    <div v-if="vimeoForm.videoData" class="card border-0 bg-light mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <img :src="vimeoForm.videoData.thumbnail" class="img-fluid rounded" alt="썸네일">
+                                </div>
+                                <div class="col-md-8">
+                                    <h6 class="fw-bold">{{ vimeoForm.videoData.title }}</h6>
+                                    <p class="small text-muted mb-2">{{ vimeoForm.videoData.description }}</p>
+                                    <div class="small">
+                                        <span class="badge bg-primary me-1">⏱️ {{ vimeoForm.videoData.duration }}</span>
+                                        <span class="badge bg-secondary me-1">👁️ {{ vimeoForm.videoData.views }}</span>
+                                        <span class="badge bg-success">📅 {{ vimeoForm.videoData.publishedAt }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="vimeoForm.videoData">
+                        <div class="mb-3">
+                            <label class="form-label">제목 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="vimeoForm.title">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">설명</label>
+                            <textarea class="form-control" rows="3" v-model="vimeoForm.description"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">강좌 배정</label>
+                            <select class="form-select" v-model="vimeoForm.course">
+                                <option value="">미배정</option>
+                                <option v-for="c in courseList" :key="c">{{ c }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveVimeoVideo"
+                            :disabled="!vimeoForm.videoData || !vimeoForm.title">가져오기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube 일괄 가져오기 모달 -->
+    <div class="modal fade" id="youtubeBatchModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📺 YouTube 일괄 가져오기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">가져오기 방법</label>
+                        <div class="btn-group w-100 mb-3">
+                            <button type="button" class="btn"
+                                    :class="youtubeBatchForm.type === 'playlist' ? 'btn-primary' : 'btn-outline-secondary'"
+                                    @click="youtubeBatchForm.type = 'playlist'">
+                                📋 재생목록
+                            </button>
+                            <button type="button" class="btn"
+                                    :class="youtubeBatchForm.type === 'channel' ? 'btn-primary' : 'btn-outline-secondary'"
+                                    @click="youtubeBatchForm.type = 'channel'">
+                                📺 채널
+                            </button>
+                        </div>
+
+                        <input type="text" class="form-control" v-model="youtubeBatchForm.url"
+                               :placeholder="youtubeBatchForm.type === 'playlist'
+                                   ? 'https://www.youtube.com/playlist?list=...'
+                                   : 'https://www.youtube.com/channel/... 또는 @username'"
+                               @input="debounceYoutubeBatchExtract">
+                        <div class="form-text">
+                            {{ youtubeBatchForm.type === 'playlist' ? '재생목록' : '채널' }} URL을 입력하세요
+                        </div>
+                    </div>
+
+                    <div v-if="youtubeBatchForm.loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">동영상 목록을 가져오는 중...</p>
+                    </div>
+
+                    <div v-if="youtubeBatchForm.videos.length > 0">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0">동영상 {{ youtubeBatchForm.videos.length }}개 발견</h6>
+                                <small class="text-muted">가져올 동영상을 선택하세요</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary me-2" @click="selectAllYoutubeVideos">
+                                    전체 선택
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" @click="deselectAllYoutubeVideos">
+                                    전체 해제
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">강좌 배정 (선택된 모든 동영상에 적용)</label>
+                            <select class="form-select" v-model="youtubeBatchForm.course">
+                                <option value="">미배정</option>
+                                <option v-for="c in courseList" :key="c">{{ c }}</option>
+                            </select>
+                        </div>
+
+                        <div style="max-height: 400px; overflow-y: auto;">
+                            <div v-for="video in youtubeBatchForm.videos" :key="video.id"
+                                 class="card border mb-2"
+                                 :class="{'border-primary': video.selected}">
+                                <div class="card-body p-2">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input"
+                                                   v-model="video.selected" style="transform: scale(1.2);">
+                                        </div>
+                                        <div class="col-auto">
+                                            <img :src="video.thumbnail" style="width: 120px; height: 68px; object-fit: cover;"
+                                                 class="rounded" alt="썸네일">
+                                        </div>
+                                        <div class="col">
+                                            <h6 class="mb-1 small fw-bold">{{ video.title }}</h6>
+                                            <div class="small text-muted">
+                                                <span class="me-2">⏱️ {{ video.duration }}</span>
+                                                <span class="me-2">👁️ {{ video.views }}</span>
+                                                <span>📅 {{ video.publishedAt }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveYoutubeBatch"
+                            :disabled="!youtubeBatchForm.videos.some(v => v.selected)">
+                        선택한 {{ youtubeBatchForm.videos.filter(v => v.selected).length }}개 가져오기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vimeo 일괄 가져오기 모달 -->
+    <div class="modal fade" id="vimeoBatchModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🎬 Vimeo 일괄 가져오기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">가져오기 방법</label>
+                        <div class="btn-group w-100 mb-3">
+                            <button type="button" class="btn"
+                                    :class="vimeoBatchForm.type === 'showcase' ? 'btn-primary' : 'btn-outline-secondary'"
+                                    @click="vimeoBatchForm.type = 'showcase'">
+                                🎨 쇼케이스
+                            </button>
+                            <button type="button" class="btn"
+                                    :class="vimeoBatchForm.type === 'album' ? 'btn-primary' : 'btn-outline-secondary'"
+                                    @click="vimeoBatchForm.type = 'album'">
+                                📁 앨범
+                            </button>
+                            <button type="button" class="btn"
+                                    :class="vimeoBatchForm.type === 'channel' ? 'btn-primary' : 'btn-outline-secondary'"
+                                    @click="vimeoBatchForm.type = 'channel'">
+                                📺 채널
+                            </button>
+                        </div>
+
+                        <input type="text" class="form-control" v-model="vimeoBatchForm.url"
+                               :placeholder="'https://vimeo.com/showcase/... 또는 /channels/... 또는 /album/...'"
+                               @input="debounceVimeoBatchExtract">
+                        <div class="form-text">
+                            {{ vimeoBatchForm.type === 'showcase' ? '쇼케이스' : vimeoBatchForm.type === 'album' ? '앨범' : '채널' }} URL을 입력하세요
+                        </div>
+                    </div>
+
+                    <div v-if="vimeoBatchForm.loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">동영상 목록을 가져오는 중...</p>
+                    </div>
+
+                    <div v-if="vimeoBatchForm.videos.length > 0">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0">동영상 {{ vimeoBatchForm.videos.length }}개 발견</h6>
+                                <small class="text-muted">가져올 동영상을 선택하세요</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary me-2" @click="selectAllVimeoVideos">
+                                    전체 선택
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" @click="deselectAllVimeoVideos">
+                                    전체 해제
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">강좌 배정 (선택된 모든 동영상에 적용)</label>
+                            <select class="form-select" v-model="vimeoBatchForm.course">
+                                <option value="">미배정</option>
+                                <option v-for="c in courseList" :key="c">{{ c }}</option>
+                            </select>
+                        </div>
+
+                        <div style="max-height: 400px; overflow-y: auto;">
+                            <div v-for="video in vimeoBatchForm.videos" :key="video.id"
+                                 class="card border mb-2"
+                                 :class="{'border-primary': video.selected}">
+                                <div class="card-body p-2">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <input type="checkbox" class="form-check-input"
+                                                   v-model="video.selected" style="transform: scale(1.2);">
+                                        </div>
+                                        <div class="col-auto">
+                                            <img :src="video.thumbnail" style="width: 120px; height: 68px; object-fit: cover;"
+                                                 class="rounded" alt="썸네일">
+                                        </div>
+                                        <div class="col">
+                                            <h6 class="mb-1 small fw-bold">{{ video.title }}</h6>
+                                            <div class="small text-muted">
+                                                <span class="me-2">⏱️ {{ video.duration }}</span>
+                                                <span class="me-2">👁️ {{ video.views }}</span>
+                                                <span>📅 {{ video.publishedAt }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveVimeoBatch"
+                            :disabled="!vimeoBatchForm.videos.some(v => v.selected)">
+                        선택한 {{ vimeoBatchForm.videos.filter(v => v.selected).length }}개 가져오기
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
