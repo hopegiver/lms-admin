@@ -114,15 +114,15 @@ export default {
         },
 
         createTemplate() {
-            this.navigateTo('/learning/certificates/create');
+            this.navigateTo('/settings/certificates/new');
         },
 
         viewTemplate(template) {
-            this.navigateTo(`/learning/certificates/${template.id}`);
+            this.navigateTo(`/settings/certificates/${template.id}`);
         },
 
         editTemplate(template) {
-            this.navigateTo(`/learning/certificates/${template.id}/edit`);
+            this.navigateTo(`/settings/certificates/${template.id}`);
         },
 
         duplicateTemplate(template) {

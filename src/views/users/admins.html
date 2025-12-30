@@ -3,29 +3,15 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="mb-1">관리자</h4>
-            <p class="text-muted mb-0">관리자 계정과 권한 그룹을 관리합니다</p>
+            <p class="text-muted mb-0">관리자 계정을 관리합니다. 권한 그룹은 <a href="#" @click.prevent="navigateTo('/settings/permissions')" class="text-primary">설정 > 권한 관리</a>에서 설정하세요.</p>
         </div>
         <button class="btn btn-primary" @click="openCreateModal">
             <span class="me-1">➕</span> 관리자 등록
         </button>
     </div>
 
-    <!-- 탭 메뉴 -->
-    <ul class="nav nav-tabs mb-4">
-        <li class="nav-item">
-            <a class="nav-link" :class="{ active: activeTab === 'admins' }" href="#" @click.prevent="activeTab = 'admins'">
-                관리자 목록
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" :class="{ active: activeTab === 'roles' }" href="#" @click.prevent="activeTab = 'roles'">
-                권한 그룹
-            </a>
-        </li>
-    </ul>
-
-    <!-- 관리자 목록 탭 -->
-    <div v-if="activeTab === 'admins'">
+    <!-- 관리자 목록 -->
+    <div>
         <div class="row g-4">
             <div class="col-md-6 col-lg-4 col-xl-3" v-for="admin in admins" :key="admin.id">
                 <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" @click="viewDetail(admin)">
@@ -62,50 +48,6 @@
                             <span class="me-1">🕒</span>
                             {{ admin.lastLogin }}
                         </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 권한 그룹 탭 -->
-    <div v-if="activeTab === 'roles'">
-        <div class="d-flex justify-content-end mb-3">
-            <button class="btn btn-outline-primary" @click="openRoleModal">
-                <span class="me-1">➕</span> 권한 그룹 추가
-            </button>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-4" v-for="role in roles" :key="role.id">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">
-                            <span class="me-2">{{ role.icon }}</span>
-                            {{ role.name }}
-                        </h6>
-                        <div class="dropdown" v-if="!role.isSystem">
-                            <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">⋮</button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#" @click="editRole(role)">✏️ 수정</a></li>
-                                <li><a class="dropdown-item text-danger" href="#" @click="deleteRole(role)">🗑️ 삭제</a></li>
-                            </ul>
-                        </div>
-                        <span class="badge bg-secondary" v-else>시스템</span>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted small mb-3">{{ role.description }}</p>
-                        <div class="mb-3">
-                            <strong class="small">권한:</strong>
-                            <div class="mt-2">
-                                <span class="badge bg-light text-dark me-1 mb-1" v-for="perm in role.permissions" :key="perm">
-                                    {{ perm }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="text-muted small">
-                            사용 중: {{ role.userCount }}명
-                        </div>
                     </div>
                 </div>
             </div>

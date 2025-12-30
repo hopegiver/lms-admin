@@ -25,7 +25,6 @@ export default {
                     { id: 'courses', name: '강좌', icon: '📖', path: '/learning/courses' },
                     { id: 'assessments', name: '평가', icon: '📝', path: '/learning/assessments' },
                     { id: 'enrollments', name: '수강 관리', icon: '✅', path: '/learning/enrollments' },
-                    { id: 'certificates', name: '수료증 템플릿', icon: '🎓', path: '/learning/certificates' },
                     { id: 'progress', name: '학습 현황', icon: '📈', path: '/learning/progress' },
                     { id: 'content', name: '콘텐츠', icon: '🎬', path: '/learning/content' }
                 ],
@@ -52,6 +51,7 @@ export default {
                 settings: [
                     { id: 'general', name: '기본 설정', icon: '⚙️', path: '/settings/general' },
                     { id: 'learning', name: '학습 설정', icon: '📚', path: '/settings/learning' },
+                    { id: 'certificates', name: '수료증 템플릿', icon: '🎓', path: '/settings/certificates' },
                     { id: 'payment', name: '결제 설정', icon: '💳', path: '/settings/payment' },
                     { id: 'notifications', name: '알림 설정', icon: '🔔', path: '/settings/notifications' },
                     { id: 'integrations', name: '연동 설정', icon: '🔗', path: '/settings/integrations' },

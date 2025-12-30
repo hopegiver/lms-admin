@@ -1,10 +1,11 @@
 export default {
-    name: 'certificatesCreate',
+    name: 'certificatesDetail',
     layout: 'admin',
     data() {
         return {
             templateId: this.getParam('id'),
-            mode: 'create',
+            mode: 'view', // 'view' or 'edit'
+            isNew: false,
             form: {
                 name: '',
                 description: '',
@@ -26,19 +27,25 @@ export default {
                 { type: 'issueDate', label: '발급일', icon: '📆' },
                 { type: 'organization', label: '기관명', icon: '🏢' },
                 { type: 'signature', label: '서명', icon: '✍️' },
+                { type: 'seal', label: '직인', icon: '🔴' },
                 { type: 'text', label: '사용자 정의 텍스트', icon: '📝' }
             ],
             selectedField: null,
-            previewMode: false
+            previewMode: false,
+            usageInfo: {
+                usageCount: 0,
+                courses: []
+            }
         }
     },
     mounted() {
-        if (this.templateId) {
+        if (this.templateId === 'new') {
+            this.isNew = true;
             this.mode = 'edit';
-            this.loadTemplate();
-        } else {
-            // 기본 필드 추가
             this.addDefaultFields();
+        } else {
+            this.isNew = false;
+            this.loadTemplate();
         }
     },
     methods: {
@@ -57,10 +64,19 @@ export default {
                     borderColor: '#cccccc',
                     borderWidth: 2,
                     fields: [
-                        { type: 'studentName', label: '수료자명', x: 50, y: 40, fontSize: 24, fontWeight: 'bold', color: '#000000', customText: '' },
-                        { type: 'courseName', label: '강좌명', x: 50, y: 50, fontSize: 18, fontWeight: 'normal', color: '#333333', customText: '' },
-                        { type: 'completionDate', label: '수료일', x: 50, y: 60, fontSize: 14, fontWeight: 'normal', color: '#666666', customText: '' },
-                        { type: 'certificateNumber', label: '수료번호', x: 50, y: 70, fontSize: 12, fontWeight: 'normal', color: '#999999', customText: '' }
+                        { type: 'studentName', label: '수료자명', x: 50, y: 40, fontSize: 24, fontWeight: 'bold', color: '#000000', customText: '', align: 'center' },
+                        { type: 'courseName', label: '강좌명', x: 50, y: 50, fontSize: 18, fontWeight: 'normal', color: '#333333', customText: '', align: 'center' },
+                        { type: 'completionDate', label: '수료일', x: 50, y: 60, fontSize: 14, fontWeight: 'normal', color: '#666666', customText: '', align: 'center' },
+                        { type: 'certificateNumber', label: '수료번호', x: 50, y: 70, fontSize: 12, fontWeight: 'normal', color: '#999999', customText: '', align: 'center' }
+                    ]
+                };
+
+                this.usageInfo = {
+                    usageCount: 25,
+                    courses: [
+                        { id: 1, name: 'React 완벽 가이드', students: 120 },
+                        { id: 2, name: 'Vue.js 마스터 클래스', students: 85 },
+                        { id: 3, name: 'JavaScript 기초', students: 200 }
                     ]
                 };
             }, 100);
@@ -68,10 +84,21 @@ export default {
 
         addDefaultFields() {
             this.form.fields = [
-                { type: 'studentName', label: '수료자명', x: 50, y: 35, fontSize: 24, fontWeight: 'bold', color: '#000000', customText: '' },
-                { type: 'courseName', label: '강좌명', x: 50, y: 50, fontSize: 18, fontWeight: 'normal', color: '#333333', customText: '' },
-                { type: 'completionDate', label: '수료일', x: 50, y: 65, fontSize: 14, fontWeight: 'normal', color: '#666666', customText: '' }
+                { type: 'studentName', label: '수료자명', x: 50, y: 35, fontSize: 24, fontWeight: 'bold', color: '#000000', customText: '', align: 'center' },
+                { type: 'courseName', label: '강좌명', x: 50, y: 50, fontSize: 18, fontWeight: 'normal', color: '#333333', customText: '', align: 'center' },
+                { type: 'completionDate', label: '수료일', x: 50, y: 65, fontSize: 14, fontWeight: 'normal', color: '#666666', customText: '', align: 'center' }
             ];
+        },
+
+        toggleMode() {
+            if (this.mode === 'view') {
+                this.mode = 'edit';
+            } else {
+                if (confirm('편집을 취소하시겠습니까? 변경사항은 저장되지 않습니다.')) {
+                    this.mode = 'view';
+                    this.loadTemplate(); // 원래 데이터로 복원
+                }
+            }
         },
 
         addField(fieldType) {
@@ -84,7 +111,8 @@ export default {
                 fontSize: 16,
                 fontWeight: 'normal',
                 color: '#000000',
-                customText: ''
+                customText: '',
+                align: 'center'
             };
             this.form.fields.push(newField);
             this.selectedField = newField;
@@ -108,7 +136,7 @@ export default {
                 const temp = this.form.fields[index];
                 this.form.fields[index] = this.form.fields[index - 1];
                 this.form.fields[index - 1] = temp;
-                this.form.fields = [...this.form.fields]; // Vue 반응성 트리거
+                this.form.fields = [...this.form.fields];
             }
         },
 
@@ -117,7 +145,7 @@ export default {
                 const temp = this.form.fields[index];
                 this.form.fields[index] = this.form.fields[index + 1];
                 this.form.fields[index + 1] = temp;
-                this.form.fields = [...this.form.fields]; // Vue 반응성 트리거
+                this.form.fields = [...this.form.fields];
             }
         },
 
@@ -148,23 +176,46 @@ export default {
             }
 
             // 실제로는 API 호출
-            if (this.mode === 'create') {
+            if (this.isNew) {
                 alert('수료증 템플릿이 생성되었습니다.');
             } else {
                 alert('수료증 템플릿이 수정되었습니다.');
             }
-            this.navigateTo('/learning/certificates');
+            this.navigateTo('/settings/certificates');
+        },
+
+        deleteTemplate() {
+            if (this.usageInfo.usageCount > 0) {
+                alert(`이 템플릿은 ${this.usageInfo.usageCount}개의 강좌에서 사용 중입니다. 사용 중인 템플릿은 삭제할 수 없습니다.`);
+                return;
+            }
+            if (confirm('이 템플릿을 삭제하시겠습니까?')) {
+                alert('템플릿이 삭제되었습니다.');
+                this.navigateTo('/settings/certificates');
+            }
         },
 
         cancel() {
-            if (confirm('작성 중인 내용을 취소하시겠습니까?')) {
-                this.navigateTo('/learning/certificates');
+            if (this.isNew) {
+                if (confirm('작성을 취소하시겠습니까?')) {
+                    this.navigateTo('/settings/certificates');
+                }
+            } else {
+                this.navigateTo('/settings/certificates');
             }
         },
 
         getFieldIcon(type) {
             const field = this.availableFields.find(f => f.type === type);
             return field ? field.icon : '📝';
+        },
+
+        downloadPDF() {
+            alert('PDF 다운로드 기능은 추후 구현됩니다.');
+        },
+
+        testPrint() {
+            alert('테스트 인쇄 기능은 추후 구현됩니다.');
         }
     }
 }
