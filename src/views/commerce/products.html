@@ -147,84 +147,75 @@
         </div>
     </div>
 
-    <!-- 상품 목록 -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th><input type="checkbox" class="form-check-input"></th>
-                            <th>상품</th>
-                            <th>카테고리</th>
-                            <th class="text-end">정가</th>
-                            <th class="text-end">판매가</th>
-                            <th class="text-center" v-if="activeTab === 'books' || activeTab === 'general'">재고</th>
-                            <th class="text-center">판매량</th>
-                            <th class="text-center">상태</th>
-                            <th style="width: 120px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="product in currentProducts" :key="product.id">
-                            <td><input type="checkbox" class="form-check-input"></td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="rounded bg-light d-flex align-items-center justify-content-center me-3"
-                                         style="width: 48px; height: 48px;">
-                                        <span class="fs-5">{{ getProductIcon(product.type) }}</span>
-                                    </div>
-                                    <div>
-                                        <div class="fw-medium" @click="viewDetail(product)" style="cursor: pointer;">{{ product.name }}</div>
-                                        <div class="text-muted small">
-                                            <span v-if="product.courseId">강좌 ID: {{ product.courseId }}</span>
-                                            <span v-else-if="product.courses">{{ product.courses }}개 강좌</span>
-                                            <span v-else-if="product.author">{{ product.author }}</span>
-                                            <span v-else-if="product.brand">{{ product.brand }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-light text-dark">{{ product.category }}</span></td>
-                            <td class="text-end text-muted text-decoration-line-through">{{ product.originalPrice }}</td>
-                            <td class="text-end fw-bold text-primary">{{ product.price }}</td>
-                            <td class="text-center" v-if="activeTab === 'books' || activeTab === 'general'">
-                                <span :class="product.stock > 0 ? 'text-success' : 'text-danger'">
-                                    {{ product.stock }}개
-                                </span>
-                            </td>
-                            <td class="text-center">{{ product.sales }}건</td>
-                            <td class="text-center">
-                                <span class="badge" :class="getStatusBadgeClass(product.status)">
-                                    {{ getStatusText(product.status) }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <button class="btn btn-sm btn-outline-primary" @click="editProduct(product)">수정</button>
-                                    <button class="btn btn-sm btn-outline-secondary" @click="toggleStatus(product)">
-                                        {{ product.status === 'active' ? '중지' : '활성' }}
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- 상품 카드 그리드 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4 col-xl-3" v-for="product in currentProducts" :key="product.id">
+            <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" @click="viewDetail(product)">
+                <div class="position-absolute top-0 start-0 m-2">
+                    <input type="checkbox" class="form-check-input" @click.stop style="transform: scale(1.2);">
+                </div>
+                <div class="position-absolute top-0 end-0 m-2">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" @click.stop>
+                            ⋮
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" @click.stop="editProduct(product)">✏️ 수정</a></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="toggleStatus(product)">
+                                {{ product.status === 'active' ? '⏸️ 판매중지' : '▶️ 판매시작' }}
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3"
+                         style="height: 120px;">
+                        <span style="font-size: 3rem;">{{ getProductIcon(product.type) }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="badge" :class="getStatusBadgeClass(product.status)">
+                            {{ getStatusText(product.status) }}
+                        </span>
+                        <span class="badge bg-light text-dark ms-1">{{ product.category }}</span>
+                    </div>
+                    <h6 class="card-title fw-bold mb-2" style="min-height: 48px;">{{ product.name }}</h6>
+                    <p class="text-muted small mb-2">
+                        <span v-if="product.courseId">📚 강좌 ID: {{ product.courseId }}</span>
+                        <span v-else-if="product.courses">📦 {{ product.courses }}개 강좌</span>
+                        <span v-else-if="product.author">✍️ {{ product.author }}</span>
+                        <span v-else-if="product.brand">🏷️ {{ product.brand }}</span>
+                    </p>
+                    <div class="mb-3">
+                        <div class="text-muted small text-decoration-line-through">{{ product.originalPrice }}</div>
+                        <div class="fs-5 fw-bold text-primary">{{ product.price }}</div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">📊 {{ product.sales }}건</span>
+                        <span class="small" v-if="activeTab === 'books' || activeTab === 'general'"
+                              :class="product.stock > 0 ? 'text-success' : 'text-danger'">
+                            📦 {{ product.stock }}개
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 페이지네이션 -->
-    <div class="d-flex justify-content-between align-items-center mt-4">
-        <div class="text-muted small">총 {{ currentProducts.length }}개 상품</div>
-        <nav>
-            <ul class="pagination mb-0">
-                <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item"><a class="page-link" href="#">다음</a></li>
-            </ul>
-        </nav>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">총 {{ currentProducts.length }}개 상품</div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">다음</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
     </div>
 </div>

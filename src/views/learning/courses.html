@@ -60,75 +60,9 @@
         </div>
     </div>
 
-    <!-- 강좌 테이블 -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox" class="form-check-input" v-model="selectAll" @change="toggleSelectAll">
-                            </th>
-                            <th>강좌명</th>
-                            <th>카테고리</th>
-                            <th>강사</th>
-                            <th class="text-center">수강생</th>
-                            <th class="text-center">평점</th>
-                            <th class="text-end">가격</th>
-                            <th class="text-center">상태</th>
-                            <th style="width: 100px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="course in courses" :key="course.id">
-                            <td>
-                                <input type="checkbox" class="form-check-input" v-model="selectedIds" :value="course.id">
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
-                                         style="width: 48px; height: 48px;">
-                                        <span class="fs-4">📚</span>
-                                    </div>
-                                    <div>
-                                        <div class="fw-medium" @click="viewDetail(course)" style="cursor: pointer;">{{ course.title }}</div>
-                                        <small class="text-muted">{{ course.lessons }}개 차시 · {{ course.duration }}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-light text-dark">{{ course.category }}</span></td>
-                            <td>{{ course.instructor }}</td>
-                            <td class="text-center">{{ course.students }}명</td>
-                            <td class="text-center">
-                                <span class="text-warning">★</span> {{ course.rating }}
-                            </td>
-                            <td class="text-end">{{ course.price }}</td>
-                            <td class="text-center">
-                                <span class="badge" :class="getStatusClass(course.status)">
-                                    {{ getStatusText(course.status) }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">⋮</button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="#" @click="editCourse(course)">✏️ 수정</a></li>
-                                        <li><a class="dropdown-item" href="#" @click="manageCurriculum(course)">📋 커리큘럼</a></li>
-                                        <li><a class="dropdown-item" href="#" @click="copyCourse(course)">📑 복사</a></li>
-                                        <li><a class="dropdown-item" href="#" @click="previewCourse(course)">👁️ 미리보기</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#" @click="deleteCourse(course)">🗑️ 삭제</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- 선택된 항목 액션바 -->
-        <div class="card-footer bg-white border-top py-2" v-if="selectedIds.length > 0">
+    <!-- 선택된 항목 액션바 -->
+    <div class="card border-0 shadow-sm mb-3" v-if="selectedIds.length > 0">
+        <div class="card-body py-2">
             <div class="d-flex align-items-center gap-3">
                 <span class="text-muted">{{ selectedIds.length }}개 선택됨</span>
                 <button class="btn btn-sm btn-outline-secondary" @click="bulkAction('publish')">판매 시작</button>
@@ -136,8 +70,59 @@
                 <button class="btn btn-sm btn-outline-danger" @click="bulkAction('delete')">삭제</button>
             </div>
         </div>
-        <!-- 페이지네이션 -->
-        <div class="card-footer bg-white border-top">
+    </div>
+
+    <!-- 강좌 카드 그리드 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4 col-xl-3" v-for="course in courses" :key="course.id">
+            <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" @click="viewDetail(course)">
+                <div class="position-absolute top-0 start-0 m-2">
+                    <input type="checkbox" class="form-check-input" v-model="selectedIds" :value="course.id"
+                           @click.stop style="transform: scale(1.2);">
+                </div>
+                <div class="position-absolute top-0 end-0 m-2">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" @click.stop>
+                            ⋮
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" @click.stop="editCourse(course)">✏️ 수정</a></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="manageCurriculum(course)">📋 커리큘럼</a></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="copyCourse(course)">📑 복사</a></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="previewCourse(course)">👁️ 미리보기</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" @click.stop="deleteCourse(course)">🗑️ 삭제</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3"
+                         style="height: 120px;">
+                        <span style="font-size: 3rem;">📚</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="badge" :class="getStatusClass(course.status)">
+                            {{ getStatusText(course.status) }}
+                        </span>
+                        <span class="badge bg-light text-dark ms-1">{{ course.category }}</span>
+                    </div>
+                    <h6 class="card-title fw-bold mb-2" style="min-height: 48px;">{{ course.title }}</h6>
+                    <p class="text-muted small mb-2">👨‍🏫 {{ course.instructor }}</p>
+                    <p class="text-muted small mb-3">📝 {{ course.lessons }}개 차시 · ⏱️ {{ course.duration }}</p>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">👥 {{ course.students }}명</span>
+                        <span class="small">
+                            <span class="text-warning">★</span> {{ course.rating }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="text-muted small">총 {{ totalCount }}개 강좌</div>
                 <nav>

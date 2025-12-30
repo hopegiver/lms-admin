@@ -26,60 +26,43 @@
 
     <!-- 관리자 목록 탭 -->
     <div v-if="activeTab === 'admins'">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>이름</th>
-                                <th>이메일</th>
-                                <th>권한 그룹</th>
-                                <th class="text-center">상태</th>
-                                <th>마지막 로그인</th>
-                                <th style="width: 100px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="admin in admins" :key="admin.id">
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
-                                             :class="admin.role === 'super' ? 'bg-danger' : 'bg-primary'"
-                                             style="width: 36px; height: 36px; color: white;">
-                                            {{ admin.name.charAt(0) }}
-                                        </div>
-                                        <div>
-                                            <div class="fw-medium" @click="viewDetail(admin)" style="cursor: pointer;">{{ admin.name }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>{{ admin.email }}</td>
-                                <td>
-                                    <span class="badge" :class="getRoleBadgeClass(admin.role)">
-                                        {{ getRoleText(admin.role) }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge" :class="admin.status === 'active' ? 'bg-success' : 'bg-secondary'">
-                                        {{ admin.status === 'active' ? '활성' : '비활성' }}
-                                    </span>
-                                </td>
-                                <td>{{ admin.lastLogin }}</td>
-                                <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">⋮</button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="#" @click="editAdmin(admin)">✏️ 수정</a></li>
-                                            <li><a class="dropdown-item" href="#" @click="resetPassword(admin)">🔑 비밀번호 초기화</a></li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item text-danger" href="#" @click="deleteAdmin(admin)" :class="{ disabled: admin.role === 'super' }">🗑️ 삭제</a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4 col-xl-3" v-for="admin in admins" :key="admin.id">
+                <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" @click="viewDetail(admin)">
+                    <div class="position-absolute top-0 end-0 m-2">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" @click.stop>
+                                ⋮
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" @click.stop="editAdmin(admin)">✏️ 수정</a></li>
+                                <li><a class="dropdown-item" href="#" @click.stop="resetPassword(admin)">🔑 비밀번호 초기화</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" @click.stop="deleteAdmin(admin)" :class="{ disabled: admin.role === 'super' }">🗑️ 삭제</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                             :class="admin.role === 'super' ? 'bg-danger' : 'bg-primary'"
+                             style="width: 80px; height: 80px; color: white; font-size: 2rem;">
+                            {{ admin.name.charAt(0) }}
+                        </div>
+                        <h6 class="card-title fw-bold mb-2">{{ admin.name }}</h6>
+                        <p class="text-muted small mb-3">📧 {{ admin.email }}</p>
+                        <div class="mb-3">
+                            <span class="badge" :class="getRoleBadgeClass(admin.role)">
+                                {{ getRoleText(admin.role) }}
+                            </span>
+                            <span class="badge ms-1" :class="admin.status === 'active' ? 'bg-success' : 'bg-secondary'">
+                                {{ admin.status === 'active' ? '활성' : '비활성' }}
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-0">
+                            <span class="me-1">🕒</span>
+                            {{ admin.lastLogin }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

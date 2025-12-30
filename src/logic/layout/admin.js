@@ -23,8 +23,8 @@ export default {
                 ],
                 learning: [
                     { id: 'courses', name: '강좌', icon: '📖', path: '/learning/courses' },
-                    { id: 'enrollments', name: '수강 관리', icon: '✅', path: '/learning/enrollments' },
                     { id: 'assessments', name: '평가', icon: '📝', path: '/learning/assessments' },
+                    { id: 'enrollments', name: '수강 관리', icon: '✅', path: '/learning/enrollments' },
                     { id: 'progress', name: '학습 현황', icon: '📈', path: '/learning/progress' },
                     { id: 'content', name: '콘텐츠', icon: '🎬', path: '/learning/content' }
                 ],
