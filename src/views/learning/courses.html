@@ -9,9 +9,28 @@
             <button class="btn btn-outline-primary" @click="openCategoryModal">
                 📁 카테고리 관리
             </button>
-            <button class="btn btn-primary" @click="openCreateWizard">
-                <span class="me-1">➕</span> 강좌 만들기
-            </button>
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <span class="me-1">➕</span> 강좌 만들기
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="#" @click.prevent="navigateTo('/learning/courses/wizard')">
+                            <span class="me-2">🪄</span>
+                            <strong>간편 생성</strong>
+                            <div class="small text-muted">단계별 마법사로 쉽게 만들기 (추천)</div>
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="#" @click.prevent="openCreateModal">
+                            <span class="me-2">⚙️</span>
+                            <strong>직접 생성</strong>
+                            <div class="small text-muted">고급 사용자용</div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 

@@ -1,0 +1,475 @@
+<div class="courses-wizard-page">
+    <!-- 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">🪄 강좌 간편 생성</h4>
+            <p class="text-muted mb-0">단계별로 진행하여 강좌를 쉽게 만들어보세요</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="saveDraft">
+                💾 임시 저장
+            </button>
+            <button class="btn btn-outline-danger" @click="cancel">
+                취소
+            </button>
+        </div>
+    </div>
+
+    <!-- 진행률 표시 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fw-bold">{{ getStepTitle(currentStep) }}</div>
+                <div class="text-muted small">{{ currentStep }} / {{ totalSteps }}</div>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar" :style="{ width: progressPercentage + '%' }"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-3">
+                <div v-for="step in totalSteps" :key="step"
+                     class="wizard-step-indicator"
+                     :class="{ 'active': step === currentStep, 'completed': step < currentStep }"
+                     @click="goToStep(step)">
+                    <div class="step-number">{{ getStepIcon(step) }}</div>
+                    <div class="step-label small">{{ getStepTitle(step) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 단계별 컨텐츠 -->
+    <div class="wizard-content">
+        <!-- 1단계: 기본 정보 -->
+        <div v-if="currentStep === 1" class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">📋 강좌 기본 정보</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">강좌명 *</label>
+                        <input type="text" class="form-control" v-model="basicInfo.title" placeholder="예: React 완벽 가이드">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">카테고리 *</label>
+                        <select class="form-select" v-model="basicInfo.category">
+                            <option value="">선택하세요</option>
+                            <option v-for="cat in categories" :key="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">난이도 *</label>
+                        <select class="form-select" v-model="basicInfo.level">
+                            <option value="beginner">초급</option>
+                            <option value="intermediate">중급</option>
+                            <option value="advanced">고급</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">강사명 *</label>
+                        <input type="text" class="form-control" v-model="basicInfo.instructor" placeholder="강사 이름">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">강좌 설명</label>
+                        <textarea class="form-control" v-model="basicInfo.description" rows="4" placeholder="강좌에 대한 설명을 입력하세요"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">썸네일 이미지</label>
+                        <div v-if="basicInfo.thumbnail" class="mb-2">
+                            <img :src="basicInfo.thumbnail" class="img-thumbnail" style="max-width: 200px;">
+                            <button class="btn btn-sm btn-outline-danger ms-2" @click="removeThumbnail">제거</button>
+                        </div>
+                        <button v-else class="btn btn-outline-secondary" @click="uploadThumbnail">
+                            📁 이미지 업로드
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2단계: 커리큘럼 구성 -->
+        <div v-if="currentStep === 2" class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">📚 커리큘럼 구성</h5>
+                <button class="btn btn-primary btn-sm" @click="showAddSectionForm">
+                    ➕ 섹션 추가
+                </button>
+            </div>
+            <div class="card-body">
+                <div v-if="sections.length === 0" class="text-center py-5 text-muted">
+                    <div class="mb-3" style="font-size: 3rem;">📚</div>
+                    <p>아직 섹션이 없습니다. 섹션을 추가하여 커리큘럼을 구성하세요.</p>
+                    <button class="btn btn-primary" @click="showAddSectionForm">첫 섹션 추가하기</button>
+                </div>
+
+                <div v-else>
+                    <div v-for="(section, sIndex) in sections" :key="sIndex" class="card mb-3">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ section.title }}</strong>
+                                <span v-if="section.description" class="text-muted small ms-2">{{ section.description }}</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" @click="addLessonToSection(sIndex)">
+                                    ➕ 차시
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" @click="editSection(sIndex)">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @click="deleteSection(sIndex)">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div v-if="!section.lessons || section.lessons.length === 0" class="text-muted small">
+                                차시가 없습니다. 차시를 추가하세요.
+                            </div>
+                            <div v-else class="list-group">
+                                <div v-for="(lesson, lIndex) in section.lessons" :key="lIndex"
+                                     class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="me-2">{{ lIndex + 1 }}.</span>
+                                        <strong>{{ lesson.title }}</strong>
+                                        <span class="text-muted small ms-2">({{ lesson.duration }})</span>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger" @click="removeLessonFromSection(sIndex, lIndex)">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>💡 팁:</strong> 총 {{ sections.length }}개 섹션, {{ totalLessons }}개 차시가 구성되었습니다.
+                    </div>
+                </div>
+
+                <!-- 섹션 추가/수정 폼 -->
+                <div v-if="showSectionForm" class="modal d-block" style="background: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ editingSectionIndex !== null ? '섹션 수정' : '새 섹션 추가' }}</h5>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">섹션명 *</label>
+                                    <input type="text" class="form-control" v-model="tempSectionForm.title" placeholder="예: React 시작하기">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">설명</label>
+                                    <input type="text" class="form-control" v-model="tempSectionForm.description" placeholder="섹션 설명 (선택사항)">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-outline-secondary" @click="cancelSectionForm">취소</button>
+                                <button class="btn btn-primary" @click="saveSectionForm">
+                                    {{ editingSectionIndex !== null ? '수정' : '추가' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3단계: 콘텐츠 연결 -->
+        <div v-if="currentStep === 3" class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">🎬 콘텐츠 연결</h5>
+                <button class="btn btn-outline-primary btn-sm" @click="createNewContent">
+                    ➕ 새 콘텐츠 만들기
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <strong>ℹ️ 안내:</strong> 각 차시에 콘텐츠를 연결하세요. 나중에 추가할 수도 있습니다.
+                </div>
+
+                <div v-for="(section, sIndex) in sections" :key="sIndex" class="mb-4">
+                    <h6 class="fw-bold mb-3">{{ section.title }}</h6>
+                    <div v-if="section.lessons && section.lessons.length > 0" class="list-group">
+                        <div v-for="(lesson, lIndex) in section.lessons" :key="lIndex" class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>{{ lesson.title }}</strong>
+                                <span v-if="lesson.contentId" class="badge bg-success">연결됨</span>
+                                <span v-else class="badge bg-secondary">미연결</span>
+                            </div>
+                            <select class="form-select form-select-sm"
+                                    :value="lesson.contentId"
+                                    @change="assignContentToLesson(sIndex, lIndex, parseInt($event.target.value))">
+                                <option :value="null">콘텐츠 선택...</option>
+                                <option v-for="content in availableContents" :key="content.id" :value="content.id">
+                                    {{ content.title }} ({{ content.type }}, {{ content.duration }})
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4단계: 평가 설정 -->
+        <div v-if="currentStep === 4" class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">📝 평가 설정 (선택사항)</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning mb-4">
+                    <strong>💡 참고:</strong> 평가는 선택사항입니다. 나중에 추가할 수 있습니다.
+                </div>
+
+                <h6 class="mb-3">시험</h6>
+                <div class="row g-3 mb-4">
+                    <div v-for="exam in availableExams" :key="exam.id" class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           :checked="assessments.exams.includes(exam.id)"
+                                           @change="$event.target.checked ? addExam(exam.id) : removeExam(exam.id)">
+                                    <label class="form-check-label">
+                                        <strong>{{ exam.title }}</strong><br>
+                                        <small class="text-muted">{{ exam.questionCount }}문항 · {{ exam.timeLimit }}</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="mb-3">과제</h6>
+                <div class="row g-3">
+                    <div v-for="assignment in availableAssignments" :key="assignment.id" class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           :checked="assessments.assignments.includes(assignment.id)"
+                                           @change="$event.target.checked ? addAssignment(assignment.id) : removeAssignment(assignment.id)">
+                                    <label class="form-check-label">
+                                        <strong>{{ assignment.title }}</strong><br>
+                                        <small class="text-muted">{{ assignment.points }}점 · 기한: {{ assignment.dueDate }}</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5단계: 수료 설정 -->
+        <div v-if="currentStep === 5" class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">🎓 수료 설정</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <label class="form-label">수료증 템플릿 *</label>
+                    <select class="form-select" v-model="completionSettings.certificateTemplateId">
+                        <option :value="null">템플릿을 선택하세요</option>
+                        <option v-for="template in certificateTemplates" :key="template.id" :value="template.id">
+                            {{ template.name }} ({{ template.orientation === 'horizontal' ? '가로형' : '세로형' }})
+                        </option>
+                    </select>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">진도율 기준 (%)</label>
+                        <input type="number" class="form-control" v-model.number="completionSettings.progressRequired" min="0" max="100">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">총점 기준 (점)</label>
+                        <input type="number" class="form-control" v-model.number="completionSettings.scoreRequired" min="0" max="100">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">수료 처리 방식</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" value="auto" v-model="completionSettings.completionType" id="autoCompletion">
+                        <label class="form-check-label" for="autoCompletion">
+                            자동 수료 (기준 충족 시 자동 처리)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" value="manual" v-model="completionSettings.completionType" id="manualCompletion">
+                        <label class="form-check-label" for="manualCompletion">
+                            수동 수료 (관리자가 직접 처리)
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6단계: 가격 설정 -->
+        <div v-if="currentStep === 6" class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">💰 가격 설정 (선택사항)</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning mb-4">
+                    <strong>💡 참고:</strong> 가격은 나중에 판매 관리 > 상품에서 설정할 수 있습니다.
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" v-model="pricingEnabled" id="enablePricing">
+                    <label class="form-check-label" for="enablePricing">
+                        지금 가격 설정하기
+                    </label>
+                </div>
+
+                <div v-if="pricingEnabled">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">정가</label>
+                            <input type="number" class="form-control" v-model.number="pricing.price" placeholder="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">할인가</label>
+                            <input type="number" class="form-control" v-model.number="pricing.salePrice" placeholder="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">판매 시작일</label>
+                            <input type="date" class="form-control" v-model="pricing.salesStart">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">판매 종료일</label>
+                            <input type="date" class="form-control" v-model="pricing.salesEnd">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7단계: 최종 검토 -->
+        <div v-if="currentStep === 7" class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">✅ 최종 검토</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success mb-4">
+                    <strong>🎉 거의 완료되었습니다!</strong> 아래 내용을 확인하고 강좌를 생성하세요.
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="mb-3">📋 기본 정보</h6>
+                                <div class="small mb-2"><strong>강좌명:</strong> {{ basicInfo.title }}</div>
+                                <div class="small mb-2"><strong>카테고리:</strong> {{ basicInfo.category }}</div>
+                                <div class="small mb-2"><strong>강사:</strong> {{ basicInfo.instructor }}</div>
+                                <div class="small"><strong>난이도:</strong> {{ basicInfo.level }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="mb-3">📚 커리큘럼</h6>
+                                <div class="small mb-2"><strong>섹션:</strong> {{ sections.length }}개</div>
+                                <div class="small mb-2"><strong>차시:</strong> {{ totalLessons }}개</div>
+                                <div class="small mb-2"><strong>시험:</strong> {{ assessments.exams.length }}개</div>
+                                <div class="small"><strong>과제:</strong> {{ assessments.assignments.length }}개</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="mb-3">🎓 수료 설정</h6>
+                                <div class="small mb-2"><strong>진도율:</strong> {{ completionSettings.progressRequired }}%</div>
+                                <div class="small mb-2"><strong>총점:</strong> {{ completionSettings.scoreRequired }}점</div>
+                                <div class="small"><strong>처리:</strong> {{ completionSettings.completionType === 'auto' ? '자동' : '수동' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="mb-3">💰 가격</h6>
+                                <div v-if="pricingEnabled">
+                                    <div class="small mb-2"><strong>정가:</strong> {{ pricing.price }}원</div>
+                                    <div class="small"><strong>할인가:</strong> {{ pricing.salePrice }}원</div>
+                                </div>
+                                <div v-else class="small text-muted">미설정 (나중에 설정 가능)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" v-model="publishImmediately" id="publishNow">
+                    <label class="form-check-label" for="publishNow">
+                        <strong>즉시 발행하기</strong>
+                        <div class="small text-muted">체크하지 않으면 임시 저장되며, 나중에 강좌 목록에서 발행할 수 있습니다.</div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 하단 네비게이션 -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <button class="btn btn-outline-secondary" @click="prevStep" :disabled="currentStep === 1">
+                    ← 이전
+                </button>
+                <div class="d-flex gap-2">
+                    <button v-if="canSkipCurrentStep" class="btn btn-outline-secondary" @click="skipStep">
+                        건너뛰기
+                    </button>
+                    <button v-if="currentStep < totalSteps" class="btn btn-primary" @click="nextStep" :disabled="!canProceed">
+                        다음 →
+                    </button>
+                    <button v-if="currentStep === totalSteps" class="btn btn-success" @click="completeCourse" :disabled="!canProceed">
+                        ✅ 완료
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.wizard-step-indicator {
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.wizard-step-indicator:hover {
+    background: #f8f9fa;
+}
+
+.wizard-step-indicator.active {
+    background: #0d6efd;
+    color: white;
+}
+
+.wizard-step-indicator.completed {
+    background: #198754;
+    color: white;
+}
+
+.step-number {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.step-label {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
