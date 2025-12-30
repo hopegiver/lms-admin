@@ -11,6 +11,7 @@ export default {
                 { id: 'commerce', name: '판매 관리', icon: '🛒', path: '/commerce/products' },
                 { id: 'community', name: '커뮤니티', icon: '💬', path: '/community/boards' },
                 { id: 'site', name: '사이트', icon: '🌐', path: '/site/pages' },
+                { id: 'analytics', name: '통계', icon: '📈', path: '/analytics/overview' },
                 { id: 'settings', name: '설정', icon: '⚙️', path: '/settings/general' }
             ],
             sidebarSubmenus: {
@@ -57,6 +58,18 @@ export default {
                     { id: 'integrations', name: '연동 설정', icon: '🔗', path: '/settings/integrations' },
                     { id: 'permissions', name: '권한 관리', icon: '🔐', path: '/settings/permissions' },
                     { id: 'system', name: '시스템', icon: '🖥️', path: '/settings/system' }
+                ],
+                analytics: [
+                    { id: 'overview', name: '통합 대시보드', icon: '📊', path: '/analytics/overview' },
+                    { id: 'learning', name: '학습 분석', icon: '📚', path: '/analytics/learning' },
+                    { id: 'revenue', name: '매출 분석', icon: '💰', path: '/analytics/revenue' },
+                    { id: 'users', name: '사용자 분석', icon: '👥', path: '/analytics/users' },
+                    { id: 'marketing', name: '마케팅 분석', icon: '📢', path: '/analytics/marketing' },
+                    { id: 'content', name: '콘텐츠 분석', icon: '🎬', path: '/analytics/content' },
+                    { id: 'community', name: '커뮤니티 분석', icon: '💬', path: '/analytics/community' },
+                    { id: 'assessments', name: '평가 분석', icon: '📝', path: '/analytics/assessments' },
+                    { id: 'realtime', name: '실시간 모니터링', icon: '⚡', path: '/analytics/realtime' },
+                    { id: 'system', name: '시스템 분석', icon: '🖥️', path: '/analytics/system' }
                 ]
             }
         }

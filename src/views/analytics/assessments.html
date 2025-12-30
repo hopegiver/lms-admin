@@ -1,0 +1,68 @@
+<div class="analytics-assessments">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">평가 분석</h4>
+            <p class="text-muted mb-0">시험 성적과 문항 분석</p>
+        </div>
+    </div>
+
+    <!-- 평가 통계 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h6 class="card-title mb-4">평가별 통계</h6>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>평가명</th>
+                            <th class="text-center">응시자</th>
+                            <th class="text-center">평균 점수</th>
+                            <th class="text-center">합격률</th>
+                            <th class="text-center">재응시율</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="assessment in assessmentStats" :key="assessment.name">
+                            <td class="fw-bold">{{ assessment.name }}</td>
+                            <td class="text-center">{{ formatNumber(assessment.attempts) }}</td>
+                            <td class="text-center"><span class="badge bg-primary">{{ assessment.avgScore }}점</span></td>
+                            <td class="text-center"><span class="badge bg-success">{{ assessment.passRate }}%</span></td>
+                            <td class="text-center">{{ assessment.retakeRate }}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문항별 분석 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h6 class="card-title mb-4">문항별 정답률 분석</h6>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>문항</th>
+                            <th class="text-center">정답률</th>
+                            <th class="text-center">난이도</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="question in questionAnalysis" :key="question.question">
+                            <td class="fw-bold">{{ question.question }}</td>
+                            <td class="text-center">
+                                <span class="badge" :class="{
+                                    'bg-success': question.correctRate >= 80,
+                                    'bg-warning': question.correctRate >= 60 && question.correctRate < 80,
+                                    'bg-danger': question.correctRate < 60
+                                }">{{ question.correctRate }}%</span>
+                            </td>
+                            <td class="text-center">{{ question.difficulty }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

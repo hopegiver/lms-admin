@@ -1,0 +1,235 @@
+<div class="analytics-learning">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">학습 분석</h4>
+            <p class="text-muted mb-0">학습 패턴과 완강률을 분석합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" style="width: 200px;" v-model="selectedCourse">
+                <option v-for="course in courseList" :key="course" :value="course">{{ course }}</option>
+            </select>
+            <div class="btn-group">
+                <button type="button" class="btn btn-sm" :class="dateRange === '7days' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('7days')">7일</button>
+                <button type="button" class="btn btn-sm" :class="dateRange === '30days' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('30days')">30일</button>
+                <button type="button" class="btn btn-sm" :class="dateRange === '90days' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('90days')">90일</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 핵심 학습 지표 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">총 수강 등록</div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-2">
+                            <span class="fs-5">✅</span>
+                        </div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ learningMetrics.totalEnrollments }}</div>
+                    <div class="small">
+                        <span class="text-success">▲ {{ learningMetrics.enrollmentsChange }}%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">평균 완강률</div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-2">
+                            <span class="fs-5">🎓</span>
+                        </div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ learningMetrics.avgCompletionRate }}</div>
+                    <div class="small">
+                        <span class="text-success">▲ {{ learningMetrics.completionChange }}%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">평균 학습 시간</div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-2">
+                            <span class="fs-5">⏰</span>
+                        </div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ learningMetrics.avgLearningTime }}</div>
+                    <div class="small">
+                        <span class="text-success">▲ {{ learningMetrics.timeChange }}시간</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">수료증 발급</div>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-2">
+                            <span class="fs-5">📜</span>
+                        </div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ learningMetrics.certificateIssued }}</div>
+                    <div class="small">
+                        <span class="text-success">▲ {{ learningMetrics.certificateChange }}%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 학습 패턴 분석 -->
+    <div class="row g-4 mb-4">
+        <!-- 시간대별 학습 패턴 -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">시간대별 학습 패턴</h6>
+                    <div class="chart-container" style="height: 250px;">
+                        <div class="d-flex align-items-end justify-content-between h-100" style="gap: 4px;">
+                            <div v-for="data in learningPatternByHour" :key="data.hour" class="flex-fill text-center">
+                                <div class="mb-2">
+                                    <div class="bg-info rounded" :style="{ height: getPatternBarHeight(data.count), minHeight: '10px' }"></div>
+                                </div>
+                                <div class="small text-muted" style="font-size: 0.7rem;">{{ data.hour }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <small>💡 가장 활발한 학습 시간대는 <strong>18-22시</strong>입니다.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 요일별 학습 패턴 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">요일별 학습 패턴</h6>
+                    <div class="chart-container" style="height: 250px;">
+                        <div class="d-flex align-items-end justify-content-between h-100" style="gap: 8px;">
+                            <div v-for="data in learningPatternByDay" :key="data.day" class="flex-fill text-center">
+                                <div class="mb-2">
+                                    <div class="bg-primary rounded" :style="{ height: getDayBarHeight(data.count), minHeight: '10px' }"></div>
+                                </div>
+                                <div class="small text-muted">{{ data.day }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <small>💡 목요일에 가장 많이 학습합니다.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 강좌별 완강률 & 드롭아웃 분석 -->
+    <div class="row g-4 mb-4">
+        <!-- 강좌별 완강률 -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">강좌별 완강률 TOP 5</h6>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>강좌명</th>
+                                    <th class="text-center">수강생</th>
+                                    <th class="text-center">완강</th>
+                                    <th class="text-center">완강률</th>
+                                    <th>진행도</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="course in courseCompletionRates" :key="course.course">
+                                    <td class="fw-bold">{{ course.course }}</td>
+                                    <td class="text-center">{{ formatNumber(course.enrollments) }}</td>
+                                    <td class="text-center">{{ formatNumber(course.completions) }}</td>
+                                    <td class="text-center">
+                                        <span class="badge" :class="{
+                                            'bg-success': course.rate >= 70,
+                                            'bg-warning': course.rate >= 60 && course.rate < 70,
+                                            'bg-danger': course.rate < 60
+                                        }">{{ course.rate }}%</span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar" :class="{
+                                                'bg-success': course.rate >= 70,
+                                                'bg-warning': course.rate >= 60 && course.rate < 70,
+                                                'bg-danger': course.rate < 60
+                                            }" :style="{ width: course.progress + '%' }"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 드롭아웃 분석 -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">드롭아웃 분석 (진도율 구간별)</h6>
+                    <div style="max-height: 320px; overflow-y: auto;">
+                        <div v-for="data in dropoutAnalysis" :key="data.range" class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small">{{ data.range }}</span>
+                                <span class="small fw-bold">{{ data.count }}명 ({{ data.percentage }}%)</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" :class="{
+                                    'bg-danger': data.range.startsWith('0-') || data.range.startsWith('10-'),
+                                    'bg-warning': data.range.startsWith('20-') || data.range.startsWith('30-') || data.range.startsWith('40-'),
+                                    'bg-success': data.range.startsWith('90-')
+                                }" :style="{ width: data.percentage + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <small>⚠️ 초반 10% 구간에서 이탈이 높습니다.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 평균 학습 시간 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h6 class="card-title mb-4">강좌별 평균 학습 시간</h6>
+            <div class="row g-3">
+                <div v-for="data in avgLearningTimeData" :key="data.course" class="col-md-6 col-lg-4">
+                    <div class="card border">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold">{{ data.course }}</span>
+                                <span class="badge bg-primary">{{ data.time }}시간</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-primary" :style="{ width: (data.time / 10 * 100) + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

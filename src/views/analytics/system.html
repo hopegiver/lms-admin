@@ -1,0 +1,124 @@
+<div class="analytics-system">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">시스템 분석</h4>
+            <p class="text-muted mb-0">서버 리소스와 성능을 모니터링합니다</p>
+        </div>
+    </div>
+
+    <!-- 서버 리소스 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-2">CPU 사용률</div>
+                    <div class="fs-3 fw-bold mb-2">{{ serverMetrics.cpu }}%</div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar" :class="'bg-' + getStatusColor(serverMetrics.cpu)" :style="{ width: serverMetrics.cpu + '%' }"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-2">메모리 사용률</div>
+                    <div class="fs-3 fw-bold mb-2">{{ serverMetrics.memory }}%</div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar" :class="'bg-' + getStatusColor(serverMetrics.memory)" :style="{ width: serverMetrics.memory + '%' }"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-2">디스크 사용률</div>
+                    <div class="fs-3 fw-bold mb-2">{{ serverMetrics.disk }}%</div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar" :class="'bg-' + getStatusColor(serverMetrics.disk)" :style="{ width: serverMetrics.disk + '%' }"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-2">네트워크 사용률</div>
+                    <div class="fs-3 fw-bold mb-2">{{ serverMetrics.network }}%</div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar" :class="'bg-' + getStatusColor(serverMetrics.network)" :style="{ width: serverMetrics.network + '%' }"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API 성능 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h6 class="card-title mb-4">API 성능</h6>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>엔드포인트</th>
+                            <th class="text-center">평균 응답시간</th>
+                            <th class="text-center">요청 수</th>
+                            <th class="text-center">에러 수</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="api in apiPerformance" :key="api.endpoint">
+                            <td class="fw-bold">{{ api.endpoint }}</td>
+                            <td class="text-center"><span class="badge bg-primary">{{ api.avgTime }}ms</span></td>
+                            <td class="text-center">{{ formatNumber(api.requests) }}</td>
+                            <td class="text-center"><span class="badge bg-danger">{{ api.errors }}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- 에러 로그 -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">최근 에러 로그</h6>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <div v-for="(error, index) in errorLogs" :key="index" class="d-flex align-items-start mb-3 pb-3 border-bottom">
+                            <div class="me-3">
+                                <span class="badge" :class="error.level === 'ERROR' ? 'bg-danger' : 'bg-warning'">{{ error.level }}</span>
+                            </div>
+                            <div class="flex-fill">
+                                <div class="fw-bold">{{ error.message }}</div>
+                                <div class="small text-muted">발생 횟수: {{ error.count }}회</div>
+                            </div>
+                            <div class="text-muted small">{{ error.time }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 브라우저 통계 -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">브라우저별 접속</h6>
+                    <div v-for="browser in browserStats" :key="browser.browser" class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ browser.browser }}</span>
+                            <span class="fw-bold">{{ formatNumber(browser.users) }}</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" :style="{ width: browser.percentage + '%' }"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

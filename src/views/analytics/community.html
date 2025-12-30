@@ -1,0 +1,79 @@
+<div class="analytics-community">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">커뮤니티 분석</h4>
+            <p class="text-muted mb-0">게시판 활동과 문의 현황을 분석합니다</p>
+        </div>
+    </div>
+
+    <!-- 게시판 통계 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h6 class="card-title mb-4">게시판별 활동</h6>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>게시판</th>
+                            <th class="text-center">게시글</th>
+                            <th class="text-center">댓글</th>
+                            <th class="text-center">조회수</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="board in boardStats" :key="board.board">
+                            <td class="fw-bold">{{ board.board }}</td>
+                            <td class="text-center">{{ formatNumber(board.posts) }}</td>
+                            <td class="text-center">{{ formatNumber(board.comments) }}</td>
+                            <td class="text-center">{{ formatNumber(board.views) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문의 통계 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h6 class="card-title mb-4">문의 처리 현황</h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="card border">
+                        <div class="card-body text-center">
+                            <div class="small text-muted mb-2">총 문의</div>
+                            <div class="fs-4 fw-bold">{{ formatNumber(inquiryStats.total) }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border border-warning">
+                        <div class="card-body text-center">
+                            <div class="small text-muted mb-2">처리 대기</div>
+                            <div class="fs-4 fw-bold text-warning">{{ formatNumber(inquiryStats.pending) }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border border-info">
+                        <div class="card-body text-center">
+                            <div class="small text-muted mb-2">처리 중</div>
+                            <div class="fs-4 fw-bold text-info">{{ formatNumber(inquiryStats.processing) }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border border-success">
+                        <div class="card-body text-center">
+                            <div class="small text-muted mb-2">처리 완료</div>
+                            <div class="fs-4 fw-bold text-success">{{ formatNumber(inquiryStats.completed) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-info mt-3 mb-0">
+                <strong>평균 응답 시간:</strong> {{ inquiryStats.avgResponseTime }}
+            </div>
+        </div>
+    </div>
+</div>

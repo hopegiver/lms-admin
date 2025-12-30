@@ -1,0 +1,240 @@
+<div class="analytics-users">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">사용자 분석</h4>
+            <p class="text-muted mb-0">사용자 증가와 유지율을 분석합니다</p>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm" :class="dateRange === '7days' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('7days')">7일</button>
+            <button type="button" class="btn btn-sm" :class="dateRange === '30days' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('30days')">30일</button>
+            <button type="button" class="btn btn-sm" :class="dateRange === '90days' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('90days')">90일</button>
+        </div>
+    </div>
+
+    <!-- 핵심 사용자 지표 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">전체 사용자</div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-2"><span class="fs-5">👥</span></div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ userMetrics.totalUsers }}</div>
+                    <div class="small"><span class="text-success">▲ {{ userMetrics.usersChange }}%</span> <span class="text-muted ms-1">전월 대비</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">활성 사용자</div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-2"><span class="fs-5">✨</span></div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ userMetrics.activeUsers }}</div>
+                    <div class="small"><span class="text-success">▲ {{ userMetrics.activeChange }}%</span> <span class="text-muted ms-1">전월 대비</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">신규 가입</div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-2"><span class="fs-5">⭐</span></div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ userMetrics.newUsers }}</div>
+                    <div class="small"><span class="text-success">▲ {{ userMetrics.newChange }}%</span> <span class="text-muted ms-1">전월 대비</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">이탈률</div>
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-2"><span class="fs-5">📉</span></div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ userMetrics.churnRate }}</div>
+                    <div class="small"><span class="text-success">▼ {{ userMetrics.churnChange }}%p</span> <span class="text-muted ms-1">전월 대비</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사용자 증가 추이 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h6 class="card-title mb-4">사용자 증가 추이</h6>
+            <div class="chart-container" style="height: 300px;">
+                <div class="d-flex align-items-end justify-content-between h-100" style="gap: 12px;">
+                    <div v-for="data in userGrowthData" :key="data.month" class="flex-fill text-center">
+                        <div class="mb-2">
+                            <div class="bg-primary rounded" :style="{ height: getChartBarHeight(data.total), minHeight: '20px' }"></div>
+                        </div>
+                        <div class="small fw-bold">{{ formatNumber(data.total) }}</div>
+                        <div class="small text-success">+{{ formatNumber(data.new) }}</div>
+                        <div class="small text-muted">{{ data.month }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사용자 분포 -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">사용자 유형별 분포</h6>
+                    <div v-for="type in userTypeDistribution" :key="type.type" class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ type.type }}</span>
+                            <span class="fw-bold">{{ formatNumber(type.count) }}</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" :style="{ width: type.percentage + '%' }"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">연령대별 분포</h6>
+                    <div v-for="age in ageDistribution" :key="age.range" class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ age.range }}</span>
+                            <span class="fw-bold">{{ formatNumber(age.count) }}</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" :style="{ width: age.percentage + '%' }"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">지역별 분포</h6>
+                    <div v-for="region in regionDistribution" :key="region.region" class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ region.region }}</span>
+                            <span class="fw-bold">{{ formatNumber(region.count) }}</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" :style="{ width: region.percentage + '%' }"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 유입 경로 & 활성 사용자 -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">유입 경로 분석</h6>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>경로</th>
+                                    <th class="text-center">사용자</th>
+                                    <th class="text-center">비율</th>
+                                    <th class="text-end">마케팅 비용</th>
+                                    <th class="text-end">CPA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="channel in acquisitionChannels" :key="channel.channel">
+                                    <td class="fw-bold">{{ channel.channel }}</td>
+                                    <td class="text-center">{{ formatNumber(channel.users) }}</td>
+                                    <td class="text-center">{{ channel.percentage }}%</td>
+                                    <td class="text-end">{{ formatCurrency(channel.cost) }}</td>
+                                    <td class="text-end">{{ formatCurrency(channel.cost / channel.users) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">활성 사용자 분석 (DAU/WAU/MAU)</h6>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>일일 활성 사용자 (DAU)</span>
+                            <span class="fw-bold">{{ formatNumber(activeUsersTrend.dau) }}</span>
+                        </div>
+                        <div class="progress mb-1" style="height: 20px;">
+                            <div class="progress-bar bg-primary" :style="{ width: activeUsersTrend.dauRate + '%' }">{{ activeUsersTrend.dauRate }}%</div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>주간 활성 사용자 (WAU)</span>
+                            <span class="fw-bold">{{ formatNumber(activeUsersTrend.wau) }}</span>
+                        </div>
+                        <div class="progress mb-1" style="height: 20px;">
+                            <div class="progress-bar bg-success" :style="{ width: activeUsersTrend.wauRate + '%' }">{{ activeUsersTrend.wauRate }}%</div>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>월간 활성 사용자 (MAU)</span>
+                            <span class="fw-bold">{{ formatNumber(activeUsersTrend.mau) }}</span>
+                        </div>
+                        <div class="progress mb-1" style="height: 20px;">
+                            <div class="progress-bar bg-warning" :style="{ width: activeUsersTrend.mauRate + '%' }">{{ activeUsersTrend.mauRate }}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 코호트 분석 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h6 class="card-title mb-4">코호트 분석 (월별 유지율 %)</h6>
+            <div class="table-responsive">
+                <table class="table table-sm text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>가입월</th>
+                            <th>M0</th>
+                            <th>M1</th>
+                            <th>M2</th>
+                            <th>M3</th>
+                            <th>M4</th>
+                            <th>M5</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="cohort in cohortAnalysis" :key="cohort.month">
+                            <td class="fw-bold">{{ cohort.month }}</td>
+                            <td><span class="badge bg-primary">{{ cohort.m0 }}%</span></td>
+                            <td><span v-if="cohort.m1" class="badge" :class="getCohortColor(cohort.m1)">{{ cohort.m1 }}%</span></td>
+                            <td><span v-if="cohort.m2" class="badge" :class="getCohortColor(cohort.m2)">{{ cohort.m2 }}%</span></td>
+                            <td><span v-if="cohort.m3" class="badge" :class="getCohortColor(cohort.m3)">{{ cohort.m3 }}%</span></td>
+                            <td><span v-if="cohort.m4" class="badge" :class="getCohortColor(cohort.m4)">{{ cohort.m4 }}%</span></td>
+                            <td><span v-if="cohort.m5" class="badge" :class="getCohortColor(cohort.m5)">{{ cohort.m5 }}%</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="alert alert-info mt-3 mb-0">
+                <small>💡 최근 코호트일수록 유지율이 개선되고 있습니다.</small>
+            </div>
+        </div>
+    </div>
+</div>

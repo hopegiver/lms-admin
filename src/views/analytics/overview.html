@@ -1,0 +1,234 @@
+<div class="analytics-overview">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">통합 대시보드</h4>
+            <p class="text-muted mb-0">전체 핵심 지표를 한눈에 확인하세요</p>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm" :class="dateRange === 'today' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('today')">오늘</button>
+            <button type="button" class="btn btn-sm" :class="dateRange === '7days' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('7days')">7일</button>
+            <button type="button" class="btn btn-sm" :class="dateRange === '30days' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('30days')">30일</button>
+            <button type="button" class="btn btn-sm" :class="dateRange === '90days' ? 'btn-primary' : 'btn-outline-secondary'" @click="changeDateRange('90days')">90일</button>
+        </div>
+    </div>
+
+    <!-- 실시간 접속자 알림 -->
+    <div class="alert alert-info d-flex align-items-center mb-4">
+        <span class="me-2 fs-4">⚡</span>
+        <div>
+            <strong>실시간 접속자: {{ liveUsers }}명</strong>
+            <span class="ms-2 text-muted">현재 학습 중인 사용자가 활동하고 있습니다</span>
+        </div>
+    </div>
+
+    <!-- 핵심 지표 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">총 매출</div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-2">
+                            <span class="fs-5">💰</span>
+                        </div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ keyMetrics.totalRevenue }}</div>
+                    <div class="small">
+                        <span class="text-success">▲ {{ keyMetrics.revenueChange }}%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">전체 사용자</div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-2">
+                            <span class="fs-5">👥</span>
+                        </div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ keyMetrics.totalUsers }}</div>
+                    <div class="small">
+                        <span class="text-success">▲ {{ keyMetrics.usersChange }}%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">운영 강좌</div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-2">
+                            <span class="fs-5">📚</span>
+                        </div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ keyMetrics.activeCourses }}</div>
+                    <div class="small">
+                        <span class="text-success">▲ {{ keyMetrics.coursesChange }}%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="text-muted small">평균 완강률</div>
+                        <div class="rounded-circle bg-info bg-opacity-10 p-2">
+                            <span class="fs-5">📈</span>
+                        </div>
+                    </div>
+                    <div class="fs-3 fw-bold mb-1">{{ keyMetrics.completionRate }}</div>
+                    <div class="small">
+                        <span class="text-success">▲ {{ keyMetrics.completionChange }}%</span>
+                        <span class="text-muted ms-1">전월 대비</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 차트 영역 -->
+    <div class="row g-4 mb-4">
+        <!-- 매출 추이 -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">매출 추이</h6>
+                    <div class="chart-container" style="height: 300px;">
+                        <div class="d-flex align-items-end justify-content-between h-100" style="gap: 8px;">
+                            <div v-for="data in revenueChartData" :key="data.date" class="flex-fill text-center">
+                                <div class="mb-2">
+                                    <div class="bg-primary rounded" :style="{ height: getChartBarHeight(data.amount), minHeight: '10px' }"></div>
+                                </div>
+                                <div class="small text-muted">{{ data.date }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오늘의 요약 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">오늘의 요약</h6>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">신규 가입</span>
+                            <span class="fw-bold">{{ todaySummary.newUsers }}명</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">신규 수강</span>
+                            <span class="fw-bold">{{ todaySummary.newEnrollments }}건</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">강좌 완료</span>
+                            <span class="fw-bold">{{ todaySummary.completedCourses }}건</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-info" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">매출</span>
+                            <span class="fw-bold">{{ todaySummary.revenue }}</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 인기 강좌 & 최근 활동 -->
+    <div class="row g-4">
+        <!-- 인기 강좌 TOP 5 -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">인기 강좌 TOP 5</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>순위</th>
+                                    <th>강좌명</th>
+                                    <th class="text-end">수강생</th>
+                                    <th class="text-end">매출</th>
+                                    <th class="text-center">평점</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(course, index) in topCourses" :key="course.id">
+                                    <td>
+                                        <span class="badge" :class="{
+                                            'bg-warning': index === 0,
+                                            'bg-secondary': index === 1,
+                                            'bg-info': index === 2,
+                                            'bg-light text-dark': index > 2
+                                        }">{{ index + 1 }}</span>
+                                    </td>
+                                    <td class="fw-bold">{{ course.title }}</td>
+                                    <td class="text-end">{{ formatNumber(course.enrollments) }}</td>
+                                    <td class="text-end">{{ course.revenue }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning">⭐ {{ course.rating }}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최근 활동 -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-4">최근 활동</h6>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <div v-for="activity in recentActivities" :key="activity.id" class="d-flex align-items-start mb-3 pb-3 border-bottom">
+                            <div class="me-3">
+                                <span class="badge" :class="'bg-' + getActivityColor(activity.type)">
+                                    {{ getActivityIcon(activity.type) }}
+                                </span>
+                            </div>
+                            <div class="flex-fill">
+                                <div class="fw-bold">{{ activity.user }}</div>
+                                <div class="small text-muted">
+                                    <span v-if="activity.course">{{ activity.course }}</span>
+                                    <span v-if="activity.amount">{{ activity.amount }}</span>
+                                    <span v-if="activity.subject">{{ activity.subject }}</span>
+                                    <span v-if="activity.rating"> - ⭐ {{ activity.rating }}점</span>
+                                </div>
+                            </div>
+                            <div class="text-muted small">{{ activity.time }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
