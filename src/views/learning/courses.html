@@ -92,7 +92,7 @@
                                         <span class="fs-4">📚</span>
                                     </div>
                                     <div>
-                                        <div class="fw-medium">{{ course.title }}</div>
+                                        <div class="fw-medium" @click="viewDetail(course)" style="cursor: pointer;">{{ course.title }}</div>
                                         <small class="text-muted">{{ course.lessons }}개 차시 · {{ course.duration }}</small>
                                     </div>
                                 </div>

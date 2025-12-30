@@ -87,7 +87,7 @@
                                         {{ learner.name.charAt(0) }}
                                     </div>
                                     <div>
-                                        <div class="fw-medium">{{ learner.name }}</div>
+                                        <div class="fw-medium" @click="viewDetail(learner)" style="cursor: pointer;">{{ learner.name }}</div>
                                     </div>
                                 </div>
                             </td>

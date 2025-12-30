@@ -52,6 +52,9 @@ export default {
         toggleSelectAll() {
             this.selectedIds = this.selectAll ? this.courses.map(c => c.id) : [];
         },
+        viewDetail(course) {
+            this.navigateTo('/learning/courses-detail', { id: course.id });
+        },
         openCreateWizard() { this.navigateTo('/learning/courses-create'); },
         openCategoryModal() { alert('카테고리 관리 모달은 추후 구현 예정입니다.'); },
         editCourse(course) { this.navigateTo('/learning/courses-detail', { id: course.id }); },
