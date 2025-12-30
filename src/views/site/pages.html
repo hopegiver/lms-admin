@@ -62,7 +62,7 @@
                     <tbody>
                         <tr v-for="page in pages" :key="page.id">
                             <td>
-                                <div class="fw-medium">{{ page.title }}</div>
+                                <div class="fw-medium" @click="viewDetail(page)" style="cursor: pointer;">{{ page.title }}</div>
                                 <div class="text-muted small">{{ page.description }}</div>
                             </td>
                             <td><code class="text-primary">{{ page.url }}</code></td>

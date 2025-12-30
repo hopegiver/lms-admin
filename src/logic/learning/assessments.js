@@ -40,12 +40,21 @@ export default {
         getDifficultyText(diff) {
             return { 'easy': '쉬움', 'medium': '보통', 'hard': '어려움' }[diff] || diff;
         },
-        openCreateModal() { alert(`${this.activeTab === 'exams' ? '시험' : this.activeTab === 'assignments' ? '과제' : '문제'} 생성 모달은 추후 구현 예정입니다.`); },
-        editExam(exam) { alert(`${exam.title} 수정 기능은 추후 구현 예정입니다.`); },
+        openCreateModal() {
+            this.navigateTo('/learning/assessments-create');
+        },
+        viewDetail(item) {
+            this.navigateTo('/learning/assessments-detail', {id: item.id});
+        },
+        editExam(exam) {
+            this.navigateTo('/learning/assessments-detail', {id: exam.id});
+        },
         viewResults(exam) { alert(`${exam.title} 결과 보기 기능은 추후 구현 예정입니다.`); },
         duplicateExam(exam) { alert('복사 기능은 추후 구현 예정입니다.'); },
         deleteExam(exam) { if (confirm('삭제하시겠습니까?')) alert('삭제되었습니다.'); },
-        editAssignment(a) { alert(`${a.title} 수정 기능은 추후 구현 예정입니다.`); },
+        editAssignment(a) {
+            this.navigateTo('/learning/assessments-detail', {id: a.id});
+        },
         gradeAssignment(a) { alert('채점 기능은 추후 구현 예정입니다.'); },
         viewSubmissions(a) { alert('제출물 보기 기능은 추후 구현 예정입니다.'); },
         deleteAssignment(a) { if (confirm('삭제하시겠습니까?')) alert('삭제되었습니다.'); },

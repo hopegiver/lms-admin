@@ -37,10 +37,11 @@ export default {
             this.filters = { status: '', paymentMethod: '', startDate: '', endDate: '' };
             this.searchQuery = '';
         },
+        viewDetail(order) {
+            this.navigateTo('/commerce/orders-detail', {id: order.id});
+        },
         openOrderDetail(order) {
-            this.selectedOrder = order;
-            const offcanvas = new bootstrap.Offcanvas(document.getElementById('orderDetailPanel'));
-            offcanvas.show();
+            this.navigateTo('/commerce/orders-detail', {id: order.id});
         },
         exportOrders() { alert('엑셀 다운로드 기능은 추후 구현 예정입니다.'); },
         resendReceipt(order) { alert(`${order.orderNo} 영수증 재발송 기능은 추후 구현 예정입니다.`); },

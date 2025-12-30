@@ -52,6 +52,11 @@ export default {
             this.searchQuery = '';
         },
         exportPayments() { alert('결제 내역 다운로드 기능은 추후 구현 예정입니다.'); },
-        viewPaymentDetail(payment) { alert(`${payment.paymentId} 상세 보기 기능은 추후 구현 예정입니다.`); }
+        viewDetail(payment) {
+            this.navigateTo('/commerce/payments-detail', {id: payment.id});
+        },
+        viewPaymentDetail(payment) {
+            this.navigateTo('/commerce/payments-detail', {id: payment.id});
+        }
     }
 }

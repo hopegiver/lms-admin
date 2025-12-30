@@ -75,7 +75,7 @@
                         <tbody>
                             <tr v-for="item in progressList" :key="item.id">
                                 <td>
-                                    <div class="fw-medium">{{ item.learner }}</div>
+                                    <div class="fw-medium" @click="viewDetail(item)" style="cursor: pointer;">{{ item.learner }}</div>
                                     <small class="text-muted">{{ item.email }}</small>
                                 </td>
                                 <td>{{ item.course }}</td>

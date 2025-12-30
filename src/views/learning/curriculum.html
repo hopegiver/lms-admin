@@ -33,7 +33,7 @@
                            @click.prevent="selectCourse(course)">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="fw-medium">{{ course.title }}</div>
+                                    <div class="fw-medium" @click.stop="viewDetail(course)" style="cursor: pointer;">{{ course.title }}</div>
                                     <small class="text-muted">{{ course.sections }}개 섹션 · {{ course.lessons }}개 차시</small>
                                 </div>
                                 <span class="badge" :class="course.status === 'published' ? 'bg-success' : 'bg-warning'">

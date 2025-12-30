@@ -29,6 +29,9 @@ export default {
         }
     },
     methods: {
+        viewDetail(course) {
+            this.navigateTo('/learning/curriculum-detail', {id: course.id});
+        },
         selectCourse(course) {
             this.selectedCourse = course;
             this.curriculum = [

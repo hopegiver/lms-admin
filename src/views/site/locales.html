@@ -27,7 +27,7 @@
                             <div class="d-flex align-items-center gap-2">
                                 <span class="fs-5">{{ lang.flag }}</span>
                                 <div>
-                                    <div class="fw-medium">{{ lang.name }}</div>
+                                    <div class="fw-medium" @click.stop="viewDetail(lang)" style="cursor: pointer;">{{ lang.name }}</div>
                                     <div class="text-muted small">{{ lang.code }}</div>
                                 </div>
                             </div>

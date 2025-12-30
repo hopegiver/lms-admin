@@ -28,7 +28,7 @@
                                     {{ org.expanded ? '▼' : '▶' }}
                                 </span>
                                 <span class="me-2">🏢</span>
-                                <span class="flex-grow-1">{{ org.name }}</span>
+                                <span class="flex-grow-1" @click.stop="viewDetail(org)" style="cursor: pointer;">{{ org.name }}</span>
                                 <span class="badge bg-secondary">{{ org.memberCount }}명</span>
                             </div>
 
@@ -43,7 +43,7 @@
                                         </span>
                                         <span class="me-2" v-else style="width: 16px;"></span>
                                         <span class="me-2">📁</span>
-                                        <span class="flex-grow-1">{{ child.name }}</span>
+                                        <span class="flex-grow-1" @click.stop="viewDetail(child)" style="cursor: pointer;">{{ child.name }}</span>
                                         <span class="badge bg-secondary">{{ child.memberCount }}명</span>
                                     </div>
 
@@ -55,7 +55,7 @@
                                                  @click="selectOrg(sub)">
                                                 <span class="me-2" style="width: 16px;"></span>
                                                 <span class="me-2">📂</span>
-                                                <span class="flex-grow-1">{{ sub.name }}</span>
+                                                <span class="flex-grow-1" @click.stop="viewDetail(sub)" style="cursor: pointer;">{{ sub.name }}</span>
                                                 <span class="badge bg-secondary">{{ sub.memberCount }}명</span>
                                             </div>
                                         </div>

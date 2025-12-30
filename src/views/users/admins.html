@@ -50,7 +50,7 @@
                                             {{ admin.name.charAt(0) }}
                                         </div>
                                         <div>
-                                            <div class="fw-medium">{{ admin.name }}</div>
+                                            <div class="fw-medium" @click="viewDetail(admin)" style="cursor: pointer;">{{ admin.name }}</div>
                                         </div>
                                     </div>
                                 </td>

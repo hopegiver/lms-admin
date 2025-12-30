@@ -50,8 +50,11 @@ export default {
         selectMenu(menu) {
             this.selectedMenu = menu;
         },
+        viewDetail(menu) {
+            this.navigateTo('/site/menus-detail', {id: menu.id});
+        },
         openCreateMenuModal() {
-            alert('메뉴 생성 기능은 추후 구현 예정입니다.');
+            this.navigateTo('/site/menus-create');
         },
         addMenuItem() {
             const label = prompt('메뉴 항목 이름을 입력하세요:');

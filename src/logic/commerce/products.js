@@ -54,9 +54,16 @@ export default {
             this.searchQuery = '';
             this.sortBy = 'newest';
         },
-        openCreateModal() { alert('상품 등록 모달은 추후 구현 예정입니다.'); },
+        openCreateModal() {
+            this.navigateTo('/commerce/products-create');
+        },
+        viewDetail(product) {
+            this.navigateTo('/commerce/products-detail', {id: product.id});
+        },
         openCategoryModal() { alert('카테고리 관리 모달은 추후 구현 예정입니다.'); },
-        editProduct(product) { alert(`${product.name} 수정 기능은 추후 구현 예정입니다.`); },
+        editProduct(product) {
+            this.navigateTo('/commerce/products-detail', {id: product.id});
+        },
         toggleStatus(product) {
             const newStatus = product.status === 'active' ? 'inactive' : 'active';
             if (confirm(`${product.name} 상품을 ${newStatus === 'active' ? '판매중' : '판매중지'}로 변경하시겠습니까?`)) {

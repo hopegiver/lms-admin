@@ -52,8 +52,11 @@ export default {
         selectLanguage(lang) {
             this.selectedLanguage = lang;
         },
+        viewDetail(lang) {
+            this.navigateTo('/site/locales-detail', {code: lang.code});
+        },
         openAddLanguageModal() {
-            alert('언어 추가 기능은 추후 구현 예정입니다.');
+            this.navigateTo('/site/locales-create');
         },
         importTranslations() {
             alert('번역 가져오기 기능은 추후 구현 예정입니다.');

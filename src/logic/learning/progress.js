@@ -52,7 +52,9 @@ export default {
         getCompletionText(status) {
             return { 'completed': '수료', 'pending': '수료 예정', 'failed': '미수료' }[status] || status;
         },
-        viewDetail(item) { alert(`${item.learner}의 상세 학습 현황 기능은 추후 구현 예정입니다.`); },
+        viewDetail(item) {
+            this.navigateTo('/learning/progress-detail', {id: item.id});
+        },
         editAttendance(att) { alert(`${att.learner}의 출석 수정 기능은 추후 구현 예정입니다.`); },
         issueCertificate(comp) { alert(`${comp.learner}의 수료증 발급 기능은 추후 구현 예정입니다.`); },
         exportReport() { alert('리포트 내보내기 기능은 추후 구현 예정입니다.'); }

@@ -50,7 +50,7 @@
                         <tbody>
                             <tr v-for="exam in exams" :key="exam.id">
                                 <td>
-                                    <div class="fw-medium">{{ exam.title }}</div>
+                                    <div class="fw-medium" @click="viewDetail(exam)" style="cursor: pointer;">{{ exam.title }}</div>
                                     <small class="text-muted">{{ exam.type }}</small>
                                 </td>
                                 <td>{{ exam.course }}</td>
@@ -103,7 +103,7 @@
                         <tbody>
                             <tr v-for="assignment in assignments" :key="assignment.id">
                                 <td>
-                                    <div class="fw-medium">{{ assignment.title }}</div>
+                                    <div class="fw-medium" @click="viewDetail(assignment)" style="cursor: pointer;">{{ assignment.title }}</div>
                                 </td>
                                 <td>{{ assignment.course }}</td>
                                 <td>{{ assignment.dueDate }}</td>

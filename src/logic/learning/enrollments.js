@@ -37,7 +37,12 @@ export default {
         },
         approve(req) { alert(`${req.learner}의 수강 신청을 승인합니다.`); },
         reject(req) { if (confirm(`${req.learner}의 수강 신청을 거절하시겠습니까?`)) alert('거절 처리되었습니다.'); },
-        openAssignModal() { alert('수강 배정 모달은 추후 구현 예정입니다.'); },
+        viewDetail(item) {
+            this.navigateTo('/learning/enrollments-detail', {id: item.id});
+        },
+        openAssignModal() {
+            this.navigateTo('/learning/enrollments-create');
+        },
         openBulkAssign() { alert('일괄 배정 기능은 추후 구현 예정입니다.'); },
         extendPeriod(enroll) { alert(`${enroll.learner}의 수강 기간 연장 기능은 추후 구현 예정입니다.`); },
         resetProgress(enroll) { if (confirm('진도를 초기화하시겠습니까?')) alert('초기화되었습니다.'); },

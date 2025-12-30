@@ -117,10 +117,13 @@ export default {
             return texts[role] || role;
         },
         openCreateModal() {
-            alert('관리자 등록 모달은 추후 구현 예정입니다.');
+            this.navigateTo('/users/admins-create');
+        },
+        viewDetail(admin) {
+            this.navigateTo('/users/admins-detail', {id: admin.id});
         },
         editAdmin(admin) {
-            alert(`${admin.name} 수정 기능은 추후 구현 예정입니다.`);
+            this.navigateTo('/users/admins-detail', {id: admin.id});
         },
         resetPassword(admin) {
             if (confirm(`${admin.name}의 비밀번호를 초기화하시겠습니까?`)) {

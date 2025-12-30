@@ -135,15 +135,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="inquiry in inquiries" :key="inquiry.id" @click="openInquiryDetail(inquiry)" style="cursor: pointer;">
-                            <td @click.stop><input type="checkbox" class="form-check-input"></td>
+                        <tr v-for="inquiry in inquiries" :key="inquiry.id">
+                            <td><input type="checkbox" class="form-check-input"></td>
                             <td>
                                 <span class="badge" :class="getPriorityBadgeClass(inquiry.priority)">
                                     {{ getPriorityText(inquiry.priority) }}
                                 </span>
                             </td>
                             <td>
-                                <div class="fw-medium">{{ inquiry.title }}</div>
+                                <div class="fw-medium" @click="viewDetail(inquiry)" style="cursor: pointer;">{{ inquiry.title }}</div>
                                 <div class="text-muted small text-truncate" style="max-width: 300px;">{{ inquiry.preview }}</div>
                             </td>
                             <td><span class="badge bg-light text-dark">{{ getCategoryText(inquiry.category) }}</span></td>

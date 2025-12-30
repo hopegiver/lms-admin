@@ -32,10 +32,13 @@ export default {
             this.searchQuery = '';
         },
         openCreatePageModal() {
-            alert('페이지 생성 기능은 추후 구현 예정입니다.');
+            this.navigateTo('/site/pages-create');
+        },
+        viewDetail(page) {
+            this.navigateTo('/site/pages-detail', {id: page.id});
         },
         editPage(page) {
-            alert(`${page.title} 편집 페이지로 이동합니다.`);
+            this.navigateTo('/site/pages-detail', {id: page.id});
         },
         previewPage(page) {
             alert(`${page.url} 미리보기`);

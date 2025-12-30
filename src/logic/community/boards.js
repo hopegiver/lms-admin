@@ -30,13 +30,16 @@ export default {
     },
     methods: {
         openCreateBoardModal() {
-            alert('게시판 생성 기능은 추후 구현 예정입니다.');
+            this.navigateTo('/community/boards-create');
+        },
+        viewDetail(board) {
+            this.navigateTo('/community/boards-detail', {id: board.id});
         },
         viewPosts(board) {
-            alert(`${board.name} 게시글 목록 페이지로 이동합니다.`);
+            this.navigateTo('/community/boards-detail', {id: board.id});
         },
         editBoard(board) {
-            alert(`${board.name} 수정 기능은 추후 구현 예정입니다.`);
+            this.navigateTo('/community/boards-detail', {id: board.id});
         },
         toggleBoardStatus(board) {
             board.isActive = !board.isActive;

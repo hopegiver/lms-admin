@@ -40,7 +40,7 @@
                     </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h6 class="card-title mb-0">{{ banner.title }}</h6>
+                            <h6 class="card-title mb-0" @click="viewDetail(banner)" style="cursor: pointer;">{{ banner.title }}</h6>
                             <span class="badge" :class="banner.isActive ? 'bg-success' : 'bg-secondary'">
                                 {{ banner.isActive ? '활성' : '비활성' }}
                             </span>
@@ -82,7 +82,7 @@
                         <tbody>
                             <tr v-for="popup in popups" :key="popup.id">
                                 <td>
-                                    <div class="fw-medium">{{ popup.title }}</div>
+                                    <div class="fw-medium" @click="viewDetail(popup)" style="cursor: pointer;">{{ popup.title }}</div>
                                     <div class="text-muted small">{{ popup.size }}</div>
                                 </td>
                                 <td>{{ popup.displayPage }}</td>

@@ -120,7 +120,7 @@
                          :class="getThumbnailClass(file.type)">
                         <span class="fs-1">{{ getFileIcon(file.type) }}</span>
                     </div>
-                    <div class="small fw-medium text-truncate" :title="file.name">{{ file.name }}</div>
+                    <div class="small fw-medium text-truncate" :title="file.name" @click="viewDetail(file)" style="cursor: pointer;">{{ file.name }}</div>
                     <div class="small text-muted">{{ file.size }}</div>
                 </div>
                 <div class="card-footer bg-transparent border-0 p-2 pt-0">
@@ -164,7 +164,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <span class="fs-4 me-2">{{ getFileIcon(file.type) }}</span>
-                                    <span class="fw-medium">{{ file.name }}</span>
+                                    <span class="fw-medium" @click="viewDetail(file)" style="cursor: pointer;">{{ file.name }}</span>
                                 </div>
                             </td>
                             <td><span class="badge bg-light text-dark">{{ getFileTypeText(file.type) }}</span></td>

@@ -164,7 +164,7 @@
                                         <span class="fs-5">{{ getProductIcon(product.type) }}</span>
                                     </div>
                                     <div>
-                                        <div class="fw-medium">{{ product.name }}</div>
+                                        <div class="fw-medium" @click="viewDetail(product)" style="cursor: pointer;">{{ product.name }}</div>
                                         <div class="text-muted small">{{ product.instructor || product.courses + '개 강좌' }}</div>
                                     </div>
                                 </div>

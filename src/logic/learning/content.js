@@ -34,7 +34,12 @@ export default {
         selectFile(file) {
             console.log('Selected:', file.name);
         },
-        openUploadModal() { alert('파일 업로드 모달은 추후 구현 예정입니다.'); },
+        viewDetail(file) {
+            this.navigateTo('/learning/content-detail', {id: file.id});
+        },
+        openUploadModal() {
+            this.navigateTo('/learning/content-create');
+        },
         previewFile(file) { alert(`${file.name} 미리보기 기능은 추후 구현 예정입니다.`); },
         downloadFile(file) { alert(`${file.name} 다운로드 기능은 추후 구현 예정입니다.`); },
         editFile(file) { alert(`${file.name} 정보 수정 기능은 추후 구현 예정입니다.`); },

@@ -135,9 +135,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="order in orders" :key="order.id" @click="openOrderDetail(order)" style="cursor: pointer;">
-                            <td @click.stop><input type="checkbox" class="form-check-input"></td>
-                            <td><span class="fw-medium text-primary">{{ order.orderNo }}</span></td>
+                        <tr v-for="order in orders" :key="order.id">
+                            <td><input type="checkbox" class="form-check-input"></td>
+                            <td><span class="fw-medium text-primary" @click="viewDetail(order)" style="cursor: pointer;">{{ order.orderNo }}</span></td>
                             <td>
                                 <div>{{ order.buyer }}</div>
                                 <div class="text-muted small">{{ order.email }}</div>

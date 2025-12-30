@@ -110,7 +110,7 @@
                                 <span class="fs-5">{{ board.icon }}</span>
                             </td>
                             <td>
-                                <div class="fw-medium">{{ board.name }}</div>
+                                <div class="fw-medium" @click="viewDetail(board)" style="cursor: pointer;">{{ board.name }}</div>
                                 <div class="text-muted small">{{ board.description }}</div>
                             </td>
                             <td><code class="text-muted">/{{ board.slug }}</code></td>

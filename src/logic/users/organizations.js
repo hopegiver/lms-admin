@@ -123,10 +123,13 @@ export default {
             this.selectedOrg = org;
         },
         openCreateModal() {
-            alert('부서 추가 모달은 추후 구현 예정입니다.');
+            this.navigateTo('/users/organizations-create');
+        },
+        viewDetail(org) {
+            this.navigateTo('/users/organizations-detail', {id: org.id});
         },
         editOrg(org) {
-            alert(`${org.name} 수정 기능은 추후 구현 예정입니다.`);
+            this.navigateTo('/users/organizations-detail', {id: org.id});
         },
         deleteOrg(org) {
             if (confirm(`${org.name} 부서를 삭제하시겠습니까?`)) {

@@ -43,11 +43,11 @@ export default {
             this.filters = { status: '', category: '', priority: '' };
             this.searchQuery = '';
         },
+        viewDetail(inquiry) {
+            this.navigateTo('/community/inquiries-detail', {id: inquiry.id});
+        },
         openInquiryDetail(inquiry) {
-            this.selectedInquiry = inquiry;
-            this.replyContent = '';
-            const offcanvas = new bootstrap.Offcanvas(document.getElementById('inquiryDetailPanel'));
-            offcanvas.show();
+            this.navigateTo('/community/inquiries-detail', {id: inquiry.id});
         },
         replyInquiry(inquiry) {
             this.openInquiryDetail(inquiry);

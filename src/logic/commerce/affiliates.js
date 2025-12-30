@@ -36,8 +36,13 @@ export default {
         getRankBadgeClass(rank) {
             return { 'Gold': 'bg-warning', 'Silver': 'bg-secondary', 'Bronze': 'bg-orange' }[rank] || 'bg-light text-dark';
         },
+        viewDetail(partner) {
+            this.navigateTo('/commerce/affiliates-detail', {id: partner.id});
+        },
         openPartnerModal() { alert('파트너 등록 모달은 추후 구현 예정입니다.'); },
-        editPartner(partner) { alert(`${partner.name} 수정 기능은 추후 구현 예정입니다.`); },
+        editPartner(partner) {
+            this.navigateTo('/commerce/affiliates-detail', {id: partner.id});
+        },
         viewPartnerStats(partner) { alert(`${partner.name} 통계 보기 기능은 추후 구현 예정입니다.`); },
         deactivatePartner(partner) {
             if (confirm(`${partner.name} 파트너를 비활성화하시겠습니까?`)) {

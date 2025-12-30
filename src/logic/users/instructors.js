@@ -108,15 +108,13 @@ export default {
     },
     methods: {
         openCreateModal() {
-            alert('강사 등록 모달은 추후 구현 예정입니다.');
+            this.navigateTo('/users/instructors-create');
         },
         viewDetail(instructor) {
-            this.selectedInstructor = instructor;
-            const modal = new bootstrap.Modal(document.getElementById('instructorDetailModal'));
-            modal.show();
+            this.navigateTo('/users/instructors-detail', {id: instructor.id});
         },
         editInstructor(instructor) {
-            alert(`${instructor.name} 수정 기능은 추후 구현 예정입니다.`);
+            this.navigateTo('/users/instructors-detail', {id: instructor.id});
         },
         deleteInstructor(instructor) {
             if (confirm(`${instructor.name}을(를) 삭제하시겠습니까?`)) {

@@ -33,9 +33,18 @@ export default {
         getCouponStatusText(status) {
             return { 'active': '활성', 'expired': '만료', 'paused': '일시중지' }[status] || status;
         },
-        openCouponModal() { alert('쿠폰 생성 모달은 추후 구현 예정입니다.'); },
-        openEventModal() { alert('이벤트 생성 모달은 추후 구현 예정입니다.'); },
-        editEvent(event) { alert(`${event.name} 수정 기능은 추후 구현 예정입니다.`); },
+        openCouponModal() {
+            this.navigateTo('/commerce/promotions-create', {type: 'coupon'});
+        },
+        openEventModal() {
+            this.navigateTo('/commerce/promotions-create', {type: 'event'});
+        },
+        viewDetail(item) {
+            this.navigateTo('/commerce/promotions-detail', {id: item.id});
+        },
+        editEvent(event) {
+            this.navigateTo('/commerce/promotions-detail', {id: event.id});
+        },
         duplicateEvent(event) { alert(`${event.name} 복제 기능은 추후 구현 예정입니다.`); },
         deleteEvent(event) {
             if (confirm(`${event.name} 이벤트를 삭제하시겠습니까?`)) {
@@ -48,7 +57,9 @@ export default {
                 event.status = event.status === 'active' ? 'ended' : 'active';
             }
         },
-        editCoupon(coupon) { alert(`${coupon.name} 수정 기능은 추후 구현 예정입니다.`); },
+        editCoupon(coupon) {
+            this.navigateTo('/commerce/promotions-detail', {id: coupon.id});
+        },
         issueCoupon(coupon) { alert(`${coupon.code} 쿠폰 발급 기능은 추후 구현 예정입니다.`); }
     }
 }

@@ -167,7 +167,7 @@
                         </thead>
                         <tbody>
                             <tr v-for="payment in transactions" :key="payment.id">
-                                <td><span class="fw-medium">{{ payment.paymentId }}</span></td>
+                                <td><span class="fw-medium" @click="viewDetail(payment)" style="cursor: pointer;">{{ payment.paymentId }}</span></td>
                                 <td><a href="#" class="text-primary">{{ payment.orderNo }}</a></td>
                                 <td>{{ payment.buyer }}</td>
                                 <td class="text-end fw-bold">{{ payment.amount }}</td>

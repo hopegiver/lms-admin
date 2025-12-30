@@ -19,13 +19,16 @@ export default {
     },
     methods: {
         openCreateBannerModal() {
-            alert('배너 추가 기능은 추후 구현 예정입니다.');
+            this.navigateTo('/site/banners-create', {type: 'banner'});
         },
         openCreatePopupModal() {
-            alert('팝업 추가 기능은 추후 구현 예정입니다.');
+            this.navigateTo('/site/banners-create', {type: 'popup'});
+        },
+        viewDetail(item) {
+            this.navigateTo('/site/banners-detail', {id: item.id});
         },
         editBanner(banner) {
-            alert(`${banner.title} 수정 기능은 추후 구현 예정입니다.`);
+            this.navigateTo('/site/banners-detail', {id: banner.id});
         },
         toggleBanner(banner) {
             banner.isActive = !banner.isActive;
@@ -40,7 +43,7 @@ export default {
             alert(`${popup.title} 미리보기`);
         },
         editPopup(popup) {
-            alert(`${popup.title} 수정 기능은 추후 구현 예정입니다.`);
+            this.navigateTo('/site/banners-detail', {id: popup.id});
         },
         deletePopup(popup) {
             if (confirm(`${popup.title} 팝업을 삭제하시겠습니까?`)) {

@@ -45,8 +45,12 @@ export default {
             }
         },
         exportSettlements() { alert('정산 내역 다운로드 기능은 추후 구현 예정입니다.'); },
-        viewDetail(item) { alert(`${item.settlementNo} 상세 보기 기능은 추후 구현 예정입니다.`); },
-        viewInstructorDetail(instructor) { alert(`${instructor.name} 상세 보기 기능은 추후 구현 예정입니다.`); },
+        viewDetail(item) {
+            this.navigateTo('/commerce/settlements-detail', {id: item.id});
+        },
+        viewInstructorDetail(instructor) {
+            this.navigateTo('/commerce/settlements-detail', {id: instructor.id});
+        },
         editCommission(instructor) { alert(`${instructor.name} 수수료 설정 기능은 추후 구현 예정입니다.`); }
     }
 }

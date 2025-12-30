@@ -90,7 +90,7 @@
                             <tr v-for="req in pendingRequests" :key="req.id">
                                 <td><input type="checkbox" class="form-check-input"></td>
                                 <td>
-                                    <div class="fw-medium">{{ req.learner }}</div>
+                                    <div class="fw-medium" @click="viewDetail(req)" style="cursor: pointer;">{{ req.learner }}</div>
                                     <small class="text-muted">{{ req.email }}</small>
                                 </td>
                                 <td>{{ req.course }}</td>
@@ -155,7 +155,7 @@
                         <tbody>
                             <tr v-for="enroll in enrollments" :key="enroll.id">
                                 <td>
-                                    <div class="fw-medium">{{ enroll.learner }}</div>
+                                    <div class="fw-medium" @click="viewDetail(enroll)" style="cursor: pointer;">{{ enroll.learner }}</div>
                                     <small class="text-muted">{{ enroll.email }}</small>
                                 </td>
                                 <td>{{ enroll.course }}</td>
