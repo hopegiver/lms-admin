@@ -23,7 +23,6 @@ export default {
                 ],
                 learning: [
                     { id: 'courses', name: '강좌', icon: '📖', path: '/learning/courses' },
-                    { id: 'curriculum', name: '커리큘럼', icon: '📋', path: '/learning/curriculum' },
                     { id: 'enrollments', name: '수강 관리', icon: '✅', path: '/learning/enrollments' },
                     { id: 'assessments', name: '평가', icon: '📝', path: '/learning/assessments' },
                     { id: 'progress', name: '학습 현황', icon: '📈', path: '/learning/progress' },
