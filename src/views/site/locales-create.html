@@ -1,0 +1,182 @@
+<div class="locales-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/site/locales')" class="text-muted">
+                    ← 다국어 목록
+                </a>
+            </div>
+            <h4 class="mb-1">다국어 번역 추가</h4>
+            <p class="text-muted mb-0">새로운 번역 항목을 추가합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">번역 키 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.key"
+                                placeholder="예) menu.home" @input="validateKey">
+                            <small class="text-muted">영문, 숫자, 점(.), 언더스코어(_)만 사용 가능</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">카테고리</label>
+                            <select class="form-select" v-model="form.category">
+                                <option value="">선택</option>
+                                <option value="common">공통</option>
+                                <option value="menu">메뉴</option>
+                                <option value="button">버튼</option>
+                                <option value="message">메시지</option>
+                                <option value="error">에러</option>
+                                <option value="validation">유효성 검사</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">설명</label>
+                            <input type="text" class="form-control" v-model="form.description"
+                                placeholder="번역 항목에 대한 설명 (선택사항)">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태</label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="active">활성</option>
+                                <option value="inactive">비활성</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">번역 텍스트</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label">한국어 (ko) <span class="text-danger">*</span></label>
+                            <textarea class="form-control" rows="3" v-model="form.translations.ko"
+                                placeholder="한국어 번역을 입력하세요"></textarea>
+                            <small class="text-muted">{{ form.translations.ko?.length || 0 }}자</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">English (en)</label>
+                            <textarea class="form-control" rows="3" v-model="form.translations.en"
+                                placeholder="Enter English translation"></textarea>
+                            <small class="text-muted">{{ form.translations.en?.length || 0 }} characters</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">日本語 (ja)</label>
+                            <textarea class="form-control" rows="3" v-model="form.translations.ja"
+                                placeholder="日本語の翻訳を入力してください"></textarea>
+                            <small class="text-muted">{{ form.translations.ja?.length || 0 }}文字</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">中文 (zh)</label>
+                            <textarea class="form-control" rows="3" v-model="form.translations.zh"
+                                placeholder="请输入中文翻译"></textarea>
+                            <small class="text-muted">{{ form.translations.zh?.length || 0 }}个字符</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">사용 위치</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">사용 위치 태그</label>
+                        <div class="d-flex gap-2 mb-2">
+                            <input type="text" class="form-control" v-model="newLocation"
+                                placeholder="예) 홈페이지, 로그인 페이지">
+                            <button class="btn btn-outline-primary" @click="addLocation">추가</button>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2" v-if="form.locations.length > 0">
+                            <span v-for="(loc, index) in form.locations" :key="index"
+                                class="badge bg-light text-dark d-flex align-items-center gap-2">
+                                {{ loc }}
+                                <button type="button" class="btn-close btn-close-sm"
+                                    @click="removeLocation(index)" style="font-size: 0.7em;"></button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/site/locales')">
+                    취소
+                </button>
+                <button class="btn btn-primary" @click="submit">
+                    번역 추가
+                </button>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">번역 추가 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">번역 키는 고유해야 하며 중복될 수 없습니다</li>
+                        <li class="mb-2">한국어는 필수이며, 다른 언어는 선택사항입니다</li>
+                        <li class="mb-2">번역 키는 점(.)으로 계층 구조를 표현할 수 있습니다</li>
+                        <li class="mb-2">예: menu.home, button.submit, error.required</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">지원 언어</h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-primary me-2">ko</span>
+                            <span>한국어 (필수)</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-secondary me-2">en</span>
+                            <span>English</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-secondary me-2">ja</span>
+                            <span>日本語</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-secondary me-2">zh</span>
+                            <span>中文</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="mb-3">카테고리 설명</h6>
+                    <div class="small text-muted">
+                        <p class="mb-2"><strong>공통:</strong> 전체에서 사용되는 일반적인 텍스트</p>
+                        <p class="mb-2"><strong>메뉴:</strong> 메뉴 항목 이름</p>
+                        <p class="mb-2"><strong>버튼:</strong> 버튼 텍스트</p>
+                        <p class="mb-2"><strong>메시지:</strong> 안내 메시지</p>
+                        <p class="mb-2"><strong>에러:</strong> 에러 메시지</p>
+                        <p class="mb-0"><strong>유효성 검사:</strong> 폼 검증 메시지</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

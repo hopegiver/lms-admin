@@ -1,0 +1,180 @@
+<div class="content-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/learning/content')" class="text-muted">
+                    ← 콘텐츠 목록
+                </a>
+            </div>
+            <h4 class="mb-1">콘텐츠 만들기</h4>
+            <p class="text-muted mb-0">새로운 콘텐츠를 생성합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">콘텐츠 제목 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.title" placeholder="예) React Hooks 소개">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">콘텐츠 유형 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.type">
+                                <option value="">선택</option>
+                                <option value="video">비디오</option>
+                                <option value="document">문서</option>
+                                <option value="link">외부 링크</option>
+                                <option value="scorm">SCORM</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">재생 시간</label>
+                            <input type="text" class="form-control" v-model="form.duration" placeholder="예) 15분">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">설명</label>
+                            <textarea class="form-control" rows="4" v-model="form.description"
+                                placeholder="콘텐츠에 대한 설명을 입력하세요"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태</label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="draft">준비중</option>
+                                <option value="published">게시됨</option>
+                                <option value="archived">보관</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        {{ form.type === 'video' ? '비디오 파일' : form.type === 'document' ? '문서 파일' : form.type === 'link' ? '외부 링크' : form.type === 'scorm' ? 'SCORM 패키지' : '파일 업로드' }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div v-if="form.type === 'link'">
+                        <label class="form-label">URL <span class="text-danger">*</span></label>
+                        <input type="url" class="form-control" v-model="form.fileUrl" placeholder="https://">
+                    </div>
+                    <div v-else>
+                        <div class="mb-3">
+                            <label class="form-label">파일 선택 <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" @change="handleFileUpload"
+                                :accept="getAcceptedFileTypes()">
+                        </div>
+                        <div v-if="form.fileName" class="alert alert-info">
+                            <strong>선택한 파일:</strong> {{ form.fileName }}
+                            <span v-if="form.fileSize" class="ms-2">({{ formatFileSize(form.fileSize) }})</span>
+                        </div>
+                        <div v-if="uploadProgress > 0 && uploadProgress < 100" class="mb-3">
+                            <label class="form-label small">업로드 진행중...</label>
+                            <div class="progress">
+                                <div class="progress-bar" :style="{ width: uploadProgress + '%' }">
+                                    {{ uploadProgress }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">추가 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">태그</label>
+                            <input type="text" class="form-control" v-model="form.tags"
+                                placeholder="쉼표로 구분하여 입력 (예: react, hooks, frontend)">
+                            <small class="text-muted">검색 및 분류에 사용됩니다</small>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="form.downloadable" id="downloadable">
+                                <label class="form-check-label" for="downloadable">
+                                    다운로드 허용
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="form.trackProgress" id="trackProgress">
+                                <label class="form-check-label" for="trackProgress">
+                                    진도 추적 활성화
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/learning/content')">
+                    취소
+                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" @click="saveDraft">
+                        임시저장
+                    </button>
+                    <button class="btn btn-primary" @click="submit">
+                        콘텐츠 생성
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">생성 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">콘텐츠는 커리큘럼 차시에 할당됩니다</li>
+                        <li class="mb-2">비디오는 MP4, WebM 형식을 권장합니다</li>
+                        <li class="mb-2">문서는 PDF, PPT, DOCX를 지원합니다</li>
+                        <li class="mb-2">SCORM 패키지는 ZIP 형태로 업로드하세요</li>
+                        <li class="mb-2">최대 파일 크기는 500MB입니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm" v-if="form.type">
+                <div class="card-body">
+                    <h6 class="mb-3">지원 형식</h6>
+                    <div class="small">
+                        <div v-if="form.type === 'video'">
+                            <strong>비디오:</strong><br>
+                            MP4, WebM, AVI, MOV
+                        </div>
+                        <div v-if="form.type === 'document'">
+                            <strong>문서:</strong><br>
+                            PDF, PPT, PPTX, DOC, DOCX
+                        </div>
+                        <div v-if="form.type === 'scorm'">
+                            <strong>SCORM:</strong><br>
+                            SCORM 1.2, SCORM 2004 (ZIP)
+                        </div>
+                        <div v-if="form.type === 'link'">
+                            <strong>외부 링크:</strong><br>
+                            YouTube, Vimeo 등 외부 플랫폼
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

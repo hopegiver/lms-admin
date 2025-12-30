@@ -1,0 +1,165 @@
+<div class="enrollments-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/learning/enrollments')" class="text-muted">
+                    ← 수강 목록
+                </a>
+            </div>
+            <h4 class="mb-1">수강 등록</h4>
+            <p class="text-muted mb-0">새로운 수강을 등록합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">수강 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">학습자 선택 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.learnerId">
+                                <option value="">선택</option>
+                                <option v-for="learner in learners" :key="learner.id" :value="learner.id">
+                                    {{ learner.name }} ({{ learner.email }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">강좌 선택 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.courseId">
+                                <option value="">선택</option>
+                                <option v-for="course in courses" :key="course.id" :value="course.id">
+                                    {{ course.title }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">수강 시작일 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" v-model="form.enrollmentDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">수강 종료일</label>
+                            <input type="date" class="form-control" v-model="form.expiryDate">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">비고</label>
+                            <textarea class="form-control" rows="3" v-model="form.notes"
+                                placeholder="특이사항이나 메모를 입력하세요"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">결제 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">결제 상태</label>
+                            <select class="form-select" v-model="form.paymentStatus">
+                                <option value="pending">대기</option>
+                                <option value="completed">완료</option>
+                                <option value="failed">실패</option>
+                                <option value="refunded">환불</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">결제 금액</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₩</span>
+                                <input type="number" class="form-control" v-model="form.paymentAmount" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">결제 방법</label>
+                            <select class="form-select" v-model="form.paymentMethod">
+                                <option value="">선택</option>
+                                <option value="card">카드</option>
+                                <option value="transfer">계좌이체</option>
+                                <option value="virtual">가상계좌</option>
+                                <option value="free">무료</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">결제일</label>
+                            <input type="date" class="form-control" v-model="form.paymentDate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">추가 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="form.autoApprove" id="autoApprove">
+                                <label class="form-check-label" for="autoApprove">
+                                    자동 승인 (즉시 학습 시작 가능)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="form.sendEmail" id="sendEmail">
+                                <label class="form-check-label" for="sendEmail">
+                                    수강 안내 이메일 발송
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/learning/enrollments')">
+                    취소
+                </button>
+                <button class="btn btn-primary" @click="submit">
+                    수강 등록
+                </button>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">등록 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">학습자와 강좌를 선택하여 수강을 등록합니다</li>
+                        <li class="mb-2">수강 종료일을 설정하지 않으면 무제한입니다</li>
+                        <li class="mb-2">자동 승인 시 즉시 학습을 시작할 수 있습니다</li>
+                        <li class="mb-2">결제 정보는 나중에 수정할 수 있습니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm" v-if="form.courseId">
+                <div class="card-body">
+                    <h6 class="mb-3">선택한 강좌 정보</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small text-muted">강좌명</span>
+                        <span class="fw-bold small">{{ getSelectedCourse()?.title }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small text-muted">정가</span>
+                        <span class="fw-bold">₩{{ getSelectedCourse()?.price.toLocaleString() }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,103 @@
+<div class="organizations-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/users/organizations')" class="text-muted">
+                    ← 조직 목록
+                </a>
+            </div>
+            <h4 class="mb-1">조직 등록</h4>
+            <p class="text-muted mb-0">새로운 조직을 등록합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">조직명 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.name" placeholder="개발팀">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">조직코드 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.code" placeholder="DEV001">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상위 조직</label>
+                            <select class="form-select" v-model="form.parentOrganization">
+                                <option value="">최상위 조직</option>
+                                <option v-for="org in parentOrganizations" :key="org.id" :value="org.id">
+                                    {{ org.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">담당자</label>
+                            <input type="text" class="form-control" v-model="form.manager" placeholder="홍길동">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">연락처</label>
+                            <input type="tel" class="form-control" v-model="form.contact" placeholder="02-1234-5678">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">이메일</label>
+                            <input type="email" class="form-control" v-model="form.email" placeholder="dev@example.com">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">주소</label>
+                            <input type="text" class="form-control" v-model="form.address" placeholder="주소를 입력하세요">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태</label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="active">활성</option>
+                                <option value="inactive">비활성</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">설명</label>
+                            <textarea class="form-control" rows="3" v-model="form.description" placeholder="조직에 대한 설명을 입력하세요"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/users/organizations')">
+                    취소
+                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" @click="saveDraft">
+                        임시저장
+                    </button>
+                    <button class="btn btn-primary" @click="submit">
+                        등록하기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">등록 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">필수 항목(*)은 반드시 입력해야 합니다</li>
+                        <li class="mb-2">조직코드는 중복될 수 없습니다</li>
+                        <li class="mb-2">상위 조직을 선택하면 계층 구조가 생성됩니다</li>
+                        <li class="mb-2">등록 후 조직에 구성원을 추가할 수 있습니다</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

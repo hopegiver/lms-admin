@@ -1,0 +1,243 @@
+<div class="admins-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/users/admins')" class="text-muted">
+                    ← 관리자 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ admin?.name }}</h4>
+            <p class="text-muted mb-0">관리자 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteAdmin">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'permissions' }" href="#" @click.prevent="currentTab = 'permissions'">권한</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'activity' }" href="#" @click.prevent="currentTab = 'activity'">활동 로그</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && admin">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">기본 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">이름</label>
+                                <div class="fw-medium">{{ admin.name }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">이메일</label>
+                                <div class="fw-medium">{{ admin.email }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">연락처</label>
+                                <div class="fw-medium">{{ admin.phone || '-' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">역할</label>
+                                <div>
+                                    <span class="badge" :class="getRoleBadgeClass(admin.role)">
+                                        {{ getRoleText(admin.role) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">부서</label>
+                                <div class="fw-medium">{{ admin.department || '-' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(admin.status)">
+                                        {{ getStatusText(admin.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">생성일</label>
+                                <div class="fw-medium">{{ admin.createdAt }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">최근 로그인</label>
+                                <div class="fw-medium">{{ admin.lastLogin || '-' }}</div>
+                            </div>
+                            <div class="col-12" v-if="admin.memo">
+                                <label class="form-label text-muted small">메모</label>
+                                <div class="fw-medium">{{ admin.memo }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 정보 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">관리자 요약</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">최근 로그인</span>
+                                <span class="fw-bold small">{{ admin.lastLogin || '-' }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">생성일</span>
+                                <span class="fw-bold small">{{ admin.createdAt }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">로그인 횟수</span>
+                                <span class="fw-bold small">{{ admin.loginCount }}회</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div>
+                            <h6 class="small mb-2">권한 요약</h6>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">활성 권한</span>
+                                <span class="fw-bold small">{{ admin.permissions?.length || 0 }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">마지막 권한 변경</span>
+                                <span class="fw-bold small">{{ admin.permissionUpdatedAt || '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">활동 통계</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">오늘 접속</span>
+                            <span class="fw-bold small">{{ admin.todayAccess ? '예' : '아니오' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">이번주 작업</span>
+                            <span class="fw-bold small">{{ admin.weeklyActions }}건</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="small text-muted">이번달 작업</span>
+                            <span class="fw-bold small">{{ admin.monthlyActions }}건</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 권한 탭 -->
+    <div v-if="currentTab === 'permissions' && admin">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">메뉴 접근 권한</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>권한명</th>
+                                        <th class="text-center">상태</th>
+                                        <th>부여일</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="perm in allPermissions" :key="perm.id">
+                                        <td>
+                                            <div class="fw-medium">{{ perm.name }}</div>
+                                            <small class="text-muted">{{ perm.description }}</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span v-if="hasPermission(perm.id)" class="badge bg-success">활성</span>
+                                            <span v-else class="badge bg-secondary">비활성</span>
+                                        </td>
+                                        <td>
+                                            <span v-if="hasPermission(perm.id)">{{ admin.createdAt }}</span>
+                                            <span v-else class="text-muted">-</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">권한 정보</h6>
+                        <div class="alert alert-info mb-0">
+                            <small>
+                                <strong>현재 역할:</strong> {{ getRoleText(admin.role) }}<br>
+                                <strong>활성 권한:</strong> {{ admin.permissions?.length || 0 }}개<br>
+                                <strong>마지막 업데이트:</strong> {{ admin.permissionUpdatedAt || '-' }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 활동 로그 탭 -->
+    <div v-if="currentTab === 'activity'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">활동 로그</h5>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm" style="width: auto;" v-model="logFilter">
+                            <option value="all">전체</option>
+                            <option value="login">로그인</option>
+                            <option value="action">작업</option>
+                            <option value="setting">설정변경</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item mb-3 pb-3 border-bottom" v-for="(log, index) in filteredActivityLogs" :key="index">
+                        <div class="d-flex gap-3">
+                            <div class="text-muted small" style="min-width: 140px;">{{ log.date }}</div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge badge-sm" :class="getLogTypeBadgeClass(log.type)">
+                                        {{ getLogTypeText(log.type) }}
+                                    </span>
+                                    <span class="fw-medium">{{ log.action }}</span>
+                                </div>
+                                <small class="text-muted">{{ log.detail }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

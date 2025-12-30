@@ -1,0 +1,250 @@
+<div class="instructors-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/users/instructors')" class="text-muted">
+                    ← 강사 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ instructor?.name }}</h4>
+            <p class="text-muted mb-0">강사 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteInstructor">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'courses' }" href="#" @click.prevent="currentTab = 'courses'">담당 강좌</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'earnings' }" href="#" @click.prevent="currentTab = 'earnings'">수익 현황</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'activity' }" href="#" @click.prevent="currentTab = 'activity'">활동 로그</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && instructor">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">기본 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12 mb-3" v-if="instructor.profileImage">
+                                <img :src="instructor.profileImage" alt="프로필 이미지" class="img-thumbnail" style="max-width: 150px;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">이름</label>
+                                <div class="fw-medium">{{ instructor.name }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">이메일</label>
+                                <div class="fw-medium">{{ instructor.email }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">연락처</label>
+                                <div class="fw-medium">{{ instructor.phone || '-' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">전문분야</label>
+                                <div class="fw-medium">{{ instructor.specialization }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">등록일</label>
+                                <div class="fw-medium">{{ instructor.createdAt }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(instructor.status)">
+                                        {{ getStatusText(instructor.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-12" v-if="instructor.bio">
+                                <label class="form-label text-muted small">소개</label>
+                                <div class="fw-medium" style="white-space: pre-wrap;">{{ instructor.bio }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">강사 통계</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">총 강좌 수</span>
+                                <span class="fw-bold">{{ instructor.totalCourses }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">총 수강생</span>
+                                <span class="fw-bold">{{ instructor.totalStudents }}명</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">평균 평점</span>
+                                <span class="fw-bold">{{ instructor.avgRating }}/5.0</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">총 수익</span>
+                                <span class="fw-bold text-primary">{{ instructor.totalEarnings }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">최근 접속</span>
+                                <span class="fw-bold">{{ instructor.lastLogin }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 담당 강좌 탭 -->
+    <div v-if="currentTab === 'courses' && instructor">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>강좌명</th>
+                                <th class="text-center">수강생</th>
+                                <th class="text-center">평점</th>
+                                <th>개설일</th>
+                                <th class="text-center">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="course in instructor.courses" :key="course.id">
+                                <td>
+                                    <div class="fw-medium">{{ course.title }}</div>
+                                    <small class="text-muted">{{ course.category }}</small>
+                                </td>
+                                <td class="text-center">{{ course.students }}명</td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning text-dark">{{ course.rating }}/5.0</span>
+                                </td>
+                                <td>{{ course.createdAt }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="course.status === 'active' ? 'bg-success' : 'bg-secondary'">
+                                        {{ course.status === 'active' ? '활성' : '비활성' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수익 현황 탭 -->
+    <div v-if="currentTab === 'earnings' && instructor">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">이번 달 수익</div>
+                        <h5 class="mb-0 text-primary">₩{{ instructor.earningsThisMonth }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">지난 달 수익</div>
+                        <h5 class="mb-0">₩{{ instructor.earningsLastMonth }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">올해 수익</div>
+                        <h5 class="mb-0">₩{{ instructor.earningsThisYear }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">총 수익</div>
+                        <h5 class="mb-0 text-success">{{ instructor.totalEarnings }}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="mb-3">수익 내역</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>날짜</th>
+                                <th>강좌명</th>
+                                <th class="text-end">수익</th>
+                                <th class="text-center">수강생</th>
+                                <th class="text-center">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="earning in instructor.earningHistory" :key="earning.id">
+                                <td>{{ earning.date }}</td>
+                                <td>{{ earning.courseName }}</td>
+                                <td class="text-end fw-medium">₩{{ earning.amount }}</td>
+                                <td class="text-center">{{ earning.students }}명</td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">{{ earning.status }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 활동 로그 탭 -->
+    <div v-if="currentTab === 'activity'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item mb-3" v-for="(log, index) in activityLogs" :key="index">
+                        <div class="d-flex gap-3">
+                            <div class="text-muted small" style="min-width: 120px;">{{ log.date }}</div>
+                            <div class="flex-grow-1">
+                                <div class="fw-medium">{{ log.action }}</div>
+                                <small class="text-muted">{{ log.detail }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

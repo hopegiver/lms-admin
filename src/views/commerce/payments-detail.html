@@ -1,0 +1,397 @@
+<div class="payments-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/commerce/payments')" class="text-muted">
+                    ← 결제 목록
+                </a>
+            </div>
+            <h4 class="mb-1">거래번호: {{ payment?.transactionId }}</h4>
+            <p class="text-muted mb-0">결제 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="printReceipt">
+                영수증 출력
+            </button>
+            <button class="btn btn-outline-danger" @click="processRefund" v-if="payment?.status === '결제완료'">
+                환불 처리
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'payment' }" href="#" @click.prevent="currentTab = 'payment'">결제 정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'order' }" href="#" @click.prevent="currentTab = 'order'">주문 정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'transactions' }" href="#" @click.prevent="currentTab = 'transactions'">거래 내역</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'refunds' }" href="#" @click.prevent="currentTab = 'refunds'">환불 처리</a>
+        </li>
+    </ul>
+
+    <!-- 결제 정보 탭 -->
+    <div v-if="currentTab === 'payment' && payment">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">결제 상세</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">거래 번호</label>
+                                <div class="fw-medium font-monospace">{{ payment.transactionId }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">결제 상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(payment.status)">
+                                        {{ payment.status }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">결제 방법</label>
+                                <div class="fw-medium">{{ payment.method }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">결제 금액</label>
+                                <div class="fw-medium text-primary fs-5">{{ payment.amount }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">결제 일시</label>
+                                <div class="fw-medium">{{ payment.paidAt }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">PG사</label>
+                                <div class="fw-medium">{{ payment.pgProvider }}</div>
+                            </div>
+                            <div class="col-md-6" v-if="payment.cardInfo">
+                                <label class="form-label text-muted small">카드 정보</label>
+                                <div class="fw-medium">{{ payment.cardInfo }}</div>
+                            </div>
+                            <div class="col-md-6" v-if="payment.approvalNumber">
+                                <label class="form-label text-muted small">승인 번호</label>
+                                <div class="fw-medium">{{ payment.approvalNumber }}</div>
+                            </div>
+                            <div class="col-md-6" v-if="payment.installment">
+                                <label class="form-label text-muted small">할부 개월</label>
+                                <div class="fw-medium">{{ payment.installment }}</div>
+                            </div>
+                            <div class="col-md-6" v-if="payment.receiptUrl">
+                                <label class="form-label text-muted small">영수증</label>
+                                <div>
+                                    <a :href="payment.receiptUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        영수증 보기
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">구매자 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">이름</label>
+                                <div class="fw-medium">{{ payment.buyer.name }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">이메일</label>
+                                <div class="fw-medium">{{ payment.buyer.email }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">연락처</label>
+                                <div class="fw-medium">{{ payment.buyer.phone }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">회원 등급</label>
+                                <div>
+                                    <span class="badge bg-primary">{{ payment.buyer.memberLevel }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">결제 요약</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">상품 금액</span>
+                                <span class="fw-medium">{{ payment.subtotal }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">할인 금액</span>
+                                <span class="fw-medium text-danger">-{{ payment.discount }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2" v-if="payment.couponDiscount">
+                                <span class="small text-muted">쿠폰 할인</span>
+                                <span class="fw-medium text-danger">-{{ payment.couponDiscount }}</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold">결제 금액</span>
+                                <span class="fw-bold text-primary fs-5">{{ payment.amount }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">PG 수수료</h6>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">수수료율</span>
+                                <span class="fw-medium">{{ payment.feeRate }}%</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">수수료 금액</span>
+                                <span class="fw-medium text-danger">{{ payment.feeAmount }}</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">실 수령액</span>
+                                <span class="fw-bold text-success">{{ payment.netAmount }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 주문 정보 탭 -->
+    <div v-if="currentTab === 'order'">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">주문 상세</h5>
+                <a :href="`/commerce/orders-detail?id=${order.id}`" @click.prevent="navigateTo(`/commerce/orders-detail?id=${order.id}`)" class="btn btn-sm btn-outline-primary">
+                    주문 상세보기
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">주문번호</label>
+                        <div class="fw-medium">{{ order.orderNumber }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">주문 상태</label>
+                        <div>
+                            <span class="badge" :class="getOrderStatusClass(order.status)">
+                                {{ order.status }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">주문일시</label>
+                        <div class="fw-medium">{{ order.orderDate }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">주문금액</label>
+                        <div class="fw-medium">{{ order.totalAmount }}</div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>상품명</th>
+                                <th>유형</th>
+                                <th class="text-end">금액</th>
+                                <th class="text-center">수량</th>
+                                <th class="text-end">합계</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in orderItems" :key="item.id">
+                                <td>{{ item.productName }}</td>
+                                <td>
+                                    <span class="badge" :class="getTypeClass(item.type)">
+                                        {{ item.type }}
+                                    </span>
+                                </td>
+                                <td class="text-end">{{ item.price }}</td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end fw-medium">{{ item.total }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 거래 내역 탭 -->
+    <div v-if="currentTab === 'transactions'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">거래 이력</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item" v-for="(transaction, index) in transactions" :key="index">
+                        <div class="timeline-marker" :class="{ 'bg-primary': index === 0 }"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="fw-medium">{{ transaction.type }}</div>
+                                    <div class="small text-muted">{{ transaction.timestamp }}</div>
+                                </div>
+                                <span class="badge" :class="getTransactionStatusClass(transaction.status)">
+                                    {{ transaction.status }}
+                                </span>
+                            </div>
+                            <div class="small" v-if="transaction.amount">
+                                금액: <span class="fw-medium">{{ transaction.amount }}</span>
+                            </div>
+                            <div class="small text-muted" v-if="transaction.note">
+                                {{ transaction.note }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 환불 처리 탭 -->
+    <div v-if="currentTab === 'refunds'">
+        <div class="card border-0 shadow-sm mb-4" v-if="payment?.status === '결제완료'">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">환불 처리</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">환불 금액 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₩</span>
+                            <input type="number" class="form-control" v-model="refundForm.amount" :max="payment.amount" placeholder="0">
+                        </div>
+                        <small class="text-muted">최대 환불 가능 금액: {{ payment.amount }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">환불 사유 <span class="text-danger">*</span></label>
+                        <select class="form-select" v-model="refundForm.reason">
+                            <option value="">선택</option>
+                            <option value="customer_request">고객 요청</option>
+                            <option value="defective">상품 불량</option>
+                            <option value="wrong_order">주문 오류</option>
+                            <option value="other">기타</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">상세 사유</label>
+                        <textarea class="form-control" rows="3" v-model="refundForm.note" placeholder="환불 사유를 상세히 입력하세요"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary" @click="submitRefund">
+                            환불 처리
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">환불 내역</h5>
+            </div>
+            <div class="card-body">
+                <div v-if="refunds.length === 0" class="text-center text-muted py-5">
+                    환불 내역이 없습니다.
+                </div>
+                <div v-else class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>환불 번호</th>
+                                <th>환불 사유</th>
+                                <th class="text-end">환불 금액</th>
+                                <th>처리 일시</th>
+                                <th class="text-center">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="refund in refunds" :key="refund.id">
+                                <td>{{ refund.refundNumber }}</td>
+                                <td>
+                                    <div>{{ getRefundReasonText(refund.reason) }}</div>
+                                    <small class="text-muted" v-if="refund.note">{{ refund.note }}</small>
+                                </td>
+                                <td class="text-end fw-medium">{{ refund.amount }}</td>
+                                <td>{{ refund.processedAt }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getRefundStatusClass(refund.status)">
+                                        {{ refund.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style scoped>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -23px;
+    top: 20px;
+    width: 2px;
+    height: calc(100% - 10px);
+    background-color: #dee2e6;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -28px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    border: 2px solid white;
+}
+
+.timeline-content {
+    padding-bottom: 10px;
+}
+</style>

@@ -1,0 +1,246 @@
+<div class="menus-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/site/menus')" class="text-muted">
+                    ← 메뉴 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ menu?.name }}</h4>
+            <p class="text-muted mb-0">메뉴 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteMenu">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'structure' }" href="#" @click.prevent="currentTab = 'structure'">메뉴 구조</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'preview' }" href="#" @click.prevent="currentTab = 'preview'">미리보기</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && menu">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">메뉴 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">메뉴 이름</label>
+                                <div class="fw-medium">{{ menu.name }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">메뉴 위치</label>
+                                <div class="fw-medium">{{ getLocationText(menu.location) }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="menu.status === 'active' ? 'bg-success' : 'bg-secondary'">
+                                        {{ menu.status === 'active' ? '사용' : '사용안함' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">생성일</label>
+                                <div class="fw-medium">{{ menu.createdAt }}</div>
+                            </div>
+                            <div class="col-12" v-if="menu.description">
+                                <label class="form-label text-muted small">설명</label>
+                                <div class="fw-medium">{{ menu.description }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">메뉴 통계</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 항목</span>
+                                <span class="fw-bold fs-5">{{ menu.totalItems }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">최상위 항목</span>
+                                <span class="fw-bold">{{ menu.topLevelItems }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">최대 깊이</span>
+                                <span class="fw-bold">{{ menu.maxDepth }}단계</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">작성자 정보</h6>
+                        <div class="small">
+                            <div class="mb-2">
+                                <span class="text-muted">작성자:</span>
+                                <span class="fw-medium ms-2">{{ menu.author }}</span>
+                            </div>
+                            <div>
+                                <span class="text-muted">최종 수정:</span>
+                                <span class="fw-medium ms-2">{{ menu.updatedAt }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메뉴 구조 탭 -->
+    <div v-if="currentTab === 'structure' && menu">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">메뉴 구조</h5>
+            </div>
+            <div class="card-body">
+                <div class="menu-tree">
+                    <div v-for="(item, index) in menu.items" :key="index"
+                        class="menu-tree-item border rounded p-3 mb-2"
+                        :style="{ marginLeft: (item.depth * 30) + 'px' }">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-light text-dark">{{ index + 1 }}</span>
+                                    <span v-if="item.depth > 0" class="text-muted">
+                                        {{ '└'.repeat(item.depth) }}
+                                    </span>
+                                    <strong>{{ item.label }}</strong>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    <span>URL: {{ item.url }}</span>
+                                    <span class="ms-3">대상: {{ item.target === '_blank' ? '새창' : '현재창' }}</span>
+                                    <span class="ms-3">깊이: {{ item.depth }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge" :class="item.active ? 'bg-success' : 'bg-secondary'">
+                                    {{ item.active ? '활성' : '비활성' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 미리보기 탭 -->
+    <div v-if="currentTab === 'preview' && menu">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">메뉴 미리보기</h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn" :class="previewStyle === 'horizontal' ? 'btn-primary' : 'btn-outline-primary'"
+                                @click="previewStyle = 'horizontal'">
+                                가로형
+                            </button>
+                            <button class="btn" :class="previewStyle === 'vertical' ? 'btn-primary' : 'btn-outline-primary'"
+                                @click="previewStyle = 'vertical'">
+                                세로형
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- 가로형 미리보기 -->
+                        <div v-if="previewStyle === 'horizontal'" class="preview-horizontal">
+                            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                                <div class="container-fluid">
+                                    <ul class="navbar-nav">
+                                        <template v-for="(item, index) in getTopLevelItems()" :key="index">
+                                            <li class="nav-item" :class="{ dropdown: hasChildren(item) }">
+                                                <a class="nav-link" :class="{ 'dropdown-toggle': hasChildren(item) }"
+                                                    href="#" @click.prevent>
+                                                    {{ item.label }}
+                                                </a>
+                                                <ul class="dropdown-menu" v-if="hasChildren(item)">
+                                                    <li v-for="child in getChildren(item)" :key="child.label">
+                                                        <a class="dropdown-item" href="#" @click.prevent>
+                                                            {{ child.label }}
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </nav>
+                        </div>
+
+                        <!-- 세로형 미리보기 -->
+                        <div v-if="previewStyle === 'vertical'" class="preview-vertical">
+                            <div class="list-group">
+                                <template v-for="(item, index) in menu.items" :key="index">
+                                    <a href="#" @click.prevent
+                                        class="list-group-item list-group-item-action"
+                                        :style="{ paddingLeft: (item.depth * 20 + 16) + 'px' }">
+                                        {{ item.label }}
+                                    </a>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 미리보기 옵션 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">미리보기 안내</h6>
+                        <ul class="small text-muted mb-0 ps-3">
+                            <li class="mb-2">가로형은 헤더 메뉴에 적합합니다</li>
+                            <li class="mb-2">세로형은 사이드바 메뉴에 적합합니다</li>
+                            <li class="mb-2">실제 화면과 다소 차이가 있을 수 있습니다</li>
+                            <li class="mb-2">메뉴 항목을 클릭해도 이동하지 않습니다</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style scoped>
+.menu-tree-item {
+    transition: all 0.3s;
+}
+.menu-tree-item:hover {
+    background-color: #f8f9fa;
+}
+.preview-horizontal .navbar {
+    border-radius: 0.375rem;
+}
+.preview-vertical {
+    max-height: 500px;
+    overflow-y: auto;
+}
+</style>

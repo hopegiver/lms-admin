@@ -1,0 +1,264 @@
+<div class="enrollments-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/learning/enrollments')" class="text-muted">
+                    ← 수강 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ enrollment?.learnerName }} - {{ enrollment?.courseName }}</h4>
+            <p class="text-muted mb-0">수강 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteEnrollment">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'progress' }" href="#" @click.prevent="currentTab = 'progress'">학습 진도</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'assessments' }" href="#" @click.prevent="currentTab = 'assessments'">평가 결과</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'payment' }" href="#" @click.prevent="currentTab = 'payment'">결제 정보</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && enrollment">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">수강 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">학습자</label>
+                                <div class="fw-medium">{{ enrollment.learnerName }}</div>
+                                <small class="text-muted">{{ enrollment.learnerEmail }}</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">강좌</label>
+                                <div class="fw-medium">{{ enrollment.courseName }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">수강 시작일</label>
+                                <div class="fw-medium">{{ enrollment.enrollmentDate }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">수강 종료일</label>
+                                <div class="fw-medium">{{ enrollment.expiryDate || '무제한' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(enrollment.status)">
+                                        {{ getStatusText(enrollment.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">진도율</label>
+                                <div>
+                                    <div class="progress mb-1" style="height: 20px;">
+                                        <div class="progress-bar" :style="{ width: enrollment.progress + '%' }">
+                                            {{ enrollment.progress }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12" v-if="enrollment.notes">
+                                <label class="form-label text-muted small">비고</label>
+                                <div class="fw-medium">{{ enrollment.notes }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">학습 통계</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">완료 차시</span>
+                            <span class="fw-bold">{{ enrollment.completedLessons }}/{{ enrollment.totalLessons }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">학습 시간</span>
+                            <span class="fw-bold">{{ enrollment.studyTime }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">마지막 학습</span>
+                            <span class="fw-bold">{{ enrollment.lastStudyDate }}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <span class="small text-muted">등록일</span>
+                            <span class="fw-medium">{{ enrollment.createdAt }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 학습 진도 탭 -->
+    <div v-if="currentTab === 'progress'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">차시별 학습 진도</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item" v-for="(lesson, index) in progressData" :key="lesson.id">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-light text-dark">{{ index + 1 }}</span>
+                                <div>
+                                    <div class="fw-medium">{{ lesson.title }}</div>
+                                    <small class="text-muted">{{ lesson.duration }}</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-end">
+                                    <div class="progress" style="height: 8px; width: 150px;">
+                                        <div class="progress-bar" :style="{ width: lesson.progress + '%' }"></div>
+                                    </div>
+                                    <small class="text-muted">{{ lesson.progress }}%</small>
+                                </div>
+                                <span class="badge" :class="lesson.completed ? 'bg-success' : 'bg-secondary'">
+                                    {{ lesson.completed ? '완료' : '진행중' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div v-if="lesson.lastStudied" class="mt-2">
+                            <small class="text-muted">마지막 학습: {{ lesson.lastStudied }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 평가 결과 탭 -->
+    <div v-if="currentTab === 'assessments'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">평가 응시 내역</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>평가명</th>
+                                <th class="text-center">유형</th>
+                                <th class="text-center">점수</th>
+                                <th class="text-center">통과 여부</th>
+                                <th>응시일</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="assessment in assessmentResults" :key="assessment.id">
+                                <td>{{ assessment.title }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark">{{ assessment.type }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-bold" :class="assessment.passed ? 'text-success' : 'text-danger'">
+                                        {{ assessment.score }}점
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge" :class="assessment.passed ? 'bg-success' : 'bg-danger'">
+                                        {{ assessment.passed ? '통과' : '미통과' }}
+                                    </span>
+                                </td>
+                                <td>{{ assessment.attemptDate }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결제 정보 탭 -->
+    <div v-if="currentTab === 'payment'">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">결제 상세</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">결제 상태</label>
+                                <div>
+                                    <span class="badge" :class="getPaymentStatusClass(enrollment.paymentStatus)">
+                                        {{ getPaymentStatusText(enrollment.paymentStatus) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">결제 금액</label>
+                                <div class="fw-medium fs-5 text-primary">₩{{ enrollment.paymentAmount?.toLocaleString() }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">결제 방법</label>
+                                <div class="fw-medium">{{ getPaymentMethodText(enrollment.paymentMethod) }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">결제일</label>
+                                <div class="fw-medium">{{ enrollment.paymentDate }}</div>
+                            </div>
+                            <div class="col-12" v-if="enrollment.paymentInfo">
+                                <label class="form-label text-muted small">결제 정보</label>
+                                <div class="fw-medium">{{ enrollment.paymentInfo }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 결제 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">결제 요약</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">강좌 정가</span>
+                            <span class="fw-medium">₩99,000</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">할인</span>
+                            <span class="fw-medium text-danger">-₩20,000</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">결제 금액</span>
+                            <span class="fw-bold text-primary">₩{{ enrollment.paymentAmount?.toLocaleString() }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

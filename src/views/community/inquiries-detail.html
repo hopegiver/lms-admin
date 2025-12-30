@@ -1,0 +1,266 @@
+<div class="inquiries-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/community/inquiries')" class="text-muted">
+                    ← 문의 목록
+                </a>
+            </div>
+            <h4 class="mb-1">문의 상세</h4>
+            <p class="text-muted mb-0">문의 내용 및 답변</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="assignToMe" v-if="inquiry?.status === 'pending'">
+                담당자 지정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteInquiry">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 상태 표시 -->
+    <div class="alert" :class="getStatusAlertClass(inquiry?.status)" v-if="inquiry">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>상태:</strong> {{ getStatusText(inquiry.status) }}
+                <span v-if="inquiry.assignedTo" class="ms-3">
+                    <strong>담당자:</strong> {{ inquiry.assignedTo }}
+                </span>
+            </div>
+            <div v-if="inquiry.status !== 'closed'">
+                <button class="btn btn-sm btn-success" @click="closeInquiry" v-if="inquiry.status === 'resolved'">
+                    문의 종료
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'content' }" href="#" @click.prevent="currentTab = 'content'">문의 내용</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'reply' }" href="#" @click.prevent="currentTab = 'reply'">답변</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'history' }" href="#" @click.prevent="currentTab = 'history'">처리 이력</a>
+        </li>
+    </ul>
+
+    <!-- 문의 내용 탭 -->
+    <div v-if="currentTab === 'content' && inquiry">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">문의 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">문의 유형</label>
+                                <div class="fw-medium">{{ getTypeText(inquiry.type) }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">문의일</label>
+                                <div class="fw-medium">{{ inquiry.createdAt }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">문의자</label>
+                                <div class="fw-medium">{{ inquiry.userName }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">이메일</label>
+                                <div class="fw-medium">{{ inquiry.email }}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">제목</label>
+                                <div class="fw-medium fs-5">{{ inquiry.subject }}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">문의 내용</label>
+                                <div class="border rounded p-3 bg-light">
+                                    <pre class="mb-0" style="white-space: pre-wrap;">{{ inquiry.content }}</pre>
+                                </div>
+                            </div>
+                            <div class="col-12" v-if="inquiry.attachments && inquiry.attachments.length > 0">
+                                <label class="form-label text-muted small">첨부파일</label>
+                                <div class="list-group">
+                                    <a v-for="file in inquiry.attachments" :key="file.id"
+                                       href="#" @click.prevent="downloadFile(file)"
+                                       class="list-group-item list-group-item-action">
+                                        {{ file.name }} ({{ file.size }})
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">문의 정보</h6>
+                        <div class="small">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">문의 번호</span>
+                                <span class="fw-medium">#{{ inquiry.id }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">상태</span>
+                                <span class="badge" :class="getStatusBadgeClass(inquiry.status)">
+                                    {{ getStatusText(inquiry.status) }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">우선순위</span>
+                                <span class="badge" :class="getPriorityClass(inquiry.priority)">
+                                    {{ getPriorityText(inquiry.priority) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm" v-if="inquiry.relatedCourse">
+                    <div class="card-body">
+                        <h6 class="mb-3">관련 강좌</h6>
+                        <div class="small">
+                            <div class="fw-medium mb-1">{{ inquiry.relatedCourse.title }}</div>
+                            <div class="text-muted">{{ inquiry.relatedCourse.instructor }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 답변 탭 -->
+    <div v-if="currentTab === 'reply'">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- 기존 답변 목록 -->
+                <div v-if="inquiry?.replies && inquiry.replies.length > 0" class="mb-4">
+                    <div v-for="reply in inquiry.replies" :key="reply.id" class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <div>
+                                    <strong>{{ reply.author }}</strong>
+                                    <span class="badge bg-primary ms-2">{{ reply.isPrivate ? '비공개' : '공개' }}</span>
+                                </div>
+                                <small class="text-muted">{{ reply.createdAt }}</small>
+                            </div>
+                            <div class="border-start border-primary border-3 ps-3">
+                                <pre class="mb-0" style="white-space: pre-wrap;">{{ reply.content }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 답변 작성 폼 -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">답변 작성</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">답변 내용 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" rows="8" v-model="replyForm.content"
+                                placeholder="답변 내용을 입력하세요"></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" v-model="replyForm.isPrivate" id="isPrivate">
+                            <label class="form-check-label" for="isPrivate">
+                                비공개 답변 (문의자만 확인 가능)
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" v-model="replyForm.sendEmail" id="sendEmail">
+                            <label class="form-check-label" for="sendEmail">
+                                답변 완료 이메일 발송
+                            </label>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" @click="submitReply">
+                                답변 등록
+                            </button>
+                            <button class="btn btn-success" @click="submitReplyAndResolve">
+                                답변 등록 및 해결 완료
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 템플릿 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0">답변 템플릿</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a href="#" v-for="template in replyTemplates" :key="template.id"
+                               @click.prevent="applyTemplate(template)"
+                               class="list-group-item list-group-item-action px-0">
+                                <div class="small fw-medium">{{ template.title }}</div>
+                                <div class="text-muted small">{{ template.description }}</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 처리 이력 탭 -->
+    <div v-if="currentTab === 'history'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">처리 이력</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div v-for="history in processHistory" :key="history.id" class="timeline-item mb-4">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <div class="timeline-icon" :class="getHistoryIconClass(history.type)">
+                                    <i class="bi" :class="getHistoryIcon(history.type)"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="mb-1">{{ history.title }}</h6>
+                                    <small class="text-muted">{{ history.timestamp }}</small>
+                                </div>
+                                <p class="text-muted mb-1">{{ history.description }}</p>
+                                <small class="text-muted">작업자: {{ history.actor }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style scoped>
+.timeline-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+.timeline-icon.bg-info { background-color: #0dcaf0; }
+.timeline-icon.bg-warning { background-color: #ffc107; }
+.timeline-icon.bg-success { background-color: #198754; }
+.timeline-icon.bg-danger { background-color: #dc3545; }
+</style>

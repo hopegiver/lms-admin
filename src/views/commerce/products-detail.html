@@ -1,0 +1,326 @@
+<div class="products-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/commerce/products')" class="text-muted">
+                    ← 상품 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ product?.name }}</h4>
+            <p class="text-muted mb-0">상품 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteProduct">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'courses' }" href="#" @click.prevent="currentTab = 'courses'">포함 강좌</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'sales' }" href="#" @click.prevent="currentTab = 'sales'">판매 현황</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'reviews' }" href="#" @click.prevent="currentTab = 'reviews'">리뷰</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && product">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">상품 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12" v-if="product.thumbnail">
+                                <img :src="product.thumbnail" class="img-fluid rounded" style="max-height: 300px;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상품명</label>
+                                <div class="fw-medium">{{ product.name }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상품 유형</label>
+                                <div class="fw-medium">
+                                    <span class="badge" :class="getTypeClass(product.type)">
+                                        {{ getTypeText(product.type) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(product.status)">
+                                        {{ getStatusText(product.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">등록일</label>
+                                <div class="fw-medium">{{ product.createdAt }}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">상품 설명</label>
+                                <div class="fw-medium">{{ product.description }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">가격 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">정가</label>
+                                <div class="fw-medium">{{ product.price }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">판매가</label>
+                                <div class="fw-medium text-primary fs-5">{{ product.salePrice || product.price }}</div>
+                            </div>
+                            <div class="col-md-4" v-if="product.salePrice">
+                                <label class="form-label text-muted small">할인율</label>
+                                <div class="fw-medium text-danger">{{ product.discountRate }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">판매 통계</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 판매량</span>
+                                <span class="fw-bold fs-5">{{ product.totalSales }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 매출</span>
+                                <span class="fw-bold fs-5">{{ product.totalRevenue }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">평균 평점</span>
+                                <span class="fw-bold fs-5">
+                                    <span class="text-warning">★</span> {{ product.rating }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">리뷰 수</span>
+                                <span class="fw-bold">{{ product.reviewCount }}개</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">이번 달 판매</span>
+                                <span class="fw-bold">{{ product.monthlySales }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">전환율</span>
+                                <span class="fw-bold">{{ product.conversionRate }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">최근 30일 판매 추이</h6>
+                        <div class="text-center text-muted small">
+                            <p>차트 영역 (추후 구현)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 포함 강좌 탭 -->
+    <div v-if="currentTab === 'courses'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">포함된 강좌</h5>
+            </div>
+            <div class="card-body">
+                <div v-if="courses.length === 0" class="text-center text-muted py-5">
+                    포함된 강좌가 없습니다.
+                </div>
+                <div v-else class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>강좌명</th>
+                                <th>강사</th>
+                                <th class="text-center">차시</th>
+                                <th class="text-center">수강생</th>
+                                <th class="text-center">평점</th>
+                                <th class="text-center">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="course in courses" :key="course.id">
+                                <td>
+                                    <div class="fw-medium">{{ course.name }}</div>
+                                </td>
+                                <td>{{ course.instructor }}</td>
+                                <td class="text-center">{{ course.lessons }}개</td>
+                                <td class="text-center">{{ course.students }}명</td>
+                                <td class="text-center">
+                                    <span class="text-warning">★</span> {{ course.rating }}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getStatusClass(course.status)">
+                                        {{ getStatusText(course.status) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 판매 현황 탭 -->
+    <div v-if="currentTab === 'sales'">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">오늘 판매</div>
+                        <div class="fs-4 fw-bold">{{ salesStats.today }}개</div>
+                        <div class="small text-success">+12.5%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">이번 주</div>
+                        <div class="fs-4 fw-bold">{{ salesStats.week }}개</div>
+                        <div class="small text-success">+8.3%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">이번 달</div>
+                        <div class="fs-4 fw-bold">{{ salesStats.month }}개</div>
+                        <div class="small text-success">+15.2%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">전체</div>
+                        <div class="fs-4 fw-bold">{{ salesStats.total }}개</div>
+                        <div class="small text-muted">누적</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">최근 주문 내역</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>주문번호</th>
+                                <th>구매자</th>
+                                <th class="text-end">금액</th>
+                                <th>결제방법</th>
+                                <th>주문일시</th>
+                                <th class="text-center">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="order in recentOrders" :key="order.id">
+                                <td>
+                                    <a href="#" @click.prevent="navigateTo(`/commerce/orders-detail?id=${order.id}`)">
+                                        {{ order.orderNumber }}
+                                    </a>
+                                </td>
+                                <td>{{ order.buyer }}</td>
+                                <td class="text-end">{{ order.amount }}</td>
+                                <td>{{ order.paymentMethod }}</td>
+                                <td>{{ order.orderDate }}</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getOrderStatusClass(order.status)">
+                                        {{ order.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 리뷰 탭 -->
+    <div v-if="currentTab === 'reviews'">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">평점 분포</h6>
+                        <div v-for="star in [5, 4, 3, 2, 1]" :key="star" class="d-flex align-items-center mb-2">
+                            <div class="text-warning me-2" style="width: 60px;">
+                                {{ '★'.repeat(star) }}{{ '☆'.repeat(5-star) }}
+                            </div>
+                            <div class="progress flex-grow-1" style="height: 8px;">
+                                <div class="progress-bar bg-warning" :style="{ width: getRatingPercentage(star) + '%' }"></div>
+                            </div>
+                            <div class="text-muted small ms-2" style="width: 50px;">
+                                {{ getRatingCount(star) }}개
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0" v-for="review in reviews" :key="review.id">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <span class="fw-medium">{{ review.author }}</span>
+                                <span class="ms-2 text-warning">{{ '★'.repeat(review.rating) }}</span>
+                            </div>
+                            <small class="text-muted">{{ review.date }}</small>
+                        </div>
+                        <p class="mb-0 text-muted">{{ review.content }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,154 @@
+<div class="admins-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/users/admins')" class="text-muted">
+                    ← 관리자 목록
+                </a>
+            </div>
+            <h4 class="mb-1">관리자 등록</h4>
+            <p class="text-muted mb-0">새로운 관리자를 등록합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">이름 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.name" placeholder="홍길동">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">이메일 <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" v-model="form.email" placeholder="admin@example.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">비밀번호 <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" v-model="form.password" placeholder="8자 이상">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">연락처</label>
+                            <input type="tel" class="form-control" v-model="form.phone" placeholder="010-1234-5678">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">역할 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.role">
+                                <option value="">선택하세요</option>
+                                <option value="super_admin">슈퍼관리자</option>
+                                <option value="general_admin">일반관리자</option>
+                                <option value="content_admin">콘텐츠관리자</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">부서</label>
+                            <select class="form-select" v-model="form.department">
+                                <option value="">선택안함</option>
+                                <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                                    {{ dept.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태</label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="active">활성</option>
+                                <option value="inactive">비활성</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">메모</label>
+                            <textarea class="form-control" rows="3" v-model="form.memo" placeholder="관리자에 대한 메모"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">권한 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label mb-3">메뉴 접근 권한</label>
+                            <div class="row">
+                                <div class="col-md-6" v-for="permission in availablePermissions" :key="permission.id">
+                                    <div class="form-check mb-2">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            :id="'perm-' + permission.id"
+                                            :value="permission.id"
+                                            v-model="form.permissions">
+                                        <label class="form-check-label" :for="'perm-' + permission.id">
+                                            {{ permission.name }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0">
+                                <small>
+                                    <strong>역할별 기본 권한:</strong><br>
+                                    • 슈퍼관리자: 모든 권한<br>
+                                    • 일반관리자: 사용자, 강좌, 수강 관리<br>
+                                    • 콘텐츠관리자: 강좌, 콘텐츠 관리
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/users/admins')">
+                    취소
+                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" @click="saveDraft">
+                        임시저장
+                    </button>
+                    <button class="btn btn-primary" @click="submit">
+                        등록하기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">등록 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">필수 항목(*)은 반드시 입력해야 합니다</li>
+                        <li class="mb-2">이메일은 로그인 ID로 사용됩니다</li>
+                        <li class="mb-2">비밀번호는 8자 이상이어야 합니다</li>
+                        <li class="mb-2">역할에 따라 기본 권한이 자동 설정됩니다</li>
+                        <li class="mb-2">등록 후 관리자에게 안내 이메일이 발송됩니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">보안 주의사항</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">슈퍼관리자 권한은 신중하게 부여하세요</li>
+                        <li class="mb-2">최소 권한 원칙을 따르세요</li>
+                        <li class="mb-2">정기적으로 권한을 검토하세요</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

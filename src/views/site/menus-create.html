@@ -1,0 +1,185 @@
+<div class="menus-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/site/menus')" class="text-muted">
+                    ← 메뉴 목록
+                </a>
+            </div>
+            <h4 class="mb-1">메뉴 만들기</h4>
+            <p class="text-muted mb-0">새로운 메뉴를 생성합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">메뉴 이름 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.name" placeholder="예) 메인 메뉴">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">메뉴 위치 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.location">
+                                <option value="">선택</option>
+                                <option value="header">헤더</option>
+                                <option value="footer">푸터</option>
+                                <option value="sidebar">사이드바</option>
+                                <option value="mobile">모바일</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">설명</label>
+                            <input type="text" class="form-control" v-model="form.description"
+                                placeholder="메뉴에 대한 간단한 설명">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태</label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="active">사용</option>
+                                <option value="inactive">사용안함</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">메뉴 항목</h5>
+                    <button class="btn btn-sm btn-primary" @click="addMenuItem">
+                        항목 추가
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div v-if="form.items.length === 0" class="text-center text-muted py-4">
+                        메뉴 항목이 없습니다. 항목 추가 버튼을 클릭하세요.
+                    </div>
+                    <div v-else class="menu-items-list">
+                        <div v-for="(item, index) in form.items" :key="index"
+                            class="menu-item border rounded p-3 mb-3"
+                            :style="{ marginLeft: (item.depth * 20) + 'px' }">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="flex-shrink-0 pt-2">
+                                    <button class="btn btn-sm btn-outline-secondary me-1" @click="moveUp(index)" :disabled="index === 0">
+                                        ↑
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" @click="moveDown(index)" :disabled="index === form.items.length - 1">
+                                        ↓
+                                    </button>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="row g-2">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control form-control-sm"
+                                                v-model="item.label" placeholder="메뉴 이름">
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control form-control-sm"
+                                                v-model="item.url" placeholder="URL 또는 경로">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <select class="form-select form-select-sm" v-model="item.target">
+                                                <option value="_self">현재창</option>
+                                                <option value="_blank">새창</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <small class="text-muted">깊이:</small>
+                                                <button class="btn btn-sm btn-outline-secondary" @click="decreaseDepth(index)" :disabled="item.depth === 0">
+                                                    -
+                                                </button>
+                                                <span class="badge bg-light text-dark">{{ item.depth }}</span>
+                                                <button class="btn btn-sm btn-outline-secondary" @click="increaseDepth(index)" :disabled="item.depth >= 2">
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 pt-2">
+                                    <button class="btn btn-sm btn-outline-danger" @click="removeMenuItem(index)">
+                                        삭제
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/site/menus')">
+                    취소
+                </button>
+                <button class="btn btn-primary" @click="submit">
+                    메뉴 생성
+                </button>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">메뉴 생성 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">메뉴 항목을 추가하고 순서를 조정하세요</li>
+                        <li class="mb-2">깊이를 조절하여 하위 메뉴를 만들 수 있습니다</li>
+                        <li class="mb-2">최대 3단계(깊이 0~2)까지 지원합니다</li>
+                        <li class="mb-2">외부 링크는 전체 URL을 입력하세요</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">빠른 추가</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-sm btn-outline-primary" @click="addQuickMenu('pages')">
+                            페이지 추가
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" @click="addQuickMenu('courses')">
+                            강좌 카테고리
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" @click="addQuickMenu('custom')">
+                            커스텀 링크
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="mb-3">메뉴 위치 설명</h6>
+                    <div class="small text-muted">
+                        <p class="mb-2"><strong>헤더:</strong> 페이지 상단 메인 메뉴</p>
+                        <p class="mb-2"><strong>푸터:</strong> 페이지 하단 메뉴</p>
+                        <p class="mb-2"><strong>사이드바:</strong> 페이지 측면 메뉴</p>
+                        <p class="mb-0"><strong>모바일:</strong> 모바일 전용 메뉴</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style scoped>
+.menu-item {
+    transition: all 0.3s;
+}
+.menu-item:hover {
+    background-color: #f8f9fa;
+}
+</style>

@@ -1,0 +1,277 @@
+<div class="boards-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/community/boards')" class="text-muted">
+                    ← 게시판 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ board?.title }}</h4>
+            <p class="text-muted mb-0">게시판 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteBoard">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'posts' }" href="#" @click.prevent="currentTab = 'posts'">게시글 목록</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'settings' }" href="#" @click.prevent="currentTab = 'settings'">설정</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'stats' }" href="#" @click.prevent="currentTab = 'stats'">통계</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && board">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">게시판 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">게시판 이름</label>
+                                <div class="fw-medium">{{ board.title }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">게시판 유형</label>
+                                <div class="fw-medium">{{ getBoardTypeText(board.boardType) }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="board.status === 'active' ? 'bg-success' : 'bg-secondary'">
+                                        {{ board.status === 'active' ? '사용' : '사용안함' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">생성일</label>
+                                <div class="fw-medium">{{ board.createdAt }}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">설명</label>
+                                <div class="fw-medium">{{ board.description || '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">권한 설정</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">읽기 권한</label>
+                                <div class="fw-medium">{{ getPermissionText(board.readPermission) }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">쓰기 권한</label>
+                                <div class="fw-medium">{{ getPermissionText(board.writePermission) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">카테고리</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2" v-if="board.categories && board.categories.length > 0">
+                            <span v-for="cat in board.categories" :key="cat" class="badge bg-light text-dark">
+                                {{ cat }}
+                            </span>
+                        </div>
+                        <p class="text-muted mb-0" v-else>설정된 카테고리가 없습니다</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">게시판 통계</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 게시글</span>
+                                <span class="fw-bold fs-5">{{ board.totalPosts }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 댓글</span>
+                                <span class="fw-bold">{{ board.totalComments }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">총 조회수</span>
+                                <span class="fw-bold">{{ board.totalViews }}회</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">게시판 기능</h6>
+                        <div class="small">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">댓글</span>
+                                <span class="fw-medium">{{ board.useComments ? '사용' : '사용안함' }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">첨부파일</span>
+                                <span class="fw-medium">{{ board.useAttachments ? '사용' : '사용안함' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게시글 목록 탭 -->
+    <div v-if="currentTab === 'posts'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">게시글 목록</h5>
+                <button class="btn btn-sm btn-primary" @click="createPost">
+                    게시글 작성
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px">번호</th>
+                                <th>제목</th>
+                                <th style="width: 100px">작성자</th>
+                                <th class="text-center" style="width: 80px">조회</th>
+                                <th class="text-center" style="width: 80px">댓글</th>
+                                <th style="width: 120px">작성일</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="post in posts" :key="post.id" @click="viewPost(post)" style="cursor: pointer;">
+                                <td>{{ post.id }}</td>
+                                <td>
+                                    <div class="fw-medium">{{ post.title }}</div>
+                                    <span v-if="post.category" class="badge bg-light text-dark small">{{ post.category }}</span>
+                                </td>
+                                <td>{{ post.author }}</td>
+                                <td class="text-center">{{ post.views }}</td>
+                                <td class="text-center">{{ post.comments }}</td>
+                                <td>{{ post.createdAt }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 설정 탭 -->
+    <div v-if="currentTab === 'settings'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">게시판 설정</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <h6 class="mb-3">기능 설정</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" :checked="board.useComments" disabled id="useComments">
+                            <label class="form-check-label" for="useComments">
+                                댓글 기능 사용
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" :checked="board.useAttachments" disabled id="useAttachments">
+                            <label class="form-check-label" for="useAttachments">
+                                첨부파일 기능 사용
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <p class="text-muted small mb-0">설정을 변경하려면 수정 버튼을 클릭하세요</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 통계 탭 -->
+    <div v-if="currentTab === 'stats'">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">게시글 증가 추이</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">차트 영역 (추후 구현)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">조회수 추이</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">차트 영역 (추후 구현)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">인기 게시글 TOP 10</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px">순위</th>
+                                        <th>제목</th>
+                                        <th class="text-center" style="width: 80px">조회수</th>
+                                        <th class="text-center" style="width: 80px">댓글</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(post, index) in topPosts" :key="post.id">
+                                        <td>{{ index + 1 }}</td>
+                                        <td>{{ post.title }}</td>
+                                        <td class="text-center">{{ post.views }}</td>
+                                        <td class="text-center">{{ post.comments }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,238 @@
+<div class="banners-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/site/banners')" class="text-muted">
+                    ← 배너/팝업 목록
+                </a>
+            </div>
+            <h4 class="mb-1">배너/팝업 만들기</h4>
+            <p class="text-muted mb-0">새로운 배너 또는 팝업을 생성합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">제목 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.title" placeholder="예) 신규 강좌 오픈 안내">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">유형 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.type">
+                                <option value="">선택</option>
+                                <option value="banner">배너</option>
+                                <option value="popup">팝업</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태</label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="active">활성</option>
+                                <option value="inactive">비활성</option>
+                                <option value="scheduled">예약됨</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">이미지</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">이미지 업로드 <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" accept="image/*" @change="handleImageUpload">
+                        <small class="text-muted">
+                            권장 크기: 배너 1200x400px, 팝업 600x800px
+                        </small>
+                    </div>
+                    <div v-if="form.imageUrl" class="text-center">
+                        <img :src="form.imageUrl" class="img-thumbnail" style="max-width: 100%; max-height: 300px;">
+                        <button class="btn btn-sm btn-outline-danger mt-2" @click="removeImage">
+                            이미지 제거
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">링크 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">링크 URL</label>
+                            <input type="text" class="form-control" v-model="form.linkUrl"
+                                placeholder="https://example.com 또는 /courses">
+                            <small class="text-muted">클릭 시 이동할 URL (선택사항)</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">링크 타겟</label>
+                            <select class="form-select" v-model="form.linkTarget">
+                                <option value="_self">현재 창</option>
+                                <option value="_blank">새 창</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">디스플레이 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">노출 위치</label>
+                            <select class="form-select" v-model="form.location">
+                                <option value="main_top">메인 상단</option>
+                                <option value="main_middle">메인 중간</option>
+                                <option value="main_bottom">메인 하단</option>
+                                <option value="sidebar">사이드바</option>
+                                <option value="popup_center">팝업 (중앙)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">우선순위</label>
+                            <input type="number" class="form-control" v-model="form.priority"
+                                placeholder="1" min="1">
+                            <small class="text-muted">숫자가 낮을수록 우선 표시</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">노출 시작일 <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" v-model="form.startDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">노출 종료일 <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" v-model="form.endDate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">타겟팅 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">노출 대상</label>
+                            <select class="form-select" v-model="form.targetAudience">
+                                <option value="all">전체 사용자</option>
+                                <option value="guest">비회원만</option>
+                                <option value="member">회원만</option>
+                                <option value="new_member">신규 회원</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">노출 페이지</label>
+                            <select class="form-select" v-model="form.targetPages">
+                                <option value="all">전체 페이지</option>
+                                <option value="home">홈페이지만</option>
+                                <option value="courses">강좌 페이지</option>
+                                <option value="specific">특정 페이지</option>
+                            </select>
+                        </div>
+                        <div class="col-12" v-if="form.targetPages === 'specific'">
+                            <label class="form-label">페이지 URL</label>
+                            <textarea class="form-control" rows="3" v-model="form.specificPages"
+                                placeholder="/courses/123&#10;/about&#10;/contact"></textarea>
+                            <small class="text-muted">한 줄에 하나씩 입력</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4" v-if="form.type === 'popup'">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">팝업 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">팝업 크기 (너비)</label>
+                            <input type="number" class="form-control" v-model="form.popupWidth" placeholder="600">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">팝업 크기 (높이)</label>
+                            <input type="number" class="form-control" v-model="form.popupHeight" placeholder="800">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="form.showCloseButton" id="showCloseButton">
+                                <label class="form-check-label" for="showCloseButton">
+                                    닫기 버튼 표시
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="form.showTodayClose" id="showTodayClose">
+                                <label class="form-check-label" for="showTodayClose">
+                                    "오늘 하루 보지 않기" 버튼 표시
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/site/banners')">
+                    취소
+                </button>
+                <button class="btn btn-primary" @click="submit">
+                    배너/팝업 생성
+                </button>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">생성 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">배너는 페이지 내 특정 위치에 표시됩니다</li>
+                        <li class="mb-2">팝업은 페이지 로드 시 중앙에 표시됩니다</li>
+                        <li class="mb-2">노출 기간을 설정하여 자동으로 표시/숨김 가능</li>
+                        <li class="mb-2">우선순위로 여러 배너의 순서를 조정할 수 있습니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="mb-3">이미지 권장 사항</h6>
+                    <div class="small text-muted">
+                        <p class="mb-2"><strong>배너:</strong></p>
+                        <ul class="ps-3 mb-3">
+                            <li>메인 상단: 1200x400px</li>
+                            <li>사이드바: 300x250px</li>
+                        </ul>
+                        <p class="mb-2"><strong>팝업:</strong></p>
+                        <ul class="ps-3 mb-0">
+                            <li>일반: 600x800px</li>
+                            <li>와이드: 800x600px</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

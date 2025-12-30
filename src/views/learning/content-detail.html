@@ -1,0 +1,239 @@
+<div class="content-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/learning/content')" class="text-muted">
+                    ← 콘텐츠 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ content?.title }}</h4>
+            <p class="text-muted mb-0">콘텐츠 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteContent">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'preview' }" href="#" @click.prevent="currentTab = 'preview'">미리보기</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'usage' }" href="#" @click.prevent="currentTab = 'usage'">사용 현황</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'stats' }" href="#" @click.prevent="currentTab = 'stats'">통계</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && content">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">콘텐츠 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">제목</label>
+                                <div class="fw-medium">{{ content.title }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">유형</label>
+                                <div>
+                                    <span class="badge bg-light text-dark">{{ getTypeText(content.type) }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">재생 시간</label>
+                                <div class="fw-medium">{{ content.duration }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">파일 크기</label>
+                                <div class="fw-medium">{{ content.fileSize }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(content.status)">
+                                        {{ getStatusText(content.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">설명</label>
+                                <div class="fw-medium">{{ content.description }}</div>
+                            </div>
+                            <div class="col-12" v-if="content.tags">
+                                <label class="form-label text-muted small">태그</label>
+                                <div>
+                                    <span class="badge bg-light text-dark me-1" v-for="tag in content.tags.split(',')" :key="tag">
+                                        {{ tag.trim() }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">다운로드 허용</label>
+                                <div class="fw-medium">{{ content.downloadable ? '예' : '아니오' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">진도 추적</label>
+                                <div class="fw-medium">{{ content.trackProgress ? '활성' : '비활성' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">콘텐츠 통계</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">총 조회수</span>
+                            <span class="fw-bold fs-5">{{ content.views }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">사용 강좌</span>
+                            <span class="fw-bold">{{ content.usedInCourses }}개</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">평균 완료율</span>
+                            <span class="fw-bold">{{ content.avgCompletion }}%</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">생성일</span>
+                            <span class="fw-medium">{{ content.createdAt }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="small text-muted">수정일</span>
+                            <span class="fw-medium">{{ content.updatedAt }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 미리보기 탭 -->
+    <div v-if="currentTab === 'preview'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">콘텐츠 미리보기</h5>
+            </div>
+            <div class="card-body">
+                <div v-if="content.type === 'video'" class="text-center">
+                    <video controls style="max-width: 100%; max-height: 500px;" :src="content.fileUrl">
+                        비디오를 지원하지 않는 브라우저입니다.
+                    </video>
+                </div>
+                <div v-else-if="content.type === 'document'" class="text-center">
+                    <iframe :src="content.fileUrl" style="width: 100%; height: 600px; border: none;"></iframe>
+                </div>
+                <div v-else-if="content.type === 'link'" class="text-center">
+                    <a :href="content.fileUrl" target="_blank" class="btn btn-primary">
+                        외부 링크 열기
+                    </a>
+                    <p class="text-muted mt-3">{{ content.fileUrl }}</p>
+                </div>
+                <div v-else class="text-center text-muted py-5">
+                    <p>미리보기를 지원하지 않는 콘텐츠 유형입니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사용 현황 탭 -->
+    <div v-if="currentTab === 'usage'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">강좌별 사용 현황</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>강좌명</th>
+                                <th>커리큘럼</th>
+                                <th>차시</th>
+                                <th class="text-center">수강생</th>
+                                <th class="text-center">평균 완료율</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="usage in usageData" :key="usage.id">
+                                <td>{{ usage.courseName }}</td>
+                                <td>{{ usage.curriculum }}</td>
+                                <td>{{ usage.lesson }}</td>
+                                <td class="text-center">{{ usage.students }}명</td>
+                                <td class="text-center">
+                                    <div class="progress" style="height: 8px; width: 100px; margin: 0 auto;">
+                                        <div class="progress-bar" :style="{ width: usage.completion + '%' }"></div>
+                                    </div>
+                                    <small class="text-muted">{{ usage.completion }}%</small>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 통계 탭 -->
+    <div v-if="currentTab === 'stats'">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">일별 조회수 추이</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3" v-for="stat in dailyViews" :key="stat.date">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">{{ stat.date }}</span>
+                                <span class="small fw-bold">{{ stat.views }}회</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" :style="{ width: (stat.views / maxDailyViews * 100) + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">학습 완료율 분포</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3" v-for="range in completionDistribution" :key="range.label">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">{{ range.label }}</span>
+                                <span class="small fw-bold">{{ range.count }}명 ({{ range.percentage }}%)</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" :style="{ width: range.percentage + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

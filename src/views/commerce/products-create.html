@@ -1,0 +1,165 @@
+<div class="products-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/commerce/products')" class="text-muted">
+                    ← 상품 목록
+                </a>
+            </div>
+            <h4 class="mb-1">상품 만들기</h4>
+            <p class="text-muted mb-0">새로운 상품을 생성합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">상품명 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.name" placeholder="예) React 완벽 가이드">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상품 유형 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.type" @change="onTypeChange">
+                                <option value="">선택</option>
+                                <option value="course">강좌</option>
+                                <option value="bundle">번들</option>
+                                <option value="subscription">구독</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="draft">준비중</option>
+                                <option value="active">판매중</option>
+                                <option value="inactive">판매종료</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">상품 설명</label>
+                            <textarea class="form-control" rows="4" v-model="form.description"
+                                placeholder="상품에 대한 자세한 설명을 입력하세요"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4" v-if="form.type === 'course' || form.type === 'bundle'">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">강좌 선택</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.type === 'course' ? '강좌' : '포함할 강좌' }} <span class="text-danger">*</span></label>
+                        <select class="form-select" v-model="selectedCourse" @change="addCourse" :disabled="form.type === 'course' && form.courses.length > 0">
+                            <option value="">선택</option>
+                            <option v-for="course in availableCourses" :key="course.id" :value="course.id">
+                                {{ course.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div v-if="form.courses.length > 0">
+                        <label class="form-label small text-muted">선택된 강좌</label>
+                        <div class="list-group">
+                            <div class="list-group-item d-flex justify-content-between align-items-center" v-for="courseId in form.courses" :key="courseId">
+                                <span>{{ getCourseNameById(courseId) }}</span>
+                                <button class="btn btn-sm btn-outline-danger" @click="removeCourse(courseId)">제거</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">가격 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">정가 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">₩</span>
+                                <input type="number" class="form-control" v-model="form.price" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">할인가</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₩</span>
+                                <input type="number" class="form-control" v-model="form.salePrice" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="col-12" v-if="form.salePrice && form.price">
+                            <div class="alert alert-info mb-0">
+                                할인율: <strong>{{ calculateDiscountRate() }}%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">썸네일 이미지</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="file" class="form-control" accept="image/*" @change="handleImageUpload">
+                    </div>
+                    <div v-if="form.thumbnail" class="text-center">
+                        <img :src="form.thumbnail" class="img-thumbnail" style="max-width: 300px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/commerce/products')">
+                    취소
+                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" @click="saveDraft">
+                        임시저장
+                    </button>
+                    <button class="btn btn-primary" @click="submit">
+                        상품 생성
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">상품 유형 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2"><strong>강좌:</strong> 단일 강좌를 판매합니다</li>
+                        <li class="mb-2"><strong>번들:</strong> 여러 강좌를 묶어서 판매합니다</li>
+                        <li class="mb-2"><strong>구독:</strong> 정기 결제 상품입니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">생성 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">상품 유형에 따라 강좌를 선택할 수 있습니다</li>
+                        <li class="mb-2">할인가를 설정하면 자동으로 할인율이 계산됩니다</li>
+                        <li class="mb-2">준비중 상태로 저장하고 나중에 판매할 수 있습니다</li>
+                        <li class="mb-2">썸네일은 권장 크기 1200x630px입니다</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

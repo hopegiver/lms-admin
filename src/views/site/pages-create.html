@@ -1,0 +1,157 @@
+<div class="pages-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/site/pages')" class="text-muted">
+                    ← 페이지 목록
+                </a>
+            </div>
+            <h4 class="mb-1">페이지 만들기</h4>
+            <p class="text-muted mb-0">새로운 페이지를 생성합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">페이지 제목 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.title" placeholder="예) 서비스 소개">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">URL Slug <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">/</span>
+                                <input type="text" class="form-control" v-model="form.slug"
+                                    placeholder="about-us" @input="validateSlug">
+                            </div>
+                            <small class="text-muted">영문, 숫자, 하이픈(-)만 사용 가능</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태</label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="draft">초안</option>
+                                <option value="published">게시됨</option>
+                                <option value="private">비공개</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">콘텐츠</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">페이지 내용</label>
+                        <textarea class="form-control" rows="15" v-model="form.content"
+                            placeholder="HTML 또는 마크다운 형식으로 내용을 입력하세요"></textarea>
+                        <small class="text-muted">
+                            HTML 태그 사용 가능합니다. 에디터는 추후 고도화 예정입니다.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">SEO 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">메타 제목</label>
+                            <input type="text" class="form-control" v-model="form.metaTitle"
+                                placeholder="검색엔진에 표시될 제목">
+                            <small class="text-muted">{{ form.metaTitle?.length || 0 }}/60자</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">메타 설명</label>
+                            <textarea class="form-control" rows="3" v-model="form.metaDescription"
+                                placeholder="검색엔진에 표시될 설명"></textarea>
+                            <small class="text-muted">{{ form.metaDescription?.length || 0 }}/160자</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/site/pages')">
+                    취소
+                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" @click="saveDraft">
+                        초안 저장
+                    </button>
+                    <button class="btn btn-primary" @click="submit">
+                        페이지 생성
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">페이지 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">템플릿</label>
+                        <select class="form-select" v-model="form.template">
+                            <option value="default">기본 템플릿</option>
+                            <option value="full-width">전체 너비</option>
+                            <option value="sidebar">사이드바 포함</option>
+                            <option value="landing">랜딩 페이지</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">상위 페이지</label>
+                        <select class="form-select" v-model="form.parentPage">
+                            <option value="">없음 (최상위)</option>
+                            <option v-for="page in parentPages" :key="page.id" :value="page.id">
+                                {{ page.title }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">게시 일시</label>
+                        <input type="datetime-local" class="form-control" v-model="form.publishDate">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">페이지 생성 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">URL Slug는 고유해야 하며 변경 시 주의가 필요합니다</li>
+                        <li class="mb-2">메타 제목은 60자 이내로 작성을 권장합니다</li>
+                        <li class="mb-2">메타 설명은 160자 이내로 작성을 권장합니다</li>
+                        <li class="mb-2">초안으로 저장 후 나중에 게시할 수 있습니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="mb-3">미리보기 URL</h6>
+                    <div class="small">
+                        <code class="text-primary">{{ previewUrl }}</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,171 @@
+<div class="boards-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/community/boards')" class="text-muted">
+                    ← 게시판 목록
+                </a>
+            </div>
+            <h4 class="mb-1">게시판 만들기</h4>
+            <p class="text-muted mb-0">새로운 게시판을 생성합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">게시판 이름 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.title" placeholder="예) 공지사항">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">게시판 유형 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.boardType">
+                                <option value="">선택</option>
+                                <option value="notice">공지사항</option>
+                                <option value="faq">FAQ</option>
+                                <option value="free">자유게시판</option>
+                                <option value="qna">Q&A</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="active">사용</option>
+                                <option value="inactive">사용안함</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">설명</label>
+                            <textarea class="form-control" rows="3" v-model="form.description"
+                                placeholder="게시판에 대한 설명을 입력하세요"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">권한 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">읽기 권한</label>
+                            <select class="form-select" v-model="form.readPermission">
+                                <option value="all">전체 공개</option>
+                                <option value="member">회원만</option>
+                                <option value="admin">관리자만</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">쓰기 권한</label>
+                            <select class="form-select" v-model="form.writePermission">
+                                <option value="all">전체</option>
+                                <option value="member">회원만</option>
+                                <option value="admin">관리자만</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">카테고리 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">카테고리</label>
+                        <div class="d-flex gap-2 mb-2">
+                            <input type="text" class="form-control" v-model="newCategory" placeholder="카테고리 입력">
+                            <button class="btn btn-outline-primary" @click="addCategory">추가</button>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2" v-if="form.categories.length > 0">
+                            <span v-for="(cat, index) in form.categories" :key="index"
+                                class="badge bg-light text-dark d-flex align-items-center gap-2">
+                                {{ cat }}
+                                <button type="button" class="btn-close btn-close-sm"
+                                    @click="removeCategory(index)" style="font-size: 0.7em;"></button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">게시판 기능</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="form.useComments" id="useComments">
+                                <label class="form-check-label" for="useComments">
+                                    댓글 기능 사용
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="form.useAttachments" id="useAttachments">
+                                <label class="form-check-label" for="useAttachments">
+                                    첨부파일 기능 사용
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12" v-if="form.useAttachments">
+                            <label class="form-label">최대 첨부파일 크기 (MB)</label>
+                            <input type="number" class="form-control" v-model="form.maxFileSize" placeholder="10">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/community/boards')">
+                    취소
+                </button>
+                <button class="btn btn-primary" @click="submit">
+                    게시판 생성
+                </button>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">게시판 생성 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">게시판 유형에 따라 적절한 권한을 설정하세요</li>
+                        <li class="mb-2">공지사항은 관리자만 작성 가능하도록 설정을 권장합니다</li>
+                        <li class="mb-2">카테고리를 사용하면 게시글을 분류할 수 있습니다</li>
+                        <li class="mb-2">댓글과 첨부파일 기능은 선택적으로 사용 가능합니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="mb-3">게시판 유형별 특징</h6>
+                    <div class="small text-muted">
+                        <p class="mb-2"><strong>공지사항:</strong> 중요한 안내 및 공지용</p>
+                        <p class="mb-2"><strong>FAQ:</strong> 자주 묻는 질문과 답변</p>
+                        <p class="mb-2"><strong>자유게시판:</strong> 자유로운 의견 교환</p>
+                        <p class="mb-0"><strong>Q&A:</strong> 질문과 답변 형식</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

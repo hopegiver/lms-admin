@@ -1,0 +1,269 @@
+<div class="promotions-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/commerce/promotions')" class="text-muted">
+                    ← 프로모션 목록
+                </a>
+            </div>
+            <h4 class="mb-1">프로모션 만들기</h4>
+            <p class="text-muted mb-0">새로운 프로모션을 생성합니다</p>
+        </div>
+    </div>
+
+    <!-- 등록 폼 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기본 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">프로모션명 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.name" placeholder="예) 신규 회원 할인 이벤트">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">프로모션 유형 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.type" @change="onTypeChange">
+                                <option value="">선택</option>
+                                <option value="discount">할인</option>
+                                <option value="coupon">쿠폰</option>
+                                <option value="bundle">번들</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">상태 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.status">
+                                <option value="draft">준비중</option>
+                                <option value="active">진행중</option>
+                                <option value="inactive">종료</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">설명</label>
+                            <textarea class="form-control" rows="3" v-model="form.description"
+                                placeholder="프로모션에 대한 설명을 입력하세요"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">할인 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">할인 유형 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="form.discountType">
+                                <option value="percentage">퍼센트 (%)</option>
+                                <option value="fixed">고정 금액 (₩)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">할인 값 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" v-model="form.discountValue" placeholder="0">
+                                <span class="input-group-text" v-if="form.discountType === 'percentage'">%</span>
+                                <span class="input-group-text" v-if="form.discountType === 'fixed'">₩</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6" v-if="form.discountType === 'percentage'">
+                            <label class="form-label">최대 할인 금액</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₩</span>
+                                <input type="number" class="form-control" v-model="form.maxDiscountAmount" placeholder="0">
+                            </div>
+                            <small class="text-muted">0이면 제한 없음</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">최소 구매 금액</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₩</span>
+                                <input type="number" class="form-control" v-model="form.minPurchaseAmount" placeholder="0">
+                            </div>
+                            <small class="text-muted">0이면 제한 없음</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4" v-if="form.type === 'coupon'">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">쿠폰 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">쿠폰 코드 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" v-model="form.couponCode" placeholder="WELCOME2024">
+                                <button class="btn btn-outline-secondary" @click="generateCouponCode">
+                                    자동생성
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">발급 수량</label>
+                            <input type="number" class="form-control" v-model="form.issueLimit" placeholder="0">
+                            <small class="text-muted">0이면 제한 없음</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">대상 상품</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="form.targetType" value="all" id="targetAll">
+                            <label class="form-check-label" for="targetAll">
+                                전체 상품
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="form.targetType" value="specific" id="targetSpecific">
+                            <label class="form-check-label" for="targetSpecific">
+                                특정 상품
+                            </label>
+                        </div>
+                    </div>
+                    <div v-if="form.targetType === 'specific'">
+                        <label class="form-label">상품 선택</label>
+                        <select class="form-select mb-3" v-model="selectedProduct" @change="addProduct">
+                            <option value="">선택</option>
+                            <option v-for="product in availableProducts" :key="product.id" :value="product.id">
+                                {{ product.name }}
+                            </option>
+                        </select>
+                        <div v-if="form.targetProducts.length > 0">
+                            <label class="form-label small text-muted">선택된 상품</label>
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center" v-for="productId in form.targetProducts" :key="productId">
+                                    <span>{{ getProductNameById(productId) }}</span>
+                                    <button class="btn btn-sm btn-outline-danger" @click="removeProduct(productId)">제거</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">기간 설정</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">시작일시 <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" v-model="form.startDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">종료일시 <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" v-model="form.endDate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">사용 제한</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">총 사용 횟수</label>
+                            <input type="number" class="form-control" v-model="form.usageLimit" placeholder="0">
+                            <small class="text-muted">0이면 제한 없음</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">1인당 사용 횟수</label>
+                            <input type="number" class="form-control" v-model="form.perUserLimit" placeholder="0">
+                            <small class="text-muted">0이면 제한 없음</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between mb-4">
+                <button class="btn btn-outline-secondary" @click="navigateTo('/commerce/promotions')">
+                    취소
+                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" @click="saveDraft">
+                        임시저장
+                    </button>
+                    <button class="btn btn-primary" @click="submit">
+                        프로모션 생성
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">프로모션 유형 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2"><strong>할인:</strong> 특정 상품이나 전체 상품에 할인을 적용합니다</li>
+                        <li class="mb-2"><strong>쿠폰:</strong> 쿠폰 코드를 통해 할인을 제공합니다</li>
+                        <li class="mb-2"><strong>번들:</strong> 여러 상품을 묶어서 특별 가격에 판매합니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="mb-3">할인 미리보기</h6>
+                    <div v-if="form.discountType && form.discountValue">
+                        <div class="mb-2">
+                            <span class="small text-muted">할인 유형:</span>
+                            <span class="fw-medium ms-2">
+                                {{ form.discountType === 'percentage' ? '퍼센트' : '고정 금액' }}
+                            </span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="small text-muted">할인 값:</span>
+                            <span class="fw-medium ms-2">
+                                {{ form.discountValue }}{{ form.discountType === 'percentage' ? '%' : '원' }}
+                            </span>
+                        </div>
+                        <div class="alert alert-info small mb-0 mt-3">
+                            <strong>예시:</strong><br>
+                            100,000원 상품 →
+                            <span class="text-primary fw-bold">
+                                {{ calculateDiscountPreview() }}원
+                            </span>
+                        </div>
+                    </div>
+                    <div v-else class="text-muted small">
+                        할인 설정을 입력하세요
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="mb-3">생성 안내</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-2">프로모션 기간을 정확하게 설정하세요</li>
+                        <li class="mb-2">쿠폰 코드는 중복되지 않아야 합니다</li>
+                        <li class="mb-2">사용 제한을 설정하여 예산을 관리할 수 있습니다</li>
+                        <li class="mb-2">준비중 상태로 저장하고 나중에 활성화할 수 있습니다</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

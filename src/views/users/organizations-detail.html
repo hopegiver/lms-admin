@@ -1,0 +1,342 @@
+<div class="organizations-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/users/organizations')" class="text-muted">
+                    ← 조직 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ organization?.name }}</h4>
+            <p class="text-muted mb-0">조직 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteOrganization">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'sub-orgs' }" href="#" @click.prevent="currentTab = 'sub-orgs'">하위 조직</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'members' }" href="#" @click.prevent="currentTab = 'members'">구성원</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'stats' }" href="#" @click.prevent="currentTab = 'stats'">통계</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && organization">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">기본 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">조직명</label>
+                                <div class="fw-medium">{{ organization.name }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">조직코드</label>
+                                <div class="fw-medium">{{ organization.code }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상위 조직</label>
+                                <div class="fw-medium">{{ organization.parentOrganization || '-' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">담당자</label>
+                                <div class="fw-medium">{{ organization.manager || '-' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">연락처</label>
+                                <div class="fw-medium">{{ organization.contact || '-' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">이메일</label>
+                                <div class="fw-medium">{{ organization.email || '-' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">생성일</label>
+                                <div class="fw-medium">{{ organization.createdAt }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(organization.status)">
+                                        {{ getStatusText(organization.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">주소</label>
+                                <div class="fw-medium">{{ organization.address || '-' }}</div>
+                            </div>
+                            <div class="col-12" v-if="organization.description">
+                                <label class="form-label text-muted small">설명</label>
+                                <div class="fw-medium">{{ organization.description }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">조직 통계</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">총 구성원</span>
+                                <span class="fw-bold">{{ organization.totalMembers }}명</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">하위 조직 수</span>
+                                <span class="fw-bold">{{ organization.subOrganizations }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">활성 강좌 수</span>
+                                <span class="fw-bold">{{ organization.activeCourses }}개</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">평균 학습률</span>
+                                <span class="fw-bold">{{ organization.avgLearningRate }}%</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">최근 업데이트</span>
+                                <span class="fw-bold">{{ organization.updatedAt }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 하위 조직 탭 -->
+    <div v-if="currentTab === 'sub-orgs' && organization">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">하위 조직 목록</h5>
+                <button class="btn btn-sm btn-primary" @click="addSubOrganization">
+                    + 하위 조직 추가
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>조직명</th>
+                                <th>조직코드</th>
+                                <th>담당자</th>
+                                <th class="text-center">구성원</th>
+                                <th class="text-center">상태</th>
+                                <th class="text-center">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="subOrg in organization.subOrgList" :key="subOrg.id">
+                                <td>
+                                    <div class="fw-medium">{{ subOrg.name }}</div>
+                                </td>
+                                <td>{{ subOrg.code }}</td>
+                                <td>{{ subOrg.manager || '-' }}</td>
+                                <td class="text-center">{{ subOrg.memberCount }}명</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getStatusClass(subOrg.status)">
+                                        {{ getStatusText(subOrg.status) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            @click="navigateTo('/users/organizations-detail', {id: subOrg.id})">
+                                        상세
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 구성원 탭 -->
+    <div v-if="currentTab === 'members' && organization">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">구성원 목록</h5>
+                <button class="btn btn-sm btn-primary" @click="addMember">
+                    + 구성원 추가
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>이름</th>
+                                <th>이메일</th>
+                                <th>연락처</th>
+                                <th>역할</th>
+                                <th class="text-center">진행중 강좌</th>
+                                <th class="text-center">상태</th>
+                                <th class="text-center">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="member in organization.members" :key="member.id">
+                                <td>
+                                    <div class="fw-medium">{{ member.name }}</div>
+                                </td>
+                                <td>{{ member.email }}</td>
+                                <td>{{ member.phone || '-' }}</td>
+                                <td>{{ member.role }}</td>
+                                <td class="text-center">{{ member.enrolledCourses }}개</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getStatusClass(member.status)">
+                                        {{ getStatusText(member.status) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            @click="navigateTo('/users/learners-detail', {id: member.id})">
+                                        상세
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 통계 탭 -->
+    <div v-if="currentTab === 'stats' && organization">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">학습 현황</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>전체 수강 강좌</span>
+                                <span class="fw-bold">{{ stats.totalEnrollments }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>완료된 강좌</span>
+                                <span class="fw-bold">{{ stats.completedCourses }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>진행중 강좌</span>
+                                <span class="fw-bold">{{ stats.inProgressCourses }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>평균 진도율</span>
+                                <span class="fw-bold">{{ stats.avgProgress }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">구성원 현황</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>총 구성원</span>
+                                <span class="fw-bold">{{ stats.totalMembers }}명</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>활성 구성원</span>
+                                <span class="fw-bold">{{ stats.activeMembers }}명</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>비활성 구성원</span>
+                                <span class="fw-bold">{{ stats.inactiveMembers }}명</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>이번 달 신규 가입</span>
+                                <span class="fw-bold">{{ stats.newMembersThisMonth }}명</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">월별 학습 시간</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>총 학습 시간</span>
+                                <span class="fw-bold">{{ stats.totalLearningHours }}시간</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>평균 학습 시간/인</span>
+                                <span class="fw-bold">{{ stats.avgLearningHours }}시간</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>최다 학습자</span>
+                                <span class="fw-bold">{{ stats.topLearner }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">강좌별 현황</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>등록된 강좌</span>
+                                <span class="fw-bold">{{ stats.registeredCourses }}개</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>인기 강좌</span>
+                                <span class="fw-bold">{{ stats.popularCourse }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>완료율 1위</span>
+                                <span class="fw-bold">{{ stats.topCompletionCourse }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

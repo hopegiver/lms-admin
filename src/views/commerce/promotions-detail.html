@@ -1,0 +1,394 @@
+<div class="promotions-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/commerce/promotions')" class="text-muted">
+                    ← 프로모션 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ promotion?.name }}</h4>
+            <p class="text-muted mb-0">프로모션 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deletePromotion">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'products' }" href="#" @click.prevent="currentTab = 'products'">대상 상품</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'usage' }" href="#" @click.prevent="currentTab = 'usage'">사용 내역</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'stats' }" href="#" @click.prevent="currentTab = 'stats'">통계</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && promotion">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">프로모션 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">프로모션명</label>
+                                <div class="fw-medium">{{ promotion.name }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">유형</label>
+                                <div>
+                                    <span class="badge" :class="getTypeClass(promotion.type)">
+                                        {{ getTypeText(promotion.type) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(promotion.status)">
+                                        {{ getStatusText(promotion.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6" v-if="promotion.couponCode">
+                                <label class="form-label text-muted small">쿠폰 코드</label>
+                                <div class="fw-medium font-monospace">{{ promotion.couponCode }}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">설명</label>
+                                <div class="fw-medium">{{ promotion.description }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">할인 설정</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">할인 유형</label>
+                                <div class="fw-medium">
+                                    {{ promotion.discountType === 'percentage' ? '퍼센트 (%)' : '고정 금액 (₩)' }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">할인 값</label>
+                                <div class="fw-medium text-primary fs-5">
+                                    {{ promotion.discountValue }}{{ promotion.discountType === 'percentage' ? '%' : '원' }}
+                                </div>
+                            </div>
+                            <div class="col-md-6" v-if="promotion.maxDiscountAmount">
+                                <label class="form-label text-muted small">최대 할인 금액</label>
+                                <div class="fw-medium">{{ promotion.maxDiscountAmount }}</div>
+                            </div>
+                            <div class="col-md-6" v-if="promotion.minPurchaseAmount">
+                                <label class="form-label text-muted small">최소 구매 금액</label>
+                                <div class="fw-medium">{{ promotion.minPurchaseAmount }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">기간 및 제한</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">시작일시</label>
+                                <div class="fw-medium">{{ promotion.startDate }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">종료일시</label>
+                                <div class="fw-medium">{{ promotion.endDate }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">총 사용 횟수</label>
+                                <div class="fw-medium">
+                                    {{ promotion.usageLimit || '제한 없음' }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">1인당 사용 횟수</label>
+                                <div class="fw-medium">
+                                    {{ promotion.perUserLimit || '제한 없음' }}
+                                </div>
+                            </div>
+                            <div class="col-md-6" v-if="promotion.issueLimit">
+                                <label class="form-label text-muted small">쿠폰 발급 수량</label>
+                                <div class="fw-medium">
+                                    {{ promotion.issueLimit }}장
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">사용 통계</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 사용 횟수</span>
+                                <span class="fw-bold fs-5">{{ promotion.usageCount }}회</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 할인 금액</span>
+                                <span class="fw-bold fs-5">{{ promotion.totalDiscountAmount }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 매출 증가</span>
+                                <span class="fw-bold fs-5 text-success">{{ promotion.totalRevenue }}</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">평균 할인액</span>
+                                <span class="fw-bold">{{ promotion.avgDiscount }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">전환율</span>
+                                <span class="fw-bold">{{ promotion.conversionRate }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">진행 상황</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small text-muted">사용률</span>
+                                <span class="fw-medium">{{ getUsagePercentage() }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" :style="{ width: getUsagePercentage() + '%' }"></div>
+                            </div>
+                        </div>
+                        <div class="small text-muted">
+                            <div class="mb-1">남은 기간: {{ getRemainingDays() }}일</div>
+                            <div v-if="promotion.usageLimit">
+                                남은 횟수: {{ promotion.usageLimit - promotion.usageCount }}회
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 대상 상품 탭 -->
+    <div v-if="currentTab === 'products'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">프로모션 적용 상품</h5>
+            </div>
+            <div class="card-body">
+                <div v-if="promotion?.targetType === 'all'" class="alert alert-info">
+                    이 프로모션은 모든 상품에 적용됩니다.
+                </div>
+                <div v-else-if="targetProducts.length === 0" class="text-center text-muted py-5">
+                    적용된 상품이 없습니다.
+                </div>
+                <div v-else class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>상품명</th>
+                                <th>유형</th>
+                                <th class="text-end">정가</th>
+                                <th class="text-end">할인가</th>
+                                <th class="text-center">판매량</th>
+                                <th class="text-center">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="product in targetProducts" :key="product.id">
+                                <td>
+                                    <div class="fw-medium">{{ product.name }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge" :class="getProductTypeClass(product.type)">
+                                        {{ product.type }}
+                                    </span>
+                                </td>
+                                <td class="text-end">{{ product.price }}</td>
+                                <td class="text-end text-primary fw-medium">{{ product.salePrice }}</td>
+                                <td class="text-center">{{ product.sales }}개</td>
+                                <td class="text-center">
+                                    <span class="badge" :class="getStatusClass(product.status)">
+                                        {{ getStatusText(product.status) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사용 내역 탭 -->
+    <div v-if="currentTab === 'usage'">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">사용 내역</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>주문번호</th>
+                                <th>사용자</th>
+                                <th>상품</th>
+                                <th class="text-end">원가</th>
+                                <th class="text-end">할인액</th>
+                                <th class="text-end">결제액</th>
+                                <th>사용일시</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="usage in usageHistory" :key="usage.id">
+                                <td>
+                                    <a href="#" @click.prevent="navigateTo(`/commerce/orders-detail?id=${usage.orderId}`)">
+                                        {{ usage.orderNumber }}
+                                    </a>
+                                </td>
+                                <td>{{ usage.userName }}</td>
+                                <td>{{ usage.productName }}</td>
+                                <td class="text-end">{{ usage.originalPrice }}</td>
+                                <td class="text-end text-danger">-{{ usage.discountAmount }}</td>
+                                <td class="text-end fw-medium">{{ usage.finalPrice }}</td>
+                                <td>{{ usage.usedAt }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 통계 탭 -->
+    <div v-if="currentTab === 'stats'">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">오늘 사용</div>
+                        <div class="fs-4 fw-bold">{{ stats.today }}회</div>
+                        <div class="small text-success">+12.5%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">이번 주</div>
+                        <div class="fs-4 fw-bold">{{ stats.week }}회</div>
+                        <div class="small text-success">+8.3%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">이번 달</div>
+                        <div class="fs-4 fw-bold">{{ stats.month }}회</div>
+                        <div class="small text-success">+15.2%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">전체</div>
+                        <div class="fs-4 fw-bold">{{ stats.total }}회</div>
+                        <div class="small text-muted">누적</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">일별 사용 추이</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted text-center py-5">차트 영역 (추후 구현)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">상품별 사용 분포</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted text-center py-5">차트 영역 (추후 구현)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">시간대별 사용 현황</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>시간대</th>
+                                <th class="text-center">사용 횟수</th>
+                                <th class="text-end">할인 금액</th>
+                                <th class="text-center">비율</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="hourly in hourlyStats" :key="hourly.hour">
+                                <td>{{ hourly.hour }}</td>
+                                <td class="text-center">{{ hourly.count }}회</td>
+                                <td class="text-end">{{ hourly.amount }}</td>
+                                <td class="text-center">
+                                    <div class="progress" style="height: 8px; width: 100px; margin: 0 auto;">
+                                        <div class="progress-bar" :style="{ width: hourly.percentage + '%' }"></div>
+                                    </div>
+                                    <small class="text-muted">{{ hourly.percentage }}%</small>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,296 @@
+<div class="banners-detail-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/site/banners')" class="text-muted">
+                    ← 배너/팝업 목록
+                </a>
+            </div>
+            <h4 class="mb-1">{{ banner?.title }}</h4>
+            <p class="text-muted mb-0">배너/팝업 상세 정보</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="preview">
+                미리보기
+            </button>
+            <button class="btn btn-outline-secondary" @click="edit">
+                수정
+            </button>
+            <button class="btn btn-outline-danger" @click="deleteBanner">
+                삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'info' }" href="#" @click.prevent="currentTab = 'info'">기본정보</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'display' }" href="#" @click.prevent="currentTab = 'display'">디스플레이 설정</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'stats' }" href="#" @click.prevent="currentTab = 'stats'">통계</a>
+        </li>
+    </ul>
+
+    <!-- 기본정보 탭 -->
+    <div v-if="currentTab === 'info' && banner">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">배너/팝업 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12" v-if="banner.imageUrl">
+                                <img :src="banner.imageUrl" class="img-fluid rounded" style="max-height: 400px;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">제목</label>
+                                <div class="fw-medium">{{ banner.title }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">유형</label>
+                                <div class="fw-medium">{{ getTypeText(banner.type) }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge" :class="getStatusClass(banner.status)">
+                                        {{ getStatusText(banner.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">노출 위치</label>
+                                <div class="fw-medium">{{ getLocationText(banner.location) }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">링크 URL</label>
+                                <div class="fw-medium">{{ banner.linkUrl || '-' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">링크 타겟</label>
+                                <div class="fw-medium">{{ banner.linkTarget === '_blank' ? '새 창' : '현재 창' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">우선순위</label>
+                                <div class="fw-medium">{{ banner.priority }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">생성일</label>
+                                <div class="fw-medium">{{ banner.createdAt }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">노출 기간</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">시작일</label>
+                                <div class="fw-medium">{{ banner.startDate }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">종료일</label>
+                                <div class="fw-medium">{{ banner.endDate }}</div>
+                            </div>
+                            <div class="col-12">
+                                <div class="alert" :class="getActiveAlertClass()" role="alert">
+                                    {{ getActiveStatusText() }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 통계 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">실시간 통계</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 노출수</span>
+                                <span class="fw-bold fs-5">{{ banner.impressions }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">총 클릭수</span>
+                                <span class="fw-bold">{{ banner.clicks }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">클릭률 (CTR)</span>
+                                <span class="fw-bold text-primary">{{ banner.ctr }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm" v-if="banner.type === 'popup'">
+                    <div class="card-body">
+                        <h6 class="mb-3">팝업 설정</h6>
+                        <div class="small">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">크기</span>
+                                <span class="fw-medium">{{ banner.popupWidth }}x{{ banner.popupHeight }}px</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">닫기 버튼</span>
+                                <span class="fw-medium">{{ banner.showCloseButton ? '표시' : '숨김' }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">오늘 하루 보지 않기</span>
+                                <span class="fw-medium">{{ banner.showTodayClose ? '표시' : '숨김' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 디스플레이 설정 탭 -->
+    <div v-if="currentTab === 'display' && banner">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">타겟팅 설정</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">노출 대상</label>
+                                <div class="fw-medium">{{ getTargetAudienceText(banner.targetAudience) }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">노출 페이지</label>
+                                <div class="fw-medium">{{ getTargetPagesText(banner.targetPages) }}</div>
+                            </div>
+                            <div class="col-12" v-if="banner.specificPages">
+                                <label class="form-label text-muted small">특정 페이지 목록</label>
+                                <div class="border rounded p-3 bg-light">
+                                    <pre class="mb-0 small">{{ banner.specificPages }}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">디스플레이 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">이미지 크기</label>
+                                <div class="fw-medium">{{ banner.imageWidth }}x{{ banner.imageHeight }}px</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">파일 크기</label>
+                                <div class="fw-medium">{{ banner.fileSize }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 미리보기 사이드바 -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0">미리보기</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <img v-if="banner.imageUrl" :src="banner.imageUrl"
+                            class="img-fluid rounded" style="max-width: 100%;">
+                        <button class="btn btn-sm btn-primary mt-3" @click="preview">
+                            전체 화면으로 보기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 통계 탭 -->
+    <div v-if="currentTab === 'stats'">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-muted small mb-2">총 노출수</div>
+                        <div class="display-6 fw-bold">{{ banner?.impressions }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-muted small mb-2">총 클릭수</div>
+                        <div class="display-6 fw-bold text-primary">{{ banner?.clicks }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-muted small mb-2">클릭률 (CTR)</div>
+                        <div class="display-6 fw-bold text-success">{{ banner?.ctr }}%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">일별 통계</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">차트 영역 (추후 구현)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">시간대별 클릭 분포</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>시간대</th>
+                                        <th class="text-center">노출수</th>
+                                        <th class="text-center">클릭수</th>
+                                        <th class="text-center">CTR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="stat in hourlyStats" :key="stat.hour">
+                                        <td>{{ stat.hour }}시</td>
+                                        <td class="text-center">{{ stat.impressions }}</td>
+                                        <td class="text-center">{{ stat.clicks }}</td>
+                                        <td class="text-center">{{ stat.ctr }}%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
