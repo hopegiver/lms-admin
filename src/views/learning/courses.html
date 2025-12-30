@@ -15,19 +15,19 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="navigateTo('/learning/courses/wizard')">
+                        <button class="dropdown-item" type="button" @click="navigateTo('/learning/courses/wizard')">
                             <span class="me-2">🪄</span>
                             <strong>간편 생성</strong>
                             <div class="small text-muted">단계별 마법사로 쉽게 만들기 (추천)</div>
-                        </a>
+                        </button>
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="openCreateModal">
+                        <button class="dropdown-item" type="button" @click="openCreateModal">
                             <span class="me-2">⚙️</span>
                             <strong>직접 생성</strong>
                             <div class="small text-muted">고급 사용자용</div>
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </div>
