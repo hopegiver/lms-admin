@@ -135,13 +135,36 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">커리큘럼 관리</h5>
-                <button class="btn btn-sm btn-primary" @click="showAddLessonForm">
-                    ➕ 차시 추가
+                <button class="btn btn-sm btn-primary" @click="showAddSectionForm">
+                    ➕ 섹션 추가
                 </button>
             </div>
             <div class="card-body">
+                <!-- 섹션 추가/수정 폼 -->
+                <div v-if="sectionFormVisible" class="card bg-light border mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">{{ sectionFormMode === 'add' ? '새 섹션 추가' : '섹션 수정' }}</h6>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label">섹션명 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" v-model="sectionForm.title" placeholder="예) React 기초">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">설명</label>
+                                <textarea class="form-control" rows="2" v-model="sectionForm.description" placeholder="섹션에 대한 간단한 설명"></textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button class="btn btn-outline-secondary btn-sm" @click="cancelSectionForm">취소</button>
+                            <button class="btn btn-primary btn-sm" @click="saveSectionForm">
+                                {{ sectionFormMode === 'add' ? '추가' : '수정' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 차시 추가/수정 폼 -->
-                <div v-if="lessonFormVisible" class="card bg-light border mb-3">
+                <div v-if="lessonFormVisible" class="card bg-info bg-opacity-10 border border-info mb-3">
                     <div class="card-body">
                         <h6 class="mb-3">{{ lessonFormMode === 'add' ? '새 차시 추가' : '차시 수정' }}</h6>
                         <div class="row g-3">
@@ -195,63 +218,122 @@
                     </div>
                 </div>
 
-                <!-- 커리큘럼 목록 -->
-                <div v-if="curriculum.length === 0" class="text-center text-muted py-5">
+                <!-- 섹션 목록 -->
+                <div v-if="sections.length === 0" class="text-center text-muted py-5">
                     <div class="mb-3" style="font-size: 3rem;">📚</div>
-                    <p class="mb-0">아직 등록된 차시가 없습니다.</p>
-                    <p class="small">차시를 추가하여 커리큘럼을 구성해보세요.</p>
+                    <p class="mb-0">아직 등록된 섹션이 없습니다.</p>
+                    <p class="small">섹션을 추가하여 커리큘럼을 구성해보세요.</p>
                 </div>
 
-                <div v-else class="list-group">
-                    <div class="list-group-item" v-for="(lesson, index) in curriculum" :key="lesson.id">
-                        <div class="row align-items-center">
-                            <div class="col-auto">
-                                <div class="d-flex flex-column gap-1">
-                                    <button class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                            @click="moveLessonUp(index)"
-                                            :disabled="index === 0"
+                <div v-else class="accordion" id="curriculumAccordion">
+                    <div class="accordion-item mb-3 border rounded" v-for="(section, sectionIndex) in sections" :key="section.id">
+                        <h2 class="accordion-header">
+                            <div class="d-flex align-items-center">
+                                <div class="d-flex flex-column me-2">
+                                    <button class="btn btn-sm btn-outline-secondary py-0 px-2 mb-1"
+                                            @click="moveSectionUp(sectionIndex)"
+                                            :disabled="sectionIndex === 0"
                                             style="font-size: 0.7rem; line-height: 1;">
                                         ▲
                                     </button>
                                     <button class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                            @click="moveLessonDown(index)"
-                                            :disabled="index === curriculum.length - 1"
+                                            @click="moveSectionDown(sectionIndex)"
+                                            :disabled="sectionIndex === sections.length - 1"
                                             style="font-size: 0.7rem; line-height: 1;">
                                         ▼
                                     </button>
                                 </div>
-                            </div>
-                            <div class="col">
-                                <div class="d-flex align-items-start mb-2">
-                                    <span class="badge bg-primary me-2">{{ index + 1 }}</span>
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <span class="fw-medium">{{ lesson.title }}</span>
-                                            <span class="badge bg-light text-dark">{{ lesson.type || '동영상' }}</span>
-                                            <span v-if="lesson.isFree" class="badge bg-success">무료</span>
-                                            <span v-if="!lesson.isPublic" class="badge bg-warning text-dark">비공개</span>
+                                <button class="accordion-button collapsed flex-grow-1" type="button"
+                                        data-bs-toggle="collapse"
+                                        :data-bs-target="'#collapse' + section.id">
+                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                        <div>
+                                            <span class="fw-bold">{{ section.title }}</span>
+                                            <span class="text-muted small ms-2" v-if="section.description">{{ section.description }}</span>
                                         </div>
-                                        <div class="small text-muted">
-                                            <span>⏱️ {{ lesson.duration }}</span>
-                                            <span v-if="lesson.description" class="ms-3">{{ lesson.description }}</span>
-                                        </div>
-                                        <div v-if="lesson.contentUrl" class="small text-muted mt-1">
-                                            <span>🔗 {{ lesson.contentUrl }}</span>
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <span class="badge bg-primary">{{ section.lessons ? section.lessons.length : 0 }}개 차시</span>
+                                            <span class="badge bg-secondary">{{ getSectionDuration(section) }}</span>
                                         </div>
                                     </div>
+                                </button>
+                                <div class="dropdown ms-2 me-2">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                        ⋮
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" @click.prevent="showAddLessonForm(section.id)">➕ 차시 추가</a></li>
+                                        <li><a class="dropdown-item" href="#" @click.prevent="editSection(section)">✏️ 섹션 수정</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" @click.prevent="deleteSection(section)">🗑️ 섹션 삭제</a></li>
+                                    </ul>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary" @click="previewLesson(lesson)">
-                                        👁️ 미리보기
+                        </h2>
+                        <div :id="'collapse' + section.id" class="accordion-collapse collapse"
+                             data-bs-parent="#curriculumAccordion">
+                            <div class="accordion-body">
+                                <!-- 섹션 내 차시 목록 -->
+                                <div v-if="!section.lessons || section.lessons.length === 0" class="text-center text-muted py-4">
+                                    <p class="mb-2">이 섹션에 등록된 차시가 없습니다.</p>
+                                    <button class="btn btn-sm btn-outline-primary" @click="showAddLessonForm(section.id)">
+                                        ➕ 첫 차시 추가
                                     </button>
-                                    <button class="btn btn-sm btn-outline-secondary" @click="editLesson(lesson)">
-                                        ✏️ 수정
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" @click="deleteLesson(lesson)">
-                                        🗑️ 삭제
-                                    </button>
+                                </div>
+                                <div v-else class="list-group">
+                                    <div class="list-group-item" v-for="(lesson, lessonIndex) in section.lessons" :key="lesson.id">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <div class="d-flex flex-column gap-1">
+                                                    <button class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                            @click="moveLessonUp(section.id, lessonIndex)"
+                                                            :disabled="lessonIndex === 0"
+                                                            style="font-size: 0.7rem; line-height: 1;">
+                                                        ▲
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                            @click="moveLessonDown(section.id, lessonIndex)"
+                                                            :disabled="lessonIndex === section.lessons.length - 1"
+                                                            style="font-size: 0.7rem; line-height: 1;">
+                                                        ▼
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="d-flex align-items-start mb-2">
+                                                    <span class="badge bg-primary me-2">{{ lessonIndex + 1 }}</span>
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                                            <span class="fw-medium">{{ lesson.title }}</span>
+                                                            <span class="badge bg-light text-dark">{{ lesson.type || '동영상' }}</span>
+                                                            <span v-if="lesson.isFree" class="badge bg-success">무료</span>
+                                                            <span v-if="!lesson.isPublic" class="badge bg-warning text-dark">비공개</span>
+                                                        </div>
+                                                        <div class="small text-muted">
+                                                            <span>⏱️ {{ lesson.duration }}</span>
+                                                            <span v-if="lesson.description" class="ms-3">{{ lesson.description }}</span>
+                                                        </div>
+                                                        <div v-if="lesson.contentUrl" class="small text-muted mt-1">
+                                                            <span>🔗 {{ lesson.contentUrl }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <div class="btn-group">
+                                                    <button class="btn btn-sm btn-outline-primary" @click="previewLesson(lesson)">
+                                                        👁️
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-secondary" @click="editLesson(section.id, lesson)">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" @click="deleteLesson(section.id, lesson)">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -259,19 +341,19 @@
                 </div>
 
                 <!-- 커리큘럼 통계 -->
-                <div v-if="curriculum.length > 0" class="mt-4 p-3 bg-light rounded">
+                <div v-if="sections.length > 0" class="mt-4 p-3 bg-light rounded">
                     <div class="row text-center">
                         <div class="col-md-3">
+                            <div class="small text-muted">총 섹션</div>
+                            <div class="fw-bold fs-5">{{ sections.length }}개</div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="small text-muted">총 차시</div>
-                            <div class="fw-bold fs-5">{{ curriculum.length }}개</div>
+                            <div class="fw-bold fs-5">{{ getTotalLessonsCount() }}개</div>
                         </div>
                         <div class="col-md-3">
                             <div class="small text-muted">총 시간</div>
                             <div class="fw-bold fs-5">{{ getTotalDuration() }}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="small text-muted">공개 차시</div>
-                            <div class="fw-bold fs-5">{{ getPublicLessonsCount() }}개</div>
                         </div>
                         <div class="col-md-3">
                             <div class="small text-muted">무료 미리보기</div>
