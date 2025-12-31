@@ -29,15 +29,19 @@ export default {
                 endTime: '10:00'
             },
             exceptions: [
-                { id: 1, instructorId: 1, date: '2025-01-15', type: 'unavailable', reason: '개인 일정' },
-                { id: 2, instructorId: 1, date: '2025-02-10', type: 'holiday', reason: '설날 연휴' }
+                { id: 1, instructorId: 1, date: '2025-01-15', type: 'unavailable', reason: '개인 일정', isAllDay: true, startTime: '', endTime: '' },
+                { id: 2, instructorId: 1, date: '2025-02-10', type: 'holiday', reason: '설날 연휴', isAllDay: true, startTime: '', endTime: '' },
+                { id: 3, instructorId: 1, date: '2025-01-20', type: 'unavailable', reason: '병원 진료', isAllDay: false, startTime: '14:00', endTime: '16:00' }
             ],
             showAddSlotModal: false,
             showAddExceptionModal: false,
             newException: {
                 date: '',
                 type: 'unavailable',
-                reason: ''
+                reason: '',
+                isAllDay: true,
+                startTime: '09:00',
+                endTime: '18:00'
             },
             dayNames: {
                 monday: '월요일',
@@ -125,7 +129,10 @@ export default {
             this.newException = {
                 date: '',
                 type: 'unavailable',
-                reason: ''
+                reason: '',
+                isAllDay: true,
+                startTime: '09:00',
+                endTime: '18:00'
             };
             this.showAddExceptionModal = true;
         },
@@ -136,12 +143,26 @@ export default {
                 return;
             }
 
+            if (!this.newException.isAllDay) {
+                if (!this.newException.startTime || !this.newException.endTime) {
+                    alert('시작 시간과 종료 시간을 입력해주세요.');
+                    return;
+                }
+                if (this.newException.startTime >= this.newException.endTime) {
+                    alert('종료 시간은 시작 시간보다 늦어야 합니다.');
+                    return;
+                }
+            }
+
             this.exceptions.push({
                 id: Date.now(),
                 instructorId: this.selectedInstructor.id,
                 date: this.newException.date,
                 type: this.newException.type,
-                reason: this.newException.reason
+                reason: this.newException.reason,
+                isAllDay: this.newException.isAllDay,
+                startTime: this.newException.isAllDay ? '' : this.newException.startTime,
+                endTime: this.newException.isAllDay ? '' : this.newException.endTime
             });
 
             this.showAddExceptionModal = false;

@@ -121,6 +121,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>날짜</th>
+                                    <th>시간</th>
                                     <th>유형</th>
                                     <th>사유</th>
                                     <th style="width: 100px;"></th>
@@ -129,6 +130,10 @@
                             <tbody>
                                 <tr v-for="exception in getInstructorExceptions()" :key="exception.id">
                                     <td>{{ formatDate(exception.date) }}</td>
+                                    <td>
+                                        <span v-if="exception.isAllDay" class="text-muted">하루 종일</span>
+                                        <span v-else class="fw-bold">{{ exception.startTime }} - {{ exception.endTime }}</span>
+                                    </td>
                                     <td>
                                         <span class="badge" :class="exception.type === 'holiday' ? 'bg-danger' : 'bg-warning'">
                                             {{ exception.type === 'holiday' ? '공휴일' : '불가' }}
@@ -213,8 +218,29 @@
                         </select>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">기간</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" v-model="newException.isAllDay" id="isAllDay">
+                            <label class="form-check-label" for="isAllDay">
+                                하루 종일
+                            </label>
+                        </div>
+                    </div>
+                    <div v-if="!newException.isAllDay" class="mb-3">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="form-label">시작 시간</label>
+                                <input type="time" class="form-control" v-model="newException.startTime">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">종료 시간</label>
+                                <input type="time" class="form-control" v-model="newException.endTime">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">사유</label>
-                        <input type="text" class="form-control" v-model="newException.reason" placeholder="예: 개인 일정, 설날 연휴">
+                        <input type="text" class="form-control" v-model="newException.reason" placeholder="예: 개인 일정, 설날 연휴, 병원 진료">
                     </div>
                 </div>
                 <div class="modal-footer">
