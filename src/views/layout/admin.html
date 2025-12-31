@@ -17,6 +17,19 @@
 
             <!-- 메뉴 영역 -->
             <nav class="sidebar-nav flex-grow-1 py-3">
+                <!-- 사이트 바로가기 -->
+                <div class="px-3 mb-3">
+                    <a
+                        class="nav-link text-white-50 py-2 d-flex align-items-center justify-content-between site-link"
+                        @click="openSite"
+                        role="button"
+                    >
+                        <span><span class="me-2">🌍</span> 사이트 바로가기</span>
+                        <span class="external-icon">↗</span>
+                    </a>
+                </div>
+                <hr class="border-secondary mx-3 my-0 mb-3">
+
                 <div class="accordion accordion-flush" id="sidebar-accordion">
                     <template v-for="(menu, index) in sidebarMenus" :key="menu.id">
                         <!-- 서브메뉴가 없는 메뉴 (대시보드) -->

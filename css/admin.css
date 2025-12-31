@@ -432,6 +432,22 @@ body {
     color: rgba(255, 255, 255, 0.8) !important;
 }
 
+/* Site link styles */
+.site-link {
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.site-link .external-icon {
+    font-size: 0.875rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.site-link:hover .external-icon {
+    opacity: 1;
+}
+
 /* Scrollbar styles for sidebar */
 .sidebar-nav::-webkit-scrollbar {
     width: 6px;

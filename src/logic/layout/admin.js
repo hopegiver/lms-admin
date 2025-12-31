@@ -93,6 +93,14 @@ export default {
         closeSidebar() {
             this.sidebarOpen = false;
         },
+        openSite() {
+            // 현재는 사용자 사이트가 없으므로 확인창만 표시
+            if (confirm('사용자 사이트를 새 창으로 여시겠습니까?\n(현재는 구현되지 않았습니다)')) {
+                // 추후 실제 사이트 URL로 새 창 열기
+                // window.open('https://your-site-url.com', '_blank');
+                alert('사용자 사이트가 아직 구현되지 않았습니다.');
+            }
+        },
         handleLogout() {
             if (confirm('로그아웃 하시겠습니까?')) {
                 this.navigateTo('/dashboard');
