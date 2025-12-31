@@ -769,6 +769,36 @@ export default {
 </div>
 ```
 
+**중요: CSS 스타일링 규칙**
+- **절대 금지**: `views/` 폴더 내의 HTML 파일에 `<style>` 태그를 사용하여 CSS를 작성하지 마세요
+- **올바른 방법**: 모든 CSS 스타일은 `css/` 폴더의 별도 CSS 파일에 작성해야 합니다
+- 레이아웃 HTML 파일도 동일하게 인라인 스타일을 사용하지 않습니다
+- 예: 레이아웃 관련 스타일은 `css/admin.css` 또는 `css/layout.css` 등에 작성
+
+**잘못된 예:**
+```html
+<!-- ❌ 절대 사용 금지 -->
+<div class="sidebar">...</div>
+<style>
+.sidebar {
+    width: 250px;
+    background: #333;
+}
+</style>
+```
+
+**올바른 예:**
+```html
+<!-- ✅ HTML 파일: views/layout/admin.html -->
+<div class="sidebar">...</div>
+
+<!-- ✅ CSS 파일: css/admin.css -->
+.sidebar {
+    width: 250px;
+    background: #333;
+}
+```
+
 **src/logic/layout/default.js** (스크립트, 선택사항)
 ```javascript
 export default {
