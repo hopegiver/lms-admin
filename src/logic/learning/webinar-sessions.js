@@ -21,7 +21,14 @@ export default {
                     recordingUrl: 'https://example.com/recordings/session1.mp4',
                     notes: '프로젝트 구조 및 상태 관리에 대해 심도있게 논의함',
                     rating: 5,
-                    feedback: '매우 유익한 시간이었습니다.'
+                    feedback: '매우 유익한 시간이었습니다.',
+                    instructorFeedback: {
+                        learningContent: 'React의 고급 상태 관리 패턴 (Context API, useReducer)\nCustom Hooks 작성 방법\n성능 최적화 기법 (memo, useMemo, useCallback)',
+                        comments: '학생이 기본 개념을 잘 이해하고 있어 심화 내용으로 빠르게 진행할 수 있었습니다. 특히 Custom Hooks에 대한 관심이 높았습니다.',
+                        results: '우수',
+                        homework: '실습 프로젝트에 useReducer를 적용하여 상태 관리 개선하기',
+                        nextTopics: 'React Query를 활용한 서버 상태 관리'
+                    }
                 },
                 {
                     id: 2,
@@ -37,7 +44,14 @@ export default {
                     recordingUrl: 'https://example.com/recordings/session2.mp4',
                     notes: '포트폴리오 리뷰 및 개선 방향 제시',
                     rating: 4,
-                    feedback: '좋은 피드백을 받았습니다.'
+                    feedback: '좋은 피드백을 받았습니다.',
+                    instructorFeedback: {
+                        learningContent: '사용자 중심 디자인 원칙\n컬러 이론과 타이포그래피\n포트폴리오 구성 방법',
+                        comments: '포트폴리오에 좋은 작품들이 많지만, 스토리텔링과 프로젝트 설명 부분을 보완하면 더 좋을 것 같습니다.',
+                        results: '양호',
+                        homework: '포트폴리오 3개 프로젝트에 대한 케이스 스터디 작성',
+                        nextTopics: 'Figma를 활용한 프로토타이핑'
+                    }
                 },
                 {
                     id: 3,
@@ -69,7 +83,8 @@ export default {
                     recordingUrl: 'https://example.com/recordings/session4.mp4',
                     notes: '비동기 프로그래밍 및 Promise 패턴 학습',
                     rating: 5,
-                    feedback: '설명이 매우 명확했습니다.'
+                    feedback: '설명이 매우 명확했습니다.',
+                    instructorFeedback: null
                 }
             ],
             instructors: [
@@ -78,7 +93,15 @@ export default {
                 { id: 3, name: '박민수' }
             ],
             showDetailModal: false,
-            selectedSession: null
+            selectedSession: null,
+            showFeedbackModal: false,
+            feedbackForm: {
+                learningContent: '',
+                comments: '',
+                results: '보통',
+                homework: '',
+                nextTopics: ''
+            }
         }
     },
     computed: {
@@ -175,6 +198,35 @@ export default {
 
         exportData() {
             alert('세션 데이터를 CSV로 내보냅니다.');
+        },
+
+        openFeedbackModal(session) {
+            this.selectedSession = session;
+
+            if (session.instructorFeedback) {
+                this.feedbackForm = { ...session.instructorFeedback };
+            } else {
+                this.feedbackForm = {
+                    learningContent: '',
+                    comments: '',
+                    results: '보통',
+                    homework: '',
+                    nextTopics: ''
+                };
+            }
+
+            this.showFeedbackModal = true;
+        },
+
+        saveFeedback() {
+            if (!this.feedbackForm.learningContent.trim()) {
+                alert('학습 내용을 입력해주세요.');
+                return;
+            }
+
+            this.selectedSession.instructorFeedback = { ...this.feedbackForm };
+            this.showFeedbackModal = false;
+            alert('강사 피드백이 저장되었습니다.');
         }
     }
 }

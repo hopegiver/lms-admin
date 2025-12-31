@@ -100,6 +100,7 @@
                             <th>출석</th>
                             <th>평점</th>
                             <th>녹화</th>
+                            <th>강사 피드백</th>
                             <th>작업</th>
                         </tr>
                     </thead>
@@ -130,6 +131,18 @@
                                     @click="downloadRecording(session.recordingUrl)"
                                 >
                                     <span>📹</span>
+                                </button>
+                                <span v-else class="text-muted">-</span>
+                            </td>
+                            <td>
+                                <button
+                                    v-if="session.attendanceStatus === 'attended'"
+                                    class="btn btn-sm"
+                                    :class="session.instructorFeedback ? 'btn-success' : 'btn-outline-secondary'"
+                                    @click="openFeedbackModal(session)"
+                                >
+                                    <span v-if="session.instructorFeedback">✓</span>
+                                    <span v-else>✏️</span>
                                 </button>
                                 <span v-else class="text-muted">-</span>
                             </td>
@@ -226,10 +239,117 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12" v-if="selectedSession.instructorFeedback">
+                            <hr>
+                            <h6 class="mb-3">강사 피드백</h6>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">학습 내용</label>
+                                <div class="border rounded p-3 bg-light" style="white-space: pre-line;">{{ selectedSession.instructorFeedback.learningContent }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">강사 코멘트</label>
+                                <div class="border rounded p-3 bg-light" style="white-space: pre-line;">{{ selectedSession.instructorFeedback.comments }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">학습 결과</label>
+                                <div>
+                                    <span class="badge fs-6" :class="{
+                                        'bg-success': selectedSession.instructorFeedback.results === '우수',
+                                        'bg-primary': selectedSession.instructorFeedback.results === '양호',
+                                        'bg-secondary': selectedSession.instructorFeedback.results === '보통',
+                                        'bg-warning': selectedSession.instructorFeedback.results === '미흡'
+                                    }">
+                                        {{ selectedSession.instructorFeedback.results }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mb-3" v-if="selectedSession.instructorFeedback.homework">
+                                <label class="form-label text-muted small fw-bold">과제</label>
+                                <div class="border rounded p-3 bg-light" style="white-space: pre-line;">{{ selectedSession.instructorFeedback.homework }}</div>
+                            </div>
+                            <div class="mb-3" v-if="selectedSession.instructorFeedback.nextTopics">
+                                <label class="form-label text-muted small fw-bold">다음 학습 주제</label>
+                                <div class="border rounded p-3 bg-light" style="white-space: pre-line;">{{ selectedSession.instructorFeedback.nextTopics }}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button v-if="selectedSession.attendanceStatus === 'attended'" type="button" class="btn btn-primary" @click="showDetailModal = false; openFeedbackModal(selectedSession)">
+                        <span class="me-1">✏️</span> 피드백 {{ selectedSession.instructorFeedback ? '수정' : '작성' }}
+                    </button>
                     <button type="button" class="btn btn-secondary" @click="showDetailModal = false">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 강사 피드백 작성/수정 모달 -->
+    <div v-if="showFeedbackModal && selectedSession" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">강사 피드백 {{ selectedSession.instructorFeedback ? '수정' : '작성' }}</h5>
+                    <button type="button" class="btn-close" @click="showFeedbackModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="text-muted small mb-2">
+                            세션: #{{ selectedSession.id }} | {{ selectedSession.studentName }} - {{ selectedSession.courseTitle }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">학습 내용 <span class="text-danger">*</span></label>
+                        <textarea
+                            class="form-control"
+                            v-model="feedbackForm.learningContent"
+                            rows="4"
+                            placeholder="이번 세션에서 다룬 주요 학습 내용을 입력하세요..."
+                        ></textarea>
+                        <div class="form-text">줄바꿈으로 구분하여 작성하면 보기 좋습니다.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">강사 코멘트</label>
+                        <textarea
+                            class="form-control"
+                            v-model="feedbackForm.comments"
+                            rows="3"
+                            placeholder="학생의 학습 태도, 이해도, 특이사항 등을 입력하세요..."
+                        ></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">학습 결과</label>
+                        <select class="form-select" v-model="feedbackForm.results">
+                            <option value="우수">우수</option>
+                            <option value="양호">양호</option>
+                            <option value="보통">보통</option>
+                            <option value="미흡">미흡</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">과제</label>
+                        <textarea
+                            class="form-control"
+                            v-model="feedbackForm.homework"
+                            rows="2"
+                            placeholder="다음 세션까지 수행할 과제를 입력하세요..."
+                        ></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">다음 학습 주제</label>
+                        <textarea
+                            class="form-control"
+                            v-model="feedbackForm.nextTopics"
+                            rows="2"
+                            placeholder="다음 세션에서 다룰 주제를 입력하세요..."
+                        ></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showFeedbackModal = false">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveFeedback">
+                        <span class="me-1">💾</span> 저장
+                    </button>
                 </div>
             </div>
         </div>
