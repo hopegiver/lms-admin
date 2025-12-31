@@ -314,6 +314,142 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
+/* Sidebar styles */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 100vh;
+    z-index: 1040;
+}
+
+/* Desktop: No transform needed */
+@media (min-width: 992px) {
+    .sidebar {
+        transform: translateX(0) !important;
+    }
+}
+
+/* Mobile: Add transition only on mobile */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transition: transform 0.3s ease-in-out;
+    }
+}
+
+/* Sidebar navigation scrollable area */
+.sidebar-nav {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Sidebar brand */
+.sidebar-brand {
+    height: 60px;
+    position: relative;
+}
+
+/* Main content */
+.main-content {
+    margin-left: 250px;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+/* Header */
+.content-header {
+    height: 60px;
+}
+
+/* Mobile responsive */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1039;
+        animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+}
+
+/* Accordion button styles */
+.accordion-button {
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    box-shadow: none;
+}
+
+.accordion-button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.accordion-button::after {
+    filter: brightness(0) invert(0.5);
+}
+
+/* Nav link styles */
+.nav-link {
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Scrollbar styles for sidebar */
+.sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .main-content {
