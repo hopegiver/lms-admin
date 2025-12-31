@@ -29,8 +29,7 @@ export default {
                     { id: 'enrollments', name: '수강 관리', icon: '✅', path: '/learning/enrollments' },
                     { id: 'progress', name: '학습 현황', icon: '📈', path: '/learning/progress' },
                     { id: 'content', name: '콘텐츠', icon: '🎬', path: '/learning/content' },
-                    { id: 'webinar-reservations', name: '화상강의', icon: '🎥', path: '/learning/webinar-reservations' },
-                    { id: 'webinar-daily-schedule', name: '일별 강의 현황', icon: '📅', path: '/learning/webinar-daily-schedule' }
+                    { id: 'webinar-reservations', name: '화상강의', icon: '🎥', path: '/learning/webinar-reservations' }
                 ],
                 commerce: [
                     { id: 'products', name: '상품', icon: '📦', path: '/commerce/products' },
