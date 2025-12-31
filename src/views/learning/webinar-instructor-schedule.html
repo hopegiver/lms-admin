@@ -43,6 +43,71 @@
 
         <!-- 스케줄 설정 -->
         <div class="col-lg-9" v-if="selectedInstructor && currentSchedule">
+            <!-- 스케줄 버전 관리 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">스케줄 버전</h6>
+                        <button class="btn btn-sm btn-success" @click="openScheduleVersionModal">
+                            <span class="me-1">➕</span> 새 버전 생성
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div v-if="getScheduleHistory().length === 0" class="text-center text-muted py-3">
+                        등록된 스케줄이 없습니다
+                    </div>
+                    <div v-else>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">현재 보는 스케줄</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge fs-6" :class="getScheduleStatus(currentSchedule).class">
+                                    {{ getScheduleStatus(currentSchedule).text }}
+                                </span>
+                                <span class="text-muted">{{ formatDateRange(currentSchedule) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>상태</th>
+                                        <th>적용 기간</th>
+                                        <th style="width: 100px;">작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="schedule in getScheduleHistory()" :key="schedule.id" :class="{ 'table-active': schedule.id === selectedScheduleId }">
+                                        <td>
+                                            <span class="badge" :class="getScheduleStatus(schedule).class">
+                                                {{ getScheduleStatus(schedule).text }}
+                                            </span>
+                                        </td>
+                                        <td>{{ formatDateRange(schedule) }}</td>
+                                        <td>
+                                            <button
+                                                v-if="schedule.id !== selectedScheduleId"
+                                                class="btn btn-sm btn-outline-primary me-1"
+                                                @click="selectScheduleVersion(schedule.id)"
+                                            >
+                                                보기
+                                            </button>
+                                            <button
+                                                class="btn btn-sm btn-outline-danger"
+                                                @click="deleteScheduleVersion(schedule.id)"
+                                            >
+                                                삭제
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom">
                     <div class="d-flex justify-content-between align-items-center">
@@ -246,6 +311,62 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @click="showAddExceptionModal = false">취소</button>
                     <button type="button" class="btn btn-primary" @click="addException">추가</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 스케줄 버전 생성 모달 -->
+    <div v-if="showScheduleVersionModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">새 스케줄 버전 생성</h5>
+                    <button type="button" class="btn-close" @click="showScheduleVersionModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <small>
+                            <strong>💡 스케줄 버전 관리란?</strong><br>
+                            강사의 주간 스케줄이 특정 날짜부터 변경되는 경우, 새로운 버전을 생성하여 관리할 수 있습니다.<br>
+                            예: 2025년 4월 1일부터 강의 시간을 변경하고 싶은 경우
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">적용 시작일 <span class="text-danger">*</span></label>
+                        <input
+                            type="date"
+                            class="form-control"
+                            v-model="newScheduleVersion.effectiveFrom"
+                        >
+                        <div class="form-text">이 날짜부터 새로운 스케줄이 적용됩니다. (오늘 이후 날짜만 가능)</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                v-model="newScheduleVersion.copyFromCurrent"
+                                id="copyFromCurrent"
+                            >
+                            <label class="form-check-label" for="copyFromCurrent">
+                                현재 스케줄 복사하기
+                            </label>
+                        </div>
+                        <div class="form-text">체크 해제 시 빈 스케줄로 시작합니다.</div>
+                    </div>
+                    <div v-if="currentSchedule" class="alert alert-warning">
+                        <small>
+                            <strong>⚠️ 중요</strong><br>
+                            새 스케줄을 생성하면 현재 활성 스케줄의 종료일이 자동으로 조정됩니다.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showScheduleVersionModal = false">취소</button>
+                    <button type="button" class="btn btn-success" @click="createScheduleVersion">
+                        <span class="me-1">✨</span> 생성
+                    </button>
                 </div>
             </div>
         </div>
