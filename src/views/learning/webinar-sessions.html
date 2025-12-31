@@ -1,0 +1,237 @@
+<div class="webinar-sessions">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">세션 이력</h4>
+            <p class="text-muted mb-0">완료된 화상강의 세션 기록을 관리합니다</p>
+        </div>
+        <button class="btn btn-outline-primary" @click="exportData">
+            <span class="me-1">📊</span> 데이터 내보내기
+        </button>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">전체 세션</div>
+                    <div class="fs-3 fw-bold">{{ statistics.total }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">출석</div>
+                    <div class="fs-3 fw-bold text-success">{{ statistics.attended }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">누적 시간</div>
+                    <div class="fs-3 fw-bold text-primary">{{ statistics.totalHours }}h</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">평균 평점</div>
+                    <div class="fs-3 fw-bold text-warning">{{ statistics.avgRating }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 필터 및 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small">기간</label>
+                    <select class="form-select" v-model="filterPeriod">
+                        <option value="7days">최근 7일</option>
+                        <option value="30days">최근 30일</option>
+                        <option value="90days">최근 90일</option>
+                        <option value="all">전체</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">강사</label>
+                    <select class="form-select" v-model="filterInstructor">
+                        <option value="all">전체</option>
+                        <option v-for="instructor in instructors" :key="instructor.id" :value="instructor.id">
+                            {{ instructor.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">검색</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="searchKeyword"
+                        placeholder="학생명, 강사명, 강좌명으로 검색..."
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 세션 목록 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div v-if="filteredSessions.length === 0" class="text-center text-muted py-5">
+                <div class="fs-1 mb-3">📭</div>
+                <div>세션 기록이 없습니다</div>
+            </div>
+            <div v-else class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>세션 ID</th>
+                            <th>학생</th>
+                            <th>강사</th>
+                            <th>강좌</th>
+                            <th>일시</th>
+                            <th>소요시간</th>
+                            <th>출석</th>
+                            <th>평점</th>
+                            <th>녹화</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="session in filteredSessions" :key="session.id">
+                            <td class="fw-bold">#{{ session.id }}</td>
+                            <td>{{ session.studentName }}</td>
+                            <td>{{ session.instructorName }}</td>
+                            <td>{{ session.courseTitle }}</td>
+                            <td>
+                                <div>{{ formatDate(session.startTime) }}</div>
+                                <div class="small text-muted">{{ formatTime(session.startTime) }}</div>
+                            </td>
+                            <td>{{ session.actualDuration }}분</td>
+                            <td>
+                                <span class="badge" :class="getAttendanceBadge(session.attendanceStatus).class">
+                                    {{ getAttendanceBadge(session.attendanceStatus).text }}
+                                </span>
+                            </td>
+                            <td>
+                                <span v-if="session.rating">{{ getRatingStars(session.rating) }}</span>
+                                <span v-else class="text-muted">-</span>
+                            </td>
+                            <td>
+                                <button
+                                    v-if="session.recordingUrl"
+                                    class="btn btn-sm btn-outline-primary"
+                                    @click="downloadRecording(session.recordingUrl)"
+                                >
+                                    <span>📹</span>
+                                </button>
+                                <span v-else class="text-muted">-</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" @click="viewDetail(session)">
+                                    상세
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 세션 상세 모달 -->
+    <div v-if="showDetailModal && selectedSession" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">세션 상세 #{{ selectedSession.id }}</h5>
+                    <button type="button" class="btn-close" @click="showDetailModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">예약 ID</label>
+                                <div class="fw-bold">#{{ selectedSession.reservationId }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">학생</label>
+                                <div class="fw-bold">{{ selectedSession.studentName }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">강사</label>
+                                <div class="fw-bold">{{ selectedSession.instructorName }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">강좌</label>
+                                <div class="fw-bold">{{ selectedSession.courseTitle }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">시작 시간</label>
+                                <div class="fw-bold">{{ formatDateTime(selectedSession.startTime) }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">종료 시간</label>
+                                <div class="fw-bold">{{ formatDateTime(selectedSession.endTime) }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">소요 시간</label>
+                                <div>
+                                    <span class="fw-bold">{{ selectedSession.actualDuration }}분</span>
+                                    <span class="text-muted ms-2">(예정: {{ selectedSession.duration }}분)</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">출석 상태</label>
+                                <div>
+                                    <span class="badge fs-6" :class="getAttendanceBadge(selectedSession.attendanceStatus).class">
+                                        {{ getAttendanceBadge(selectedSession.attendanceStatus).text }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12" v-if="selectedSession.recordingUrl">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">녹화 영상</label>
+                                <div>
+                                    <button class="btn btn-primary" @click="downloadRecording(selectedSession.recordingUrl)">
+                                        <span class="me-1">📹</span> 녹화 영상 보기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12" v-if="selectedSession.notes">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">강사 노트</label>
+                                <div class="border rounded p-3 bg-light">{{ selectedSession.notes }}</div>
+                            </div>
+                        </div>
+                        <div class="col-12" v-if="selectedSession.rating">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">학생 평가</label>
+                                <div class="mb-2">
+                                    <span class="fs-4">{{ getRatingStars(selectedSession.rating) }}</span>
+                                    <span class="text-muted ms-2">({{ selectedSession.rating }}/5)</span>
+                                </div>
+                                <div v-if="selectedSession.feedback" class="border rounded p-3 bg-light">
+                                    {{ selectedSession.feedback }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showDetailModal = false">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

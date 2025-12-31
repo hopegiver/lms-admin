@@ -1,0 +1,227 @@
+<div class="webinar-instructor-schedule">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">강사 스케줄 관리</h4>
+            <p class="text-muted mb-0">강사별 가용 시간을 설정하고 예외 날짜를 관리합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="saveSchedule" v-if="selectedInstructor">
+            <span class="me-1">💾</span> 저장
+        </button>
+    </div>
+
+    <div class="row g-4">
+        <!-- 강사 목록 -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">강사 목록</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a
+                            v-for="instructor in instructors"
+                            :key="instructor.id"
+                            class="list-group-item list-group-item-action"
+                            :class="{ active: selectedInstructor && selectedInstructor.id === instructor.id }"
+                            @click="selectInstructor(instructor)"
+                            role="button"
+                        >
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px;">
+                                    <span class="small">{{ instructor.name.charAt(0) }}</span>
+                                </div>
+                                <div class="flex-fill">
+                                    <div class="fw-bold">{{ instructor.name }}</div>
+                                    <div class="small text-muted">{{ instructor.department }}</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 스케줄 설정 -->
+        <div class="col-lg-9" v-if="selectedInstructor && currentSchedule">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">주간 반복 스케줄</h6>
+                        <button class="btn btn-sm btn-primary" @click="openAddSlotModal">
+                            <span class="me-1">➕</span> 시간 추가
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">슬롯 단위 (분)</label>
+                        <select class="form-select" v-model="currentSchedule.slotDuration" style="max-width: 200px;">
+                            <option :value="30">30분</option>
+                            <option :value="60">60분</option>
+                            <option :value="90">90분</option>
+                            <option :value="120">120분</option>
+                        </select>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 120px;">요일</th>
+                                    <th>가용 시간</th>
+                                    <th style="width: 100px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(dayKey, index) in Object.keys(currentSchedule.weeklySchedule)" :key="dayKey">
+                                    <td class="fw-bold">{{ dayNames[dayKey] }}</td>
+                                    <td>
+                                        <div v-if="currentSchedule.weeklySchedule[dayKey].length === 0" class="text-muted">
+                                            설정된 시간 없음
+                                        </div>
+                                        <div v-else>
+                                            <span
+                                                v-for="(slot, slotIndex) in currentSchedule.weeklySchedule[dayKey]"
+                                                :key="slotIndex"
+                                                class="badge bg-success me-2 mb-1"
+                                            >
+                                                {{ slot.startTime }} - {{ slot.endTime }}
+                                                <button
+                                                    class="btn-close btn-close-white ms-2"
+                                                    style="font-size: 0.6rem;"
+                                                    @click="removeTimeSlot(dayKey, slotIndex)"
+                                                ></button>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 예외 날짜 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">예외 날짜 (휴가, 공휴일 등)</h6>
+                        <button class="btn btn-sm btn-primary" @click="openAddExceptionModal">
+                            <span class="me-1">➕</span> 예외 추가
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div v-if="getInstructorExceptions().length === 0" class="text-center text-muted py-4">
+                        등록된 예외 날짜가 없습니다
+                    </div>
+                    <div v-else class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>날짜</th>
+                                    <th>유형</th>
+                                    <th>사유</th>
+                                    <th style="width: 100px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="exception in getInstructorExceptions()" :key="exception.id">
+                                    <td>{{ formatDate(exception.date) }}</td>
+                                    <td>
+                                        <span class="badge" :class="exception.type === 'holiday' ? 'bg-danger' : 'bg-warning'">
+                                            {{ exception.type === 'holiday' ? '공휴일' : '불가' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ exception.reason }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" @click="removeException(exception.id)">
+                                            삭제
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9" v-else-if="!selectedInstructor">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <div class="fs-1 mb-3">👈</div>
+                    <h5 class="text-muted">강사를 선택해주세요</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 시간 슬롯 추가 모달 -->
+    <div v-if="showAddSlotModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">시간 슬롯 추가</h5>
+                    <button type="button" class="btn-close" @click="showAddSlotModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">요일</label>
+                        <select class="form-select" v-model="newTimeSlot.day">
+                            <option v-for="(name, key) in dayNames" :key="key" :value="key">{{ name }}</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">시작 시간</label>
+                            <input type="time" class="form-control" v-model="newTimeSlot.startTime">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label">종료 시간</label>
+                            <input type="time" class="form-control" v-model="newTimeSlot.endTime">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showAddSlotModal = false">취소</button>
+                    <button type="button" class="btn btn-primary" @click="addTimeSlot">추가</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 예외 날짜 추가 모달 -->
+    <div v-if="showAddExceptionModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">예외 날짜 추가</h5>
+                    <button type="button" class="btn-close" @click="showAddExceptionModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">날짜</label>
+                        <input type="date" class="form-control" v-model="newException.date">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">유형</label>
+                        <select class="form-select" v-model="newException.type">
+                            <option value="unavailable">불가</option>
+                            <option value="holiday">공휴일</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">사유</label>
+                        <input type="text" class="form-control" v-model="newException.reason" placeholder="예: 개인 일정, 설날 연휴">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showAddExceptionModal = false">취소</button>
+                    <button type="button" class="btn btn-primary" @click="addException">추가</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

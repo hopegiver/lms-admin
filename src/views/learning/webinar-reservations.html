@@ -1,0 +1,312 @@
+<div class="webinar-reservations">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">화상강의 예약 관리</h4>
+            <p class="text-muted mb-0">학생들의 화상강의 예약을 관리합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="goToSchedule">
+                <span class="me-1">📅</span> 강사 스케줄
+            </button>
+            <button class="btn btn-primary" @click="openCreateModal">
+                <span class="me-1">➕</span> 예약 생성
+            </button>
+        </div>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">전체</div>
+                    <div class="fs-3 fw-bold">{{ statusCounts.all }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">대기중</div>
+                    <div class="fs-3 fw-bold text-warning">{{ statusCounts.pending }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">확정</div>
+                    <div class="fs-3 fw-bold text-success">{{ statusCounts.confirmed }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">완료</div>
+                    <div class="fs-3 fw-bold text-secondary">{{ statusCounts.completed }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">취소</div>
+                    <div class="fs-3 fw-bold text-danger">{{ statusCounts.cancelled }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 필터 및 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small">상태</label>
+                    <select class="form-select" v-model="filterStatus">
+                        <option value="all">전체</option>
+                        <option value="pending">대기중</option>
+                        <option value="confirmed">확정</option>
+                        <option value="completed">완료</option>
+                        <option value="cancelled">취소</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">강사</label>
+                    <select class="form-select" v-model="filterInstructor">
+                        <option value="all">전체</option>
+                        <option v-for="instructor in instructors" :key="instructor.id" :value="instructor.id">
+                            {{ instructor.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">검색</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="searchKeyword"
+                        placeholder="학생명, 강사명, 강좌명으로 검색..."
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 예약 목록 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div v-if="filteredReservations.length === 0" class="text-center text-muted py-5">
+                <div class="fs-1 mb-3">📭</div>
+                <div>예약 내역이 없습니다</div>
+            </div>
+            <div v-else class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>예약 ID</th>
+                            <th>학생</th>
+                            <th>강사</th>
+                            <th>강좌</th>
+                            <th>일시</th>
+                            <th>시간</th>
+                            <th>상태</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="reservation in filteredReservations" :key="reservation.id">
+                            <td class="fw-bold">#{{ reservation.id }}</td>
+                            <td>
+                                <div>{{ reservation.studentName }}</div>
+                                <div class="small text-muted">{{ reservation.studentEmail }}</div>
+                            </td>
+                            <td>{{ reservation.instructorName }}</td>
+                            <td>{{ reservation.courseTitle }}</td>
+                            <td>
+                                <div>{{ formatDate(reservation.dateTime) }}</div>
+                                <div class="small text-muted">{{ formatTime(reservation.dateTime) }}</div>
+                            </td>
+                            <td>{{ reservation.duration }}분</td>
+                            <td>
+                                <span class="badge" :class="getStatusBadge(reservation.status).class">
+                                    {{ getStatusBadge(reservation.status).text }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" @click="viewDetail(reservation)">
+                                    상세
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 예약 생성 모달 -->
+    <div v-if="showCreateModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">새 예약 생성</h5>
+                    <button type="button" class="btn-close" @click="showCreateModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">강사 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="newReservation.instructorId" required>
+                                <option :value="null">선택하세요</option>
+                                <option v-for="instructor in instructors" :key="instructor.id" :value="instructor.id">
+                                    {{ instructor.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">강좌명</label>
+                            <input type="text" class="form-control" v-model="newReservation.courseTitle" placeholder="예: Vue.js 심화 과정">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">학생명 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="newReservation.studentName" placeholder="홍길동" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">학생 이메일 <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" v-model="newReservation.studentEmail" placeholder="student@example.com" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">예약 일시 <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" v-model="newReservation.dateTime" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">소요 시간</label>
+                            <select class="form-select" v-model="newReservation.duration">
+                                <option :value="30">30분</option>
+                                <option :value="60">60분</option>
+                                <option :value="90">90분</option>
+                                <option :value="120">120분</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">요청 사항</label>
+                            <textarea class="form-control" v-model="newReservation.notes" rows="3" placeholder="학생의 요청 사항이나 상담 주제를 입력하세요"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showCreateModal = false">취소</button>
+                    <button type="button" class="btn btn-primary" @click="createReservation">생성</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 예약 상세 모달 -->
+    <div v-if="showDetailModal && selectedReservation" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">예약 상세 #{{ selectedReservation.id }}</h5>
+                    <button type="button" class="btn-close" @click="showDetailModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">상태</label>
+                                <div>
+                                    <span class="badge fs-6" :class="getStatusBadge(selectedReservation.status).class">
+                                        {{ getStatusBadge(selectedReservation.status).text }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">학생</label>
+                                <div class="fw-bold">{{ selectedReservation.studentName }}</div>
+                                <div class="text-muted">{{ selectedReservation.studentEmail }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">강사</label>
+                                <div class="fw-bold">{{ selectedReservation.instructorName }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">강좌</label>
+                                <div class="fw-bold">{{ selectedReservation.courseTitle }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">예약 일시</label>
+                                <div class="fw-bold">{{ formatDateTime(selectedReservation.dateTime) }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">소요 시간</label>
+                                <div class="fw-bold">{{ selectedReservation.duration }}분</div>
+                            </div>
+                        </div>
+                        <div class="col-12" v-if="selectedReservation.meetingUrl">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">회의 링크</label>
+                                <div>
+                                    <a :href="selectedReservation.meetingUrl" target="_blank" class="btn btn-sm btn-primary">
+                                        <span class="me-1">🔗</span> 회의 참여
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-secondary ms-2" @click="navigator.clipboard.writeText(selectedReservation.meetingUrl)">
+                                        복사
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12" v-if="selectedReservation.notes">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">요청 사항</label>
+                                <div class="border rounded p-3 bg-light">{{ selectedReservation.notes }}</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">생성 일시</label>
+                                <div class="text-muted">{{ formatDateTime(selectedReservation.createdAt) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-danger" @click="deleteReservation(selectedReservation.id)">
+                        삭제
+                    </button>
+                    <div class="d-flex gap-2">
+                        <button
+                            v-if="selectedReservation.status === 'pending'"
+                            type="button"
+                            class="btn btn-success"
+                            @click="confirmReservation(selectedReservation)"
+                        >
+                            확정
+                        </button>
+                        <button
+                            v-if="selectedReservation.status === 'confirmed'"
+                            type="button"
+                            class="btn btn-primary"
+                            @click="completeReservation(selectedReservation)"
+                        >
+                            완료 처리
+                        </button>
+                        <button
+                            v-if="selectedReservation.status === 'pending' || selectedReservation.status === 'confirmed'"
+                            type="button"
+                            class="btn btn-outline-danger"
+                            @click="cancelReservation(selectedReservation)"
+                        >
+                            취소
+                        </button>
+                        <button type="button" class="btn btn-secondary" @click="showDetailModal = false">닫기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
