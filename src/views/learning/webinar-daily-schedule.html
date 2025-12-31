@@ -1,0 +1,171 @@
+<div class="webinar-daily-schedule">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">일별 화상강의 현황</h4>
+            <p class="text-muted mb-0">전체 강사의 일별 예약 현황을 한눈에 확인합니다</p>
+        </div>
+        <button class="btn btn-outline-primary" @click="goToReservations">
+            <span class="me-1">📋</span> 예약 관리
+        </button>
+    </div>
+
+    <!-- 날짜 선택 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <button class="btn btn-outline-secondary" @click="previousDay">
+                <span>‹ 이전</span>
+            </button>
+            <div class="d-flex align-items-center gap-3">
+                <input type="date" class="form-control" v-model="selectedDate" style="width: auto;">
+                <h5 class="mb-0 fw-bold">{{ formatDate(selectedDate) }}</h5>
+                <button class="btn btn-sm btn-outline-primary" @click="goToToday">오늘</button>
+            </div>
+            <button class="btn btn-outline-secondary" @click="nextDay">
+                <span>다음 ›</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">전체 예약</div>
+                    <div class="fs-3 fw-bold">{{ filteredReservations.length }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">확정</div>
+                    <div class="fs-3 fw-bold text-success">{{ filteredReservations.filter(r => r.status === 'confirmed').length }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">대기중</div>
+                    <div class="fs-3 fw-bold text-warning">{{ filteredReservations.filter(r => r.status === 'pending').length }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">활성 강사</div>
+                    <div class="fs-3 fw-bold text-primary">{{ instructorSchedules.filter(i => i.reservations.length > 0).length }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 타임라인 스케줄 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0" style="table-layout: fixed;">
+                    <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
+                        <tr>
+                            <th style="width: 80px;">시간</th>
+                            <th v-for="instructor in instructors" :key="instructor.id" class="text-center">
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <span class="rounded-circle d-inline-block" :style="{ width: '12px', height: '12px', backgroundColor: instructor.color }"></span>
+                                    <span class="fw-bold">{{ instructor.name }}</span>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="timeSlot in timeSlots" :key="timeSlot" style="height: 60px;">
+                            <td class="text-center align-top small text-muted fw-bold" style="padding-top: 8px;">
+                                {{ timeSlot }}
+                            </td>
+                            <td v-for="instructor in instructors" :key="instructor.id" class="p-1 align-top position-relative">
+                                <div
+                                    v-if="getReservationForTimeSlot(instructor.id, timeSlot)"
+                                    class="rounded p-2 text-white position-relative"
+                                    :style="{
+                                        backgroundColor: instructor.color,
+                                        height: getReservationHeight(getReservationForTimeSlot(instructor.id, timeSlot).duration) + 'px',
+                                        cursor: 'pointer'
+                                    }"
+                                    @click="viewDetail(getReservationForTimeSlot(instructor.id, timeSlot))"
+                                >
+                                    <div class="small fw-bold">{{ getReservationForTimeSlot(instructor.id, timeSlot).studentName }}</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.9;">{{ getReservationForTimeSlot(instructor.id, timeSlot).courseTitle }}</div>
+                                    <div style="font-size: 0.65rem; opacity: 0.8;">{{ getReservationForTimeSlot(instructor.id, timeSlot).duration }}분</div>
+                                    <span
+                                        class="badge position-absolute top-0 end-0 m-1"
+                                        :class="getStatusBadge(getReservationForTimeSlot(instructor.id, timeSlot).status).class"
+                                        style="font-size: 0.6rem;"
+                                    >
+                                        {{ getStatusBadge(getReservationForTimeSlot(instructor.id, timeSlot).status).text }}
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 예약 상세 모달 -->
+    <div v-if="showDetailModal && selectedReservation" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">예약 상세 #{{ selectedReservation.id }}</h5>
+                    <button type="button" class="btn-close" @click="showDetailModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label text-muted small">강사</label>
+                            <div class="fw-bold">{{ selectedReservation.instructorName }}</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">학생</label>
+                            <div class="fw-bold">{{ selectedReservation.studentName }}</div>
+                            <div class="small text-muted">{{ selectedReservation.studentEmail }}</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">강좌</label>
+                            <div class="fw-bold">{{ selectedReservation.courseTitle }}</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small">일시</label>
+                            <div class="fw-bold">{{ selectedReservation.dateTime }}</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small">소요 시간</label>
+                            <div class="fw-bold">{{ selectedReservation.duration }}분</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">상태</label>
+                            <div>
+                                <span class="badge fs-6" :class="getStatusBadge(selectedReservation.status).class">
+                                    {{ getStatusBadge(selectedReservation.status).text }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-12" v-if="selectedReservation.meetingUrl">
+                            <label class="form-label text-muted small">회의 링크</label>
+                            <div>
+                                <a :href="selectedReservation.meetingUrl" target="_blank" class="btn btn-sm btn-primary">
+                                    🔗 회의 참여
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showDetailModal = false">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

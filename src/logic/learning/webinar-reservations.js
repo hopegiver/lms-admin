@@ -3,9 +3,11 @@ export default {
     layout: 'admin',
     data() {
         return {
+            viewMode: 'list', // 'list' or 'calendar'
             filterStatus: 'all',
             filterInstructor: 'all',
             searchKeyword: '',
+            currentMonth: new Date(),
             reservations: [
                 {
                     id: 1,
@@ -348,6 +350,69 @@ export default {
 
         goToSchedule() {
             this.navigateTo('/learning/webinar-instructor-schedule');
+        },
+
+        // 캘린더 관련 메서드
+        getCalendarDays() {
+            const year = this.currentMonth.getFullYear();
+            const month = this.currentMonth.getMonth();
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            const endDate = new Date(lastDay);
+            endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+
+            const days = [];
+            const currentDate = new Date(startDate);
+
+            while (currentDate <= endDate) {
+                days.push(new Date(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            return days;
+        },
+
+        getReservationsForDate(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            return this.filteredReservations.filter(r => {
+                const resDateStr = r.dateTime.split(' ')[0];
+                const resDate = new Date(resDateStr);
+                return resDate.toISOString().split('T')[0] === dateStr;
+            }).sort((a, b) => {
+                const timeA = a.dateTime.split(' ')[1];
+                const timeB = b.dateTime.split(' ')[1];
+                return timeA.localeCompare(timeB);
+            });
+        },
+
+        isToday(date) {
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        },
+
+        isCurrentMonth(date) {
+            return date.getMonth() === this.currentMonth.getMonth();
+        },
+
+        previousMonth() {
+            this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
+        },
+
+        nextMonth() {
+            this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
+        },
+
+        goToToday() {
+            this.currentMonth = new Date();
+        },
+
+        formatMonthYear() {
+            return this.currentMonth.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
         }
     }
 }

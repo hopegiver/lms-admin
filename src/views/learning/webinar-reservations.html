@@ -64,8 +64,19 @@
     <!-- 필터 및 검색 -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label small">보기 방식</label>
+                    <div class="btn-group w-100">
+                        <button class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'" @click="viewMode = 'list'">
+                            📋 목록
+                        </button>
+                        <button class="btn" :class="viewMode === 'calendar' ? 'btn-primary' : 'btn-outline-secondary'" @click="viewMode = 'calendar'">
+                            📅 캘린더
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-2">
                     <label class="form-label small">상태</label>
                     <select class="form-select" v-model="filterStatus">
                         <option value="all">전체</option>
@@ -97,8 +108,8 @@
         </div>
     </div>
 
-    <!-- 예약 목록 -->
-    <div class="card border-0 shadow-sm">
+    <!-- 목록 뷰 -->
+    <div v-if="viewMode === 'list'" class="card border-0 shadow-sm">
         <div class="card-body p-0">
             <div v-if="filteredReservations.length === 0" class="text-center text-muted py-5">
                 <div class="fs-1 mb-3">📭</div>
@@ -145,6 +156,99 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 캘린더 뷰 -->
+    <div v-if="viewMode === 'calendar'">
+        <!-- 캘린더 헤더 -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <button class="btn btn-outline-secondary" @click="previousMonth">
+                    <span>‹</span>
+                </button>
+                <div class="d-flex align-items-center gap-3">
+                    <h5 class="mb-0 fw-bold">{{ formatMonthYear() }}</h5>
+                    <button class="btn btn-sm btn-outline-primary" @click="goToToday">오늘</button>
+                </div>
+                <button class="btn btn-outline-secondary" @click="nextMonth">
+                    <span>›</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 캘린더 그리드 -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-2">
+                <!-- 요일 헤더 -->
+                <div class="row g-1 mb-1">
+                    <div class="col text-center fw-bold small text-danger">일</div>
+                    <div class="col text-center fw-bold small">월</div>
+                    <div class="col text-center fw-bold small">화</div>
+                    <div class="col text-center fw-bold small">수</div>
+                    <div class="col text-center fw-bold small">목</div>
+                    <div class="col text-center fw-bold small">금</div>
+                    <div class="col text-center fw-bold small text-primary">토</div>
+                </div>
+
+                <!-- 날짜 그리드 -->
+                <div class="row g-1">
+                    <div
+                        v-for="(day, index) in getCalendarDays()"
+                        :key="index"
+                        class="col"
+                        style="min-height: 120px;"
+                    >
+                        <div
+                            class="border rounded p-1 h-100"
+                            :class="{
+                                'bg-light': !isCurrentMonth(day),
+                                'border-primary border-2': isToday(day),
+                                'bg-white': isCurrentMonth(day)
+                            }"
+                        >
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <span
+                                    class="small fw-bold"
+                                    :class="{
+                                        'text-muted': !isCurrentMonth(day),
+                                        'text-danger': index % 7 === 0 && isCurrentMonth(day),
+                                        'text-primary': index % 7 === 6 && isCurrentMonth(day)
+                                    }"
+                                >
+                                    {{ day.getDate() }}
+                                </span>
+                                <span v-if="getReservationsForDate(day).length > 0" class="badge bg-primary rounded-pill" style="font-size: 0.65rem;">
+                                    {{ getReservationsForDate(day).length }}
+                                </span>
+                            </div>
+
+                            <!-- 예약 목록 -->
+                            <div class="d-flex flex-column gap-1">
+                                <div
+                                    v-for="reservation in getReservationsForDate(day).slice(0, 2)"
+                                    :key="reservation.id"
+                                    class="small p-1 rounded text-white"
+                                    :class="{
+                                        'bg-warning': reservation.status === 'pending',
+                                        'bg-success': reservation.status === 'confirmed',
+                                        'bg-secondary': reservation.status === 'completed',
+                                        'bg-danger': reservation.status === 'cancelled'
+                                    }"
+                                    style="cursor: pointer; font-size: 0.7rem; line-height: 1.2;"
+                                    @click="viewDetail(reservation)"
+                                >
+                                    <div class="fw-bold text-truncate">{{ formatTime(reservation.dateTime) }}</div>
+                                    <div class="text-truncate opacity-75">{{ reservation.studentName }}</div>
+                                </div>
+                                <div v-if="getReservationsForDate(day).length > 2" class="small text-muted text-center" style="font-size: 0.65rem;">
+                                    +{{ getReservationsForDate(day).length - 2 }}개 더
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
