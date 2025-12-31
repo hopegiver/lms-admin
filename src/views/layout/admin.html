@@ -120,7 +120,20 @@
     width: 250px;
     height: 100vh;
     z-index: 1040;
-    transition: transform 0.3s ease-in-out;
+}
+
+/* Desktop: No transform needed */
+@media (min-width: 992px) {
+    .sidebar {
+        transform: translateX(0) !important;
+    }
+}
+
+/* Mobile: Add transition only on mobile */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transition: transform 0.3s ease-in-out;
+    }
 }
 
 /* Sidebar navigation scrollable area */
