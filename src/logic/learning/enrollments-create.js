@@ -29,7 +29,34 @@ export default {
                 { id: 3, title: 'JavaScript ES6+', price: 79000 },
                 { id: 4, title: 'Node.js 백엔드 개발', price: 99000 },
                 { id: 5, title: 'Python Django 웹 개발', price: 89000 }
-            ]
+            ],
+            learnerSearchKeyword: '',
+            showLearnerDropdown: false,
+            courseSearchKeyword: '',
+            showCourseDropdown: false
+        }
+    },
+    computed: {
+        filteredLearners() {
+            if (!this.learnerSearchKeyword) return this.learners;
+            const keyword = this.learnerSearchKeyword.toLowerCase();
+            return this.learners.filter(l =>
+                l.name.toLowerCase().includes(keyword) ||
+                l.email.toLowerCase().includes(keyword)
+            );
+        },
+        filteredCourses() {
+            if (!this.courseSearchKeyword) return this.courses;
+            const keyword = this.courseSearchKeyword.toLowerCase();
+            return this.courses.filter(c =>
+                c.title.toLowerCase().includes(keyword)
+            );
+        },
+        selectedLearner() {
+            return this.learners.find(l => l.id === this.form.learnerId);
+        },
+        selectedCourse() {
+            return this.courses.find(c => c.id === this.form.courseId);
         }
     },
     watch: {
@@ -43,6 +70,28 @@ export default {
         }
     },
     methods: {
+        selectLearner(learner) {
+            this.form.learnerId = learner.id;
+            this.learnerSearchKeyword = '';
+            this.showLearnerDropdown = false;
+        },
+
+        clearLearner() {
+            this.form.learnerId = '';
+            this.learnerSearchKeyword = '';
+        },
+
+        selectCourse(course) {
+            this.form.courseId = course.id;
+            this.courseSearchKeyword = '';
+            this.showCourseDropdown = false;
+        },
+
+        clearCourse() {
+            this.form.courseId = '';
+            this.courseSearchKeyword = '';
+        },
+
         validateForm() {
             if (!this.form.learnerId) {
                 alert('학습자를 선택해주세요.');

@@ -23,21 +23,81 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label">학습자 선택 <span class="text-danger">*</span></label>
-                            <select class="form-select" v-model="form.learnerId">
-                                <option value="">선택</option>
-                                <option v-for="learner in learners" :key="learner.id" :value="learner.id">
-                                    {{ learner.name }} ({{ learner.email }})
-                                </option>
-                            </select>
+                            <div v-if="selectedLearner" class="alert alert-info d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ selectedLearner.name }}</strong>
+                                    <span class="text-muted ms-2">({{ selectedLearner.email }})</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearLearner">변경</button>
+                            </div>
+                            <div v-else class="position-relative">
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    v-model="learnerSearchKeyword"
+                                    @focus="showLearnerDropdown = true"
+                                    @blur="setTimeout(() => showLearnerDropdown = false, 200)"
+                                    placeholder="이름 또는 이메일로 검색..."
+                                >
+                                <div
+                                    v-if="showLearnerDropdown && learnerSearchKeyword"
+                                    class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
+                                    style="max-height: 300px; overflow-y: auto; z-index: 1000;"
+                                >
+                                    <div v-if="filteredLearners.length === 0" class="p-3 text-muted text-center">
+                                        검색 결과가 없습니다
+                                    </div>
+                                    <div
+                                        v-for="learner in filteredLearners"
+                                        :key="learner.id"
+                                        class="p-2 border-bottom hover-bg-light"
+                                        style="cursor: pointer;"
+                                        @click="selectLearner(learner)"
+                                    >
+                                        <div class="fw-bold">{{ learner.name }}</div>
+                                        <div class="small text-muted">{{ learner.email }}</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label">강좌 선택 <span class="text-danger">*</span></label>
-                            <select class="form-select" v-model="form.courseId">
-                                <option value="">선택</option>
-                                <option v-for="course in courses" :key="course.id" :value="course.id">
-                                    {{ course.title }}
-                                </option>
-                            </select>
+                            <div v-if="selectedCourse" class="alert alert-info d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ selectedCourse.title }}</strong>
+                                    <span class="text-muted ms-2">(₩{{ selectedCourse.price.toLocaleString() }})</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearCourse">변경</button>
+                            </div>
+                            <div v-else class="position-relative">
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    v-model="courseSearchKeyword"
+                                    @focus="showCourseDropdown = true"
+                                    @blur="setTimeout(() => showCourseDropdown = false, 200)"
+                                    placeholder="강좌명으로 검색..."
+                                >
+                                <div
+                                    v-if="showCourseDropdown && courseSearchKeyword"
+                                    class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
+                                    style="max-height: 300px; overflow-y: auto; z-index: 1000;"
+                                >
+                                    <div v-if="filteredCourses.length === 0" class="p-3 text-muted text-center">
+                                        검색 결과가 없습니다
+                                    </div>
+                                    <div
+                                        v-for="course in filteredCourses"
+                                        :key="course.id"
+                                        class="p-2 border-bottom hover-bg-light"
+                                        style="cursor: pointer;"
+                                        @click="selectCourse(course)"
+                                    >
+                                        <div class="fw-bold">{{ course.title }}</div>
+                                        <div class="small text-muted">₩{{ course.price.toLocaleString() }}</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">수강 시작일 <span class="text-danger">*</span></label>
