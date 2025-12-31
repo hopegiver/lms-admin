@@ -165,17 +165,57 @@
                                 </option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12">
+                            <label class="form-label">학생 검색 <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <div class="input-group">
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        v-model="studentSearchKeyword"
+                                        @focus="focusStudentSearch"
+                                        @input="showStudentDropdown = true"
+                                        placeholder="학생 이름, 이메일, 전화번호로 검색..."
+                                        autocomplete="off"
+                                    >
+                                    <button
+                                        v-if="selectedStudent"
+                                        class="btn btn-outline-secondary"
+                                        type="button"
+                                        @click="clearStudentSelection"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                                <div v-if="selectedStudent" class="mt-2 p-2 bg-light rounded border">
+                                    <div class="small text-muted">선택된 학생</div>
+                                    <div class="fw-bold">{{ selectedStudent.name }}</div>
+                                    <div class="small text-muted">{{ selectedStudent.email }} | {{ selectedStudent.phone }}</div>
+                                </div>
+                                <div
+                                    v-if="showStudentDropdown && !selectedStudent && studentSearchKeyword"
+                                    class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
+                                    style="max-height: 300px; overflow-y: auto; z-index: 1050;"
+                                >
+                                    <div v-if="filteredStudents.length === 0" class="p-3 text-center text-muted">
+                                        검색 결과가 없습니다
+                                    </div>
+                                    <div
+                                        v-for="student in filteredStudents"
+                                        :key="student.id"
+                                        class="p-2 border-bottom hover-bg-light"
+                                        style="cursor: pointer;"
+                                        @click="selectStudent(student)"
+                                    >
+                                        <div class="fw-bold">{{ student.name }}</div>
+                                        <div class="small text-muted">{{ student.email }} | {{ student.phone }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
                             <label class="form-label">강좌명</label>
-                            <input type="text" class="form-control" v-model="newReservation.courseTitle" placeholder="예: Vue.js 심화 과정">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">학생명 <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" v-model="newReservation.studentName" placeholder="홍길동" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">학생 이메일 <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" v-model="newReservation.studentEmail" placeholder="student@example.com" required>
+                            <input type="text" class="form-control" v-model="newReservation.courseTitle" placeholder="예: Vue.js 심화 과정 (선택사항)">
                         </div>
                         <div class="col-md-8">
                             <label class="form-label">예약 일시 <span class="text-danger">*</span></label>

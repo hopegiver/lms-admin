@@ -73,21 +73,50 @@ export default {
                 { id: 2, name: '이철수' },
                 { id: 3, name: '박민수' }
             ],
+            students: [
+                { id: 101, name: '홍길동', email: 'hong@example.com', phone: '010-1234-5678' },
+                { id: 102, name: '김민수', email: 'kim@example.com', phone: '010-2345-6789' },
+                { id: 103, name: '박서연', email: 'park@example.com', phone: '010-3456-7890' },
+                { id: 104, name: '최지우', email: 'choi@example.com', phone: '010-4567-8901' },
+                { id: 105, name: '이서준', email: 'lee@example.com', phone: '010-5678-9012' },
+                { id: 106, name: '정유진', email: 'jung@example.com', phone: '010-6789-0123' },
+                { id: 107, name: '강민지', email: 'kang@example.com', phone: '010-7890-1234' },
+                { id: 108, name: '윤서아', email: 'yoon@example.com', phone: '010-8901-2345' },
+                { id: 109, name: '조현우', email: 'cho@example.com', phone: '010-9012-3456' },
+                { id: 110, name: '한지민', email: 'han@example.com', phone: '010-0123-4567' }
+            ],
             showCreateModal: false,
             showDetailModal: false,
             selectedReservation: null,
             newReservation: {
                 instructorId: null,
-                studentName: '',
-                studentEmail: '',
+                studentId: null,
                 courseTitle: '',
                 dateTime: '',
                 duration: 60,
                 notes: ''
-            }
+            },
+            studentSearchKeyword: '',
+            showStudentDropdown: false
         }
     },
     computed: {
+        filteredStudents() {
+            if (!this.studentSearchKeyword) return this.students;
+
+            const keyword = this.studentSearchKeyword.toLowerCase();
+            return this.students.filter(s =>
+                s.name.toLowerCase().includes(keyword) ||
+                s.email.toLowerCase().includes(keyword) ||
+                s.phone.includes(keyword)
+            );
+        },
+
+        selectedStudent() {
+            if (!this.newReservation.studentId) return null;
+            return this.students.find(s => s.id === this.newReservation.studentId);
+        },
+
         filteredReservations() {
             return this.reservations.filter(r => {
                 // 상태 필터
@@ -164,32 +193,49 @@ export default {
         openCreateModal() {
             this.newReservation = {
                 instructorId: null,
-                studentName: '',
-                studentEmail: '',
+                studentId: null,
                 courseTitle: '',
                 dateTime: '',
                 duration: 60,
                 notes: ''
             };
+            this.studentSearchKeyword = '';
+            this.showStudentDropdown = false;
             this.showCreateModal = true;
         },
 
+        selectStudent(student) {
+            this.newReservation.studentId = student.id;
+            this.studentSearchKeyword = student.name;
+            this.showStudentDropdown = false;
+        },
+
+        clearStudentSelection() {
+            this.newReservation.studentId = null;
+            this.studentSearchKeyword = '';
+        },
+
+        focusStudentSearch() {
+            this.showStudentDropdown = true;
+        },
+
         createReservation() {
-            if (!this.newReservation.instructorId || !this.newReservation.studentName ||
-                !this.newReservation.studentEmail || !this.newReservation.dateTime) {
+            if (!this.newReservation.instructorId || !this.newReservation.studentId ||
+                !this.newReservation.dateTime) {
                 alert('필수 항목을 모두 입력해주세요.');
                 return;
             }
 
             const instructor = this.instructors.find(i => i.id === parseInt(this.newReservation.instructorId));
+            const student = this.students.find(s => s.id === this.newReservation.studentId);
 
             const newRes = {
                 id: this.reservations.length + 1,
                 instructorId: parseInt(this.newReservation.instructorId),
                 instructorName: instructor.name,
-                studentId: 100 + this.reservations.length,
-                studentName: this.newReservation.studentName,
-                studentEmail: this.newReservation.studentEmail,
+                studentId: student.id,
+                studentName: student.name,
+                studentEmail: student.email,
                 courseTitle: this.newReservation.courseTitle || '개별 상담',
                 dateTime: this.newReservation.dateTime.replace('T', ' '),
                 duration: parseInt(this.newReservation.duration),
