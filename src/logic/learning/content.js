@@ -9,15 +9,36 @@ export default {
             filters: { type: '', course: '' },
             stats: { videos: 156, documents: 89, images: 234, totalSize: '45.2 GB' },
             courseList: ['React 완벽 가이드', 'Python 데이터 분석', 'JavaScript ES6+', 'AWS 클라우드 입문'],
+
+            // 폴더 관리
+            selectedFolderId: null, // null = 전체
+            folders: [
+                { id: 1, name: '프로그래밍', icon: '💻', count: 5, color: '#3b82f6' },
+                { id: 2, name: '디자인', icon: '🎨', count: 3, color: '#8b5cf6' },
+                { id: 3, name: '마케팅', icon: '📢', count: 2, color: '#10b981' },
+                { id: 4, name: '비즈니스', icon: '💼', count: 1, color: '#f59e0b' }
+            ],
+            showFolderModal: false,
+            folderForm: {
+                id: null,
+                name: '',
+                icon: '📁',
+                color: '#3b82f6'
+            },
+
             files: [
-                { id: 1, name: 'React 컴포넌트 기초.mp4', type: 'video', course: 'React 완벽 가이드', size: '256 MB', uploadDate: '2024-12-19' },
-                { id: 2, name: 'JavaScript 가이드.pdf', type: 'document', course: 'JavaScript ES6+', size: '4.2 MB', uploadDate: '2024-12-18' },
-                { id: 3, name: '강좌 썸네일.png', type: 'image', course: 'React 완벽 가이드', size: '1.5 MB', uploadDate: '2024-12-18' },
-                { id: 4, name: 'Python 데이터분석 실습.mp4', type: 'video', course: 'Python 데이터 분석', size: '512 MB', uploadDate: '2024-12-17' },
-                { id: 5, name: 'AWS 아키텍처 다이어그램.png', type: 'image', course: 'AWS 클라우드 입문', size: '2.3 MB', uploadDate: '2024-12-17' },
-                { id: 6, name: '실습 자료.zip', type: 'document', course: 'React 완벽 가이드', size: '15 MB', uploadDate: '2024-12-16' },
-                { id: 7, name: 'ES6 문법 정리.pdf', type: 'document', course: 'JavaScript ES6+', size: '3.1 MB', uploadDate: '2024-12-15' },
-                { id: 8, name: '머신러닝 개요.mp4', type: 'video', course: 'Python 데이터 분석', size: '380 MB', uploadDate: '2024-12-15' }
+                { id: 1, name: 'React 컴포넌트 기초.mp4', type: 'video', course: 'React 완벽 가이드', size: '256 MB', uploadDate: '2024-12-19', folderId: 1 },
+                { id: 2, name: 'JavaScript 가이드.pdf', type: 'document', course: 'JavaScript ES6+', size: '4.2 MB', uploadDate: '2024-12-18', folderId: 1 },
+                { id: 3, name: '강좌 썸네일.png', type: 'image', course: 'React 완벽 가이드', size: '1.5 MB', uploadDate: '2024-12-18', folderId: 2 },
+                { id: 4, name: 'Python 데이터분석 실습.mp4', type: 'video', course: 'Python 데이터 분석', size: '512 MB', uploadDate: '2024-12-17', folderId: 1 },
+                { id: 5, name: 'AWS 아키텍처 다이어그램.png', type: 'image', course: 'AWS 클라우드 입문', size: '2.3 MB', uploadDate: '2024-12-17', folderId: 2 },
+                { id: 6, name: '실습 자료.zip', type: 'document', course: 'React 완벽 가이드', size: '15 MB', uploadDate: '2024-12-16', folderId: 1 },
+                { id: 7, name: 'ES6 문법 정리.pdf', type: 'document', course: 'JavaScript ES6+', size: '3.1 MB', uploadDate: '2024-12-15', folderId: 1 },
+                { id: 8, name: '머신러닝 개요.mp4', type: 'video', course: 'Python 데이터 분석', size: '380 MB', uploadDate: '2024-12-15', folderId: 1 },
+                { id: 9, name: '마케팅 전략 가이드.pdf', type: 'document', course: null, size: '5.2 MB', uploadDate: '2024-12-14', folderId: 3 },
+                { id: 10, name: '배너 디자인.psd', type: 'image', course: null, size: '45 MB', uploadDate: '2024-12-13', folderId: 2 },
+                { id: 11, name: 'SNS 마케팅 전략.mp4', type: 'video', course: null, size: '180 MB', uploadDate: '2024-12-12', folderId: 3 },
+                { id: 12, name: '사업계획서.docx', type: 'document', course: null, size: '2.8 MB', uploadDate: '2024-12-11', folderId: 4 }
             ],
 
             // YouTube 단일 가져오기
@@ -63,7 +84,136 @@ export default {
             vimeoBatchDebounceTimer: null
         }
     },
+    computed: {
+        filteredFiles() {
+            return this.files.filter(file => {
+                // 폴더 필터
+                if (this.selectedFolderId === 0) {
+                    // 미분류 - folderId가 null이거나 undefined인 파일만
+                    if (file.folderId) return false;
+                } else if (this.selectedFolderId !== null) {
+                    // 특정 폴더 선택
+                    if (file.folderId !== this.selectedFolderId) return false;
+                }
+                // null이면 전체
+
+                // 타입 필터
+                if (this.filters.type && file.type !== this.filters.type) {
+                    return false;
+                }
+
+                // 강좌 필터
+                if (this.filters.course && file.course !== this.filters.course) {
+                    return false;
+                }
+
+                // 검색어 필터
+                if (this.searchQuery) {
+                    const keyword = this.searchQuery.toLowerCase();
+                    return file.name.toLowerCase().includes(keyword) ||
+                           (file.course && file.course.toLowerCase().includes(keyword));
+                }
+
+                return true;
+            });
+        },
+
+        currentFolderName() {
+            if (this.selectedFolderId === null) return '전체 콘텐츠';
+            if (this.selectedFolderId === 0) return '미분류';
+            const folder = this.folders.find(f => f.id === this.selectedFolderId);
+            return folder ? folder.name : '전체 콘텐츠';
+        }
+    },
+    mounted() {
+        this.updateFolderCounts();
+    },
     methods: {
+        // 폴더 관리
+        selectFolder(folderId) {
+            this.selectedFolderId = folderId;
+        },
+
+        openCreateFolderModal() {
+            this.folderForm = {
+                id: null,
+                name: '',
+                icon: '📁',
+                color: '#3b82f6'
+            };
+            this.showFolderModal = true;
+        },
+
+        openEditFolderModal(folder) {
+            this.folderForm = {
+                id: folder.id,
+                name: folder.name,
+                icon: folder.icon,
+                color: folder.color
+            };
+            this.showFolderModal = true;
+        },
+
+        saveFolderForm() {
+            if (!this.folderForm.name.trim()) {
+                alert('폴더 이름을 입력해주세요.');
+                return;
+            }
+
+            if (this.folderForm.id) {
+                // 수정
+                const folder = this.folders.find(f => f.id === this.folderForm.id);
+                if (folder) {
+                    folder.name = this.folderForm.name;
+                    folder.icon = this.folderForm.icon;
+                    folder.color = this.folderForm.color;
+                    alert('폴더가 수정되었습니다.');
+                }
+            } else {
+                // 새로 생성
+                const newFolder = {
+                    id: Math.max(...this.folders.map(f => f.id)) + 1,
+                    name: this.folderForm.name,
+                    icon: this.folderForm.icon,
+                    color: this.folderForm.color,
+                    count: 0
+                };
+                this.folders.push(newFolder);
+                alert('폴더가 생성되었습니다.');
+            }
+
+            this.showFolderModal = false;
+        },
+
+        deleteFolder(folderId) {
+            const folder = this.folders.find(f => f.id === folderId);
+            if (!folder) return;
+
+            const filesInFolder = this.files.filter(f => f.folderId === folderId);
+            if (filesInFolder.length > 0) {
+                if (!confirm(`${folder.name} 폴더에 ${filesInFolder.length}개의 파일이 있습니다.\n폴더를 삭제하면 파일들은 '미분류'로 이동됩니다.\n계속하시겠습니까?`)) {
+                    return;
+                }
+                // 파일들의 folderId를 null로 변경
+                filesInFolder.forEach(file => file.folderId = null);
+            }
+
+            const index = this.folders.findIndex(f => f.id === folderId);
+            if (index > -1) {
+                this.folders.splice(index, 1);
+                if (this.selectedFolderId === folderId) {
+                    this.selectedFolderId = null;
+                }
+                alert('폴더가 삭제되었습니다.');
+            }
+        },
+
+        updateFolderCounts() {
+            this.folders.forEach(folder => {
+                folder.count = this.files.filter(f => f.folderId === folder.id).length;
+            });
+        },
+
         getFileIcon(type) {
             return { 'video': '🎬', 'document': '📄', 'image': '🖼️' }[type] || '📁';
         },

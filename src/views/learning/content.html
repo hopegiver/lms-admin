@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="mb-1">콘텐츠</h4>
-            <p class="text-muted mb-0">미디어 라이브러리를 관리합니다</p>
+            <p class="text-muted mb-0">{{ currentFolderName }} - 미디어 라이브러리를 관리합니다</p>
         </div>
         <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -152,9 +152,76 @@
         </div>
     </div>
 
-    <!-- 그리드 뷰 -->
-    <div class="row g-3" v-if="viewMode === 'grid'">
-        <div class="col-6 col-md-4 col-lg-3 col-xl-2" v-for="file in files" :key="file.id">
+    <!-- 폴더 + 콘텐츠 영역 -->
+    <div class="row g-4">
+        <!-- 왼쪽: 폴더 목록 -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">📁 폴더</h6>
+                    <button class="btn btn-sm btn-outline-primary" @click="openCreateFolderModal">+</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <!-- 전체 콘텐츠 -->
+                        <a
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                            :class="{ 'active': selectedFolderId === null }"
+                            @click="selectFolder(null)"
+                            role="button"
+                        >
+                            <span><span class="me-2">📂</span> 전체 콘텐츠</span>
+                            <span class="badge bg-secondary rounded-pill">{{ files.length }}</span>
+                        </a>
+
+                        <!-- 폴더 목록 -->
+                        <div
+                            v-for="folder in folders"
+                            :key="folder.id"
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                            :class="{ 'active': selectedFolderId === folder.id }"
+                        >
+                            <a
+                                class="flex-grow-1 text-decoration-none text-reset"
+                                @click="selectFolder(folder.id)"
+                                role="button"
+                            >
+                                <span :style="{ color: folder.color }">{{ folder.icon }}</span>
+                                <span class="ms-2">{{ folder.name }}</span>
+                            </a>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-secondary rounded-pill">{{ folder.count }}</span>
+                                <div class="dropdown" @click.stop>
+                                    <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown">⋮</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" @click.stop="openEditFolderModal(folder)">✏️ 수정</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" @click.stop="deleteFolder(folder.id)">🗑️ 삭제</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 미분류 -->
+                        <a
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-muted"
+                            :class="{ 'active': selectedFolderId === 0 }"
+                            @click="selectFolder(0)"
+                            role="button"
+                        >
+                            <span><span class="me-2">📋</span> 미분류</span>
+                            <span class="badge bg-secondary rounded-pill">{{ files.filter(f => !f.folderId).length }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽: 콘텐츠 영역 -->
+        <div class="col-lg-9">
+            <!-- 그리드 뷰 -->
+            <div class="row g-3" v-if="viewMode === 'grid'">
+                <div class="col-6 col-md-4 col-lg-3" v-for="file in filteredFiles" :key="file.id">
             <div class="card border-0 shadow-sm h-100 content-card" @click="selectFile(file)">
                 <div class="card-body p-2">
                     <div class="content-thumbnail rounded mb-2 d-flex align-items-center justify-content-center"
@@ -181,26 +248,26 @@
                 </div>
             </div>
         </div>
-    </div>
+            </div>
 
-    <!-- 리스트 뷰 -->
-    <div class="card border-0 shadow-sm" v-if="viewMode === 'list'">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th><input type="checkbox" class="form-check-input"></th>
-                            <th>파일명</th>
-                            <th>유형</th>
-                            <th>강좌</th>
-                            <th class="text-end">크기</th>
-                            <th>업로드일</th>
-                            <th style="width: 100px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="file in files" :key="file.id">
+            <!-- 리스트 뷰 -->
+            <div class="card border-0 shadow-sm" v-if="viewMode === 'list'">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><input type="checkbox" class="form-check-input"></th>
+                                    <th>파일명</th>
+                                    <th>유형</th>
+                                    <th>강좌</th>
+                                    <th class="text-end">크기</th>
+                                    <th>업로드일</th>
+                                    <th style="width: 100px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="file in filteredFiles" :key="file.id">
                             <td><input type="checkbox" class="form-check-input"></td>
                             <td>
                                 <div class="d-flex align-items-center">
@@ -604,3 +671,53 @@
 .content-thumbnail.document { background-color: #e8f5e9; }
 .content-thumbnail.image { background-color: #fff3e0; }
 </style>
+
+    <!-- 폴더 생성/수정 모달 -->
+    <div v-if="showFolderModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ folderForm.id ? '폴더 수정' : '폴더 생성' }}</h5>
+                    <button type="button" class="btn-close" @click="showFolderModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">폴더 이름 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="folderForm.name" placeholder="예: 프로그래밍">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">아이콘</label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button
+                                v-for="icon in ['📁', '💻', '🎨', '📢', '💼', '🎬', '📚', '🔬', '⚡', '🎯']"
+                                :key="icon"
+                                type="button"
+                                class="btn btn-outline-secondary"
+                                :class="{ 'active': folderForm.icon === icon }"
+                                @click="folderForm.icon = icon"
+                            >
+                                {{ icon }}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">색상</label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button
+                                v-for="color in ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#84cc16']"
+                                :key="color"
+                                type="button"
+                                class="btn"
+                                :style="{ backgroundColor: color, width: '40px', height: '40px', border: folderForm.color === color ? '3px solid #000' : '1px solid #ddd' }"
+                                @click="folderForm.color = color"
+                            ></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showFolderModal = false">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveFolderForm">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
