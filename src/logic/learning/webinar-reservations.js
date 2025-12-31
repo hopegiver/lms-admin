@@ -94,7 +94,10 @@ export default {
                 courseTitle: '',
                 dateTime: '',
                 duration: 60,
-                notes: ''
+                notes: '',
+                isRecurring: false,
+                recurringType: 'weekly',
+                recurringCount: 4
             },
             studentSearchKeyword: '',
             showStudentDropdown: false
@@ -197,7 +200,10 @@ export default {
                 courseTitle: '',
                 dateTime: '',
                 duration: 60,
-                notes: ''
+                notes: '',
+                isRecurring: false,
+                recurringType: 'weekly',
+                recurringCount: 4
             };
             this.studentSearchKeyword = '';
             this.showStudentDropdown = false;
@@ -229,6 +235,18 @@ export default {
             const instructor = this.instructors.find(i => i.id === parseInt(this.newReservation.instructorId));
             const student = this.students.find(s => s.id === this.newReservation.studentId);
 
+            if (this.newReservation.isRecurring) {
+                // 반복 예약 생성
+                this.createRecurringReservations(instructor, student);
+            } else {
+                // 단일 예약 생성
+                this.createSingleReservation(instructor, student);
+            }
+
+            this.showCreateModal = false;
+        },
+
+        createSingleReservation(instructor, student) {
             const newRes = {
                 id: this.reservations.length + 1,
                 instructorId: parseInt(this.newReservation.instructorId),
@@ -246,8 +264,48 @@ export default {
             };
 
             this.reservations.unshift(newRes);
-            this.showCreateModal = false;
             alert('예약이 생성되었습니다.');
+        },
+
+        createRecurringReservations(instructor, student) {
+            const baseDate = new Date(this.newReservation.dateTime);
+            const createdReservations = [];
+
+            for (let i = 0; i < this.newReservation.recurringCount; i++) {
+                const reservationDate = new Date(baseDate);
+
+                if (this.newReservation.recurringType === 'weekly') {
+                    reservationDate.setDate(baseDate.getDate() + (i * 7));
+                } else if (this.newReservation.recurringType === 'biweekly') {
+                    reservationDate.setDate(baseDate.getDate() + (i * 14));
+                } else if (this.newReservation.recurringType === 'monthly') {
+                    reservationDate.setMonth(baseDate.getMonth() + i);
+                }
+
+                const dateTimeStr = reservationDate.toISOString().slice(0, 16).replace('T', ' ');
+
+                const newRes = {
+                    id: this.reservations.length + createdReservations.length + 1,
+                    instructorId: parseInt(this.newReservation.instructorId),
+                    instructorName: instructor.name,
+                    studentId: student.id,
+                    studentName: student.name,
+                    studentEmail: student.email,
+                    courseTitle: this.newReservation.courseTitle || '개별 상담',
+                    dateTime: dateTimeStr,
+                    duration: parseInt(this.newReservation.duration),
+                    status: 'pending',
+                    meetingUrl: '',
+                    notes: this.newReservation.notes + (i > 0 ? ` (${i + 1}/${this.newReservation.recurringCount}회차)` : ` (1/${this.newReservation.recurringCount}회차)`),
+                    createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+                };
+
+                createdReservations.push(newRes);
+            }
+
+            // 모든 예약을 앞에 추가
+            this.reservations.unshift(...createdReservations.reverse());
+            alert(`${createdReservations.length}개의 반복 예약이 생성되었습니다.`);
         },
 
         viewDetail(reservation) {

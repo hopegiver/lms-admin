@@ -5,6 +5,9 @@
             <p class="text-muted mb-0">학생들의 화상강의 예약을 관리합니다</p>
         </div>
         <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="navigateTo('/learning/webinar-sessions')">
+                <span class="me-1">📋</span> 세션 이력
+            </button>
             <button class="btn btn-outline-primary" @click="goToSchedule">
                 <span class="me-1">📅</span> 강사 스케줄
             </button>
@@ -229,6 +232,46 @@
                                 <option :value="90">90분</option>
                                 <option :value="120">120분</option>
                             </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="newReservation.isRecurring" id="isRecurring">
+                                <label class="form-check-label fw-bold" for="isRecurring">
+                                    반복 예약 (주간/월간)
+                                </label>
+                            </div>
+                        </div>
+                        <div v-if="newReservation.isRecurring" class="col-12 bg-light p-3 rounded">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">반복 주기</label>
+                                    <select class="form-select" v-model="newReservation.recurringType">
+                                        <option value="weekly">매주 (7일)</option>
+                                        <option value="biweekly">격주 (14일)</option>
+                                        <option value="monthly">매월</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">반복 횟수</label>
+                                    <select class="form-select" v-model="newReservation.recurringCount">
+                                        <option :value="2">2회</option>
+                                        <option :value="3">3회</option>
+                                        <option :value="4">4회 (1개월)</option>
+                                        <option :value="8">8회 (2개월)</option>
+                                        <option :value="12">12회 (3개월)</option>
+                                        <option :value="16">16회 (4개월)</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-0 small">
+                                        <strong>📅 반복 예약 안내:</strong>
+                                        선택한 일시부터 시작하여 {{ newReservation.recurringCount }}회의 예약이 자동으로 생성됩니다.
+                                        <span v-if="newReservation.recurringType === 'weekly'">매주 같은 요일, 같은 시간에 예약됩니다.</span>
+                                        <span v-if="newReservation.recurringType === 'biweekly'">격주 같은 요일, 같은 시간에 예약됩니다.</span>
+                                        <span v-if="newReservation.recurringType === 'monthly'">매월 같은 날짜, 같은 시간에 예약됩니다.</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label">요청 사항</label>
