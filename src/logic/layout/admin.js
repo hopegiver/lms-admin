@@ -3,6 +3,7 @@ export default {
     layout: null,
     data() {
         return {
+            sidebarOpen: false,
             expandedMenuId: '',
             sidebarMenus: [
                 { id: 'dashboard', name: '대시보드', icon: '📊', path: '/dashboard' },
@@ -86,6 +87,12 @@ export default {
         }
     },
     methods: {
+        toggleSidebar() {
+            this.sidebarOpen = !this.sidebarOpen;
+        },
+        closeSidebar() {
+            this.sidebarOpen = false;
+        },
         handleLogout() {
             if (confirm('로그아웃 하시겠습니까?')) {
                 this.navigateTo('/dashboard');

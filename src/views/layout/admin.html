@@ -1,17 +1,22 @@
 <div class="admin-layout">
+    <!-- Backdrop for mobile -->
+    <div v-if="sidebarOpen" class="sidebar-backdrop d-lg-none" @click="closeSidebar"></div>
+
     <!-- Left Menu -->
-    <aside class="sidebar bg-dark text-white d-flex flex-column" style="position: fixed; left: 0; top: 0; width: 250px; height: 100vh; z-index: 1040;">
+    <aside :class="['sidebar', 'bg-dark', 'text-white', 'd-flex', 'flex-column', sidebarOpen ? 'open' : '']">
         <div class="sidebar-inner d-flex flex-column h-100">
             <!-- 로고 영역 -->
-            <div class="sidebar-brand px-3 py-3 border-bottom border-secondary flex-shrink-0" style="height: 60px;">
+            <div class="sidebar-brand px-3 py-3 border-bottom border-secondary flex-shrink-0">
                 <a href="/dashboard" @click.prevent="navigateTo('/dashboard')" class="text-white text-decoration-none d-flex align-items-center">
                     <span class="fs-4 me-2">📚</span>
                     <span class="fs-5 fw-bold">LMS Admin</span>
                 </a>
+                <!-- Close button for mobile -->
+                <button type="button" class="btn-close btn-close-white d-lg-none" @click="closeSidebar" style="position: absolute; top: 15px; right: 15px;"></button>
             </div>
 
             <!-- 메뉴 영역 -->
-            <nav class="sidebar-nav flex-grow-1 py-3" style="overflow-y: auto;">
+            <nav class="sidebar-nav flex-grow-1 py-3">
                 <div class="accordion accordion-flush" id="sidebar-accordion">
                     <template v-for="(menu, index) in sidebarMenus" :key="menu.id">
                         <!-- 서브메뉴가 없는 메뉴 (대시보드) -->
@@ -19,7 +24,7 @@
                             <a
                                 class="nav-link text-white-50 px-3 py-2"
                                 :href="menu.path"
-                                @click.prevent="navigateTo(menu.path)"
+                                @click.prevent="navigateTo(menu.path); closeSidebar()"
                             >
                                 <span class="me-2">{{ menu.icon }}</span> {{ menu.name }}
                             </a>
@@ -46,7 +51,7 @@
                                             <a
                                                 class="nav-link text-white-50 ps-5 py-1"
                                                 :href="sub.path"
-                                                @click.prevent="navigateTo(sub.path)"
+                                                @click.prevent="navigateTo(sub.path); closeSidebar()"
                                             >
                                                 <span class="me-1">•</span> {{ sub.name }}
                                                 <span v-if="sub.badge" class="badge bg-danger ms-2">{{ sub.badge }}</span>
@@ -63,13 +68,19 @@
     </aside>
 
     <!-- 메인 콘텐츠 영역 -->
-    <main class="main-content bg-body-tertiary" style="margin-left: 250px; min-height: 100vh;">
+    <main class="main-content bg-body-tertiary">
         <!-- 상단 헤더바 -->
-        <header class="content-header bg-white border-bottom px-4 d-flex justify-content-between align-items-center sticky-top" style="height: 60px;">
+        <header class="content-header bg-white border-bottom px-3 px-lg-4 d-flex justify-content-between align-items-center sticky-top">
             <div class="d-flex align-items-center">
+                <!-- Hamburger menu for mobile -->
+                <button class="btn btn-link text-dark p-1 me-2 d-lg-none" @click="toggleSidebar" type="button">
+                    <svg width="24" height="24" fill="currentColor">
+                        <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
+                    </svg>
+                </button>
                 <h5 class="mb-0">LMS 관리</h5>
             </div>
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2 gap-lg-3">
                 <!-- 알림 -->
                 <button class="btn btn-link text-dark position-relative p-1">
                     <span class="fs-5">🔔</span>
@@ -94,9 +105,133 @@
         </header>
 
         <!-- 페이지 콘텐츠 -->
-        <div class="content-body p-4">
+        <div class="content-body p-3 p-lg-4">
             {{ content }}
         </div>
     </main>
-
 </div>
+
+<style>
+/* Sidebar styles */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 100vh;
+    z-index: 1040;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Sidebar navigation scrollable area */
+.sidebar-nav {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Sidebar brand */
+.sidebar-brand {
+    height: 60px;
+    position: relative;
+}
+
+/* Main content */
+.main-content {
+    margin-left: 250px;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+/* Header */
+.content-header {
+    height: 60px;
+}
+
+/* Mobile responsive */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1039;
+        animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+}
+
+/* Accordion button styles */
+.accordion-button {
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    box-shadow: none;
+}
+
+.accordion-button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.accordion-button::after {
+    filter: brightness(0) invert(0.5);
+}
+
+/* Nav link styles */
+.nav-link {
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Scrollbar styles for sidebar */
+.sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+</style>
