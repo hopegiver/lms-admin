@@ -53,7 +53,10 @@
                                 <span class="text-muted" style="cursor: move;">☰</span>
                                 <div>
                                     <div class="fw-medium">{{ item.label }}</div>
-                                    <div class="text-muted small">{{ item.url }}</div>
+                                    <div class="text-muted small">
+                                        <span class="badge bg-secondary me-2">{{ getLinkTypeLabel(item.linkType) }}</span>
+                                        {{ item.url }}
+                                    </div>
                                 </div>
                             </div>
                             <div class="d-flex gap-2">
@@ -68,6 +71,164 @@
                 </div>
                 <div class="card-body text-center text-muted py-5" v-else>
                     왼쪽에서 편집할 메뉴를 선택하세요
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메뉴 항목 추가/수정 모달 -->
+    <div v-if="showItemModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ editingItem ? '메뉴 항목 수정' : '메뉴 항목 추가' }}</h5>
+                    <button type="button" class="btn-close" @click="closeItemModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">메뉴 이름 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="itemForm.label" placeholder="메뉴에 표시될 이름">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">링크 타입 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="itemForm.linkType">
+                                <option value="url">직접 입력 (URL)</option>
+                                <option value="page">페이지</option>
+                                <option value="course">강좌</option>
+                                <option value="course-category">강좌 카테고리</option>
+                                <option value="product">상품</option>
+                                <option value="product-category">상품 카테고리</option>
+                                <option value="board">게시판</option>
+                            </select>
+                        </div>
+
+                        <!-- 직접 입력 -->
+                        <div class="col-12" v-if="itemForm.linkType === 'url'">
+                            <label class="form-label">URL <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="itemForm.url" placeholder="/path 또는 https://example.com">
+                            <div class="form-text">상대 경로 또는 전체 URL을 입력하세요</div>
+                        </div>
+
+                        <!-- 페이지 선택 -->
+                        <div class="col-12" v-if="itemForm.linkType === 'page'">
+                            <label class="form-label">페이지 선택 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="itemForm.resourceId">
+                                <option value="">선택하세요</option>
+                                <option v-for="page in pages" :key="page.id" :value="page.id">{{ page.title }}</option>
+                            </select>
+                        </div>
+
+                        <!-- 강좌 선택 -->
+                        <div class="col-12" v-if="itemForm.linkType === 'course'">
+                            <label class="form-label">강좌 선택 <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <input type="text" class="form-control" v-model="courseSearchKeyword"
+                                       @focus="showCourseDropdown = true"
+                                       @blur="setTimeout(() => showCourseDropdown = false, 200)"
+                                       placeholder="강좌명으로 검색...">
+                                <div v-if="showCourseDropdown && courseSearchKeyword"
+                                     class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
+                                     style="max-height: 300px; overflow-y: auto; z-index: 1000;">
+                                    <div v-if="filteredCourses.length === 0" class="p-3 text-muted text-center">
+                                        검색 결과가 없습니다
+                                    </div>
+                                    <div v-for="course in filteredCourses" :key="course.id"
+                                         class="p-2 border-bottom hover-bg-light"
+                                         style="cursor: pointer;"
+                                         @click="selectCourse(course)">
+                                        <div class="fw-bold">{{ course.title }}</div>
+                                        <div class="small text-muted">{{ course.instructor }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="itemForm.resourceId" class="alert alert-info mt-2 mb-0">
+                                선택됨: <strong>{{ getSelectedCourseName() }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- 강좌 카테고리 선택 -->
+                        <div class="col-12" v-if="itemForm.linkType === 'course-category'">
+                            <label class="form-label">강좌 카테고리 선택 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="itemForm.resourceId">
+                                <option value="">선택하세요</option>
+                                <option v-for="cat in sortedCourseCategories" :key="cat.id" :value="cat.id">
+                                    {{ getCategoryDisplayName(cat) }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- 상품 선택 -->
+                        <div class="col-12" v-if="itemForm.linkType === 'product'">
+                            <label class="form-label">상품 선택 <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <input type="text" class="form-control" v-model="productSearchKeyword"
+                                       @focus="showProductDropdown = true"
+                                       @blur="setTimeout(() => showProductDropdown = false, 200)"
+                                       placeholder="상품명으로 검색...">
+                                <div v-if="showProductDropdown && productSearchKeyword"
+                                     class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
+                                     style="max-height: 300px; overflow-y: auto; z-index: 1000;">
+                                    <div v-if="filteredProducts.length === 0" class="p-3 text-muted text-center">
+                                        검색 결과가 없습니다
+                                    </div>
+                                    <div v-for="product in filteredProducts" :key="product.id"
+                                         class="p-2 border-bottom hover-bg-light"
+                                         style="cursor: pointer;"
+                                         @click="selectProduct(product)">
+                                        <div class="fw-bold">{{ product.name }}</div>
+                                        <div class="small text-muted">{{ product.price }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="itemForm.resourceId" class="alert alert-info mt-2 mb-0">
+                                선택됨: <strong>{{ getSelectedProductName() }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- 상품 카테고리 선택 -->
+                        <div class="col-12" v-if="itemForm.linkType === 'product-category'">
+                            <label class="form-label">상품 카테고리 선택 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="itemForm.resourceId">
+                                <option value="">선택하세요</option>
+                                <option v-for="cat in sortedProductCategories" :key="cat.id" :value="cat.id">
+                                    {{ getCategoryDisplayName(cat) }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- 게시판 선택 -->
+                        <div class="col-12" v-if="itemForm.linkType === 'board'">
+                            <label class="form-label">게시판 선택 <span class="text-danger">*</span></label>
+                            <select class="form-select" v-model="itemForm.resourceId">
+                                <option value="">선택하세요</option>
+                                <option v-for="board in boards" :key="board.id" :value="board.id">{{ board.name }}</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">새 창으로 열기</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" v-model="itemForm.openNewTab" id="openNewTab">
+                                <label class="form-check-label" for="openNewTab">
+                                    새 창(탭)에서 열기
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12" v-if="itemForm.linkType !== 'url'">
+                            <div class="alert alert-light mb-0">
+                                <strong>미리보기 URL:</strong>
+                                <code class="ms-2">{{ getPreviewUrl() }}</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="closeItemModal">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveMenuItem">
+                        {{ editingItem ? '수정' : '추가' }}
+                    </button>
                 </div>
             </div>
         </div>
