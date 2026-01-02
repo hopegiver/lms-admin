@@ -1,0 +1,118 @@
+<div class="recipient-groups-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">수신자 그룹</h4>
+            <p class="text-muted mb-0">마케팅 발송을 위한 수신자 그룹을 관리합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="createGroup">
+            <span class="me-1">+</span> 그룹 생성
+        </button>
+    </div>
+
+    <!-- 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-10">
+                    <input type="text" class="form-control" v-model="searchQuery" placeholder="그룹명, 설명 검색...">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" @click="searchQuery = ''">
+                        초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 그룹 목록 -->
+    <div class="row g-3">
+        <div v-if="filteredGroups.length === 0" class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center text-muted py-5">
+                    그룹이 없습니다
+                </div>
+            </div>
+        </div>
+        <div v-for="group in filteredGroups" :key="group.id" class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ group.name }}</h6>
+                            <p class="text-muted small mb-0">{{ group.description }}</p>
+                        </div>
+                        <span class="badge" :class="getTypeBadgeClass(group.type)">
+                            {{ getTypeLabel(group.type) }}
+                        </span>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">구성원 수</div>
+                        <div class="h4 text-primary">{{ group.count.toLocaleString() }}명</div>
+                    </div>
+
+                    <div class="small text-muted mb-3">
+                        <div>생성일: {{ group.createdAt }}</div>
+                        <div>수정일: {{ group.updatedAt }}</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary flex-grow-1" @click="viewMembers(group)">
+                            <span class="me-1">👥</span> 회원 보기
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" @click="editGroup(group)"
+                                :disabled="group.type === 'system'">
+                            ✏️
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" @click="deleteGroup(group)"
+                                :disabled="group.type === 'system'">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 그룹 생성/수정 모달 -->
+    <div v-if="showModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ editingGroup ? '그룹 수정' : '그룹 생성' }}</h5>
+                    <button type="button" class="btn-close" @click="closeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">그룹명 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="groupForm.name"
+                               placeholder="예: 특별 프로모션 대상">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">설명</label>
+                        <textarea class="form-control" rows="3" v-model="groupForm.description"
+                                  placeholder="그룹에 대한 설명을 입력하세요"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">그룹 타입</label>
+                        <select class="form-select" v-model="groupForm.type">
+                            <option value="manual">수동 - 직접 회원 추가/제거</option>
+                            <option value="auto">자동 - 조건에 따라 자동 포함</option>
+                        </select>
+                    </div>
+                    <div v-if="groupForm.type === 'auto'" class="alert alert-info small">
+                        자동 그룹 조건 설정 기능은 추후 구현 예정입니다.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="closeModal">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveGroup">
+                        {{ editingGroup ? '수정' : '생성' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,192 @@
+<div class="campaigns-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">캠페인 관리</h4>
+            <p class="text-muted mb-0">마케팅 캠페인을 생성하고 관리합니다</p>
+        </div>
+        <button class="btn btn-primary" @click="createCampaign">
+            <span class="me-1">+</span> 캠페인 생성
+        </button>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">전체 캠페인</div>
+                            <div class="h4 mb-0">{{ stats.total }}</div>
+                        </div>
+                        <div class="text-primary fs-2">📊</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">임시저장</div>
+                            <div class="h4 mb-0">{{ stats.draft }}</div>
+                        </div>
+                        <div class="text-secondary fs-2">📝</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">예약됨</div>
+                            <div class="h4 mb-0">{{ stats.scheduled }}</div>
+                        </div>
+                        <div class="text-info fs-2">⏰</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">발송중</div>
+                            <div class="h4 mb-0">{{ stats.sending }}</div>
+                        </div>
+                        <div class="text-warning fs-2">📤</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">완료</div>
+                            <div class="h4 mb-0">{{ stats.completed }}</div>
+                        </div>
+                        <div class="text-success fs-2">✅</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 필터 및 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" v-model="searchQuery" placeholder="캠페인명, 생성자 검색...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" v-model="filterStatus">
+                        <option value="">전체 상태</option>
+                        <option value="draft">임시저장</option>
+                        <option value="scheduled">예약됨</option>
+                        <option value="sending">발송중</option>
+                        <option value="completed">완료</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" v-model="filterChannel">
+                        <option value="">전체 채널</option>
+                        <option value="email">이메일</option>
+                        <option value="sms">SMS</option>
+                        <option value="push">푸시</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" @click="resetFilters">
+                        초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 캠페인 목록 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h6 class="mb-0">캠페인 목록 ({{ filteredCampaigns.length }})</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>캠페인명</th>
+                            <th class="text-center">채널</th>
+                            <th class="text-center">상태</th>
+                            <th class="text-center">대상자</th>
+                            <th class="text-center">발송률</th>
+                            <th class="text-center">오픈율</th>
+                            <th class="text-center">클릭률</th>
+                            <th>예약/발송 시간</th>
+                            <th class="text-center">작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-if="filteredCampaigns.length === 0">
+                            <td colspan="9" class="text-center text-muted py-5">
+                                캠페인이 없습니다
+                            </td>
+                        </tr>
+                        <tr v-for="campaign in filteredCampaigns" :key="campaign.id" style="cursor: pointer;" @click="viewDetail(campaign)">
+                            <td>
+                                <div class="fw-medium">{{ campaign.name }}</div>
+                                <div class="small text-muted">생성자: {{ campaign.createdBy }}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="fs-5">{{ getChannelIcon(campaign.channel) }}</span>
+                                <div class="small text-muted">{{ getChannelLabel(campaign.channel) }}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge" :class="getStatusBadgeClass(campaign.status)">
+                                    {{ getStatusLabel(campaign.status) }}
+                                </span>
+                            </td>
+                            <td class="text-center">{{ campaign.targetCount.toLocaleString() }}명</td>
+                            <td class="text-center">
+                                <span v-if="campaign.status === 'draft' || campaign.status === 'scheduled'">-</span>
+                                <span v-else>{{ ((campaign.sentCount / campaign.targetCount) * 100).toFixed(1) }}%</span>
+                            </td>
+                            <td class="text-center">
+                                <span v-if="campaign.openRate > 0">{{ campaign.openRate }}%</span>
+                                <span v-else class="text-muted">-</span>
+                            </td>
+                            <td class="text-center">
+                                <span v-if="campaign.clickRate > 0">{{ campaign.clickRate }}%</span>
+                                <span v-else class="text-muted">-</span>
+                            </td>
+                            <td>
+                                <div class="small">{{ campaign.scheduledAt || '-' }}</div>
+                                <div v-if="campaign.completedAt" class="small text-success">완료: {{ campaign.completedAt }}</div>
+                            </td>
+                            <td class="text-center" @click.stop>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary" @click="viewDetail(campaign)" title="상세">
+                                        👁️
+                                    </button>
+                                    <button class="btn btn-outline-secondary" @click="duplicateCampaign(campaign)" title="복제">
+                                        📋
+                                    </button>
+                                    <button class="btn btn-outline-danger" @click="deleteCampaign(campaign)" title="삭제">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

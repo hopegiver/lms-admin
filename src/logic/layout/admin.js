@@ -7,6 +7,7 @@ export default {
             expandedMenuId: '',
             sidebarMenus: [
                 { id: 'dashboard', name: '대시보드', icon: '📊', path: '/dashboard' },
+                { id: 'marketing', name: '마케팅', icon: '📢', path: '/marketing/campaigns' },
                 { id: 'users', name: '사용자', icon: '👥', path: '/users/learners' },
                 { id: 'learning', name: '학습 관리', icon: '📚', path: '/learning/courses' },
                 { id: 'commerce', name: '판매 관리', icon: '🛒', path: '/commerce/products' },
@@ -17,6 +18,14 @@ export default {
             ],
             sidebarSubmenus: {
                 dashboard: [],
+                marketing: [
+                    { id: 'campaigns', name: '캠페인 관리', icon: '📋', path: '/marketing/campaigns' },
+                    { id: 'email', name: '이메일 발송', icon: '📧', path: '/marketing/email' },
+                    { id: 'sms', name: 'SMS 발송', icon: '💬', path: '/marketing/sms' },
+                    { id: 'push', name: '푸시 알림', icon: '🔔', path: '/marketing/push' },
+                    { id: 'history', name: '발송 내역', icon: '📜', path: '/marketing/history' },
+                    { id: 'groups', name: '수신자 그룹', icon: '👥', path: '/marketing/groups' }
+                ],
                 users: [
                     { id: 'learners', name: '학습자', icon: '👤', path: '/users/learners' },
                     { id: 'instructors', name: '강사', icon: '👨‍🏫', path: '/users/instructors' },
