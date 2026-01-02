@@ -8,7 +8,17 @@ export default {
             sortBy: 'newest',
             filters: { status: '', category: '' },
             stats: { total: 156, active: 128, soldOut: 8, monthlyRevenue: '₩67,450,000' },
-            categories: ['개발', '디자인', '마케팅', '비즈니스', '자격증', 'IT', '경영', '자기계발'],
+            categories: [
+                { id: 1, name: '도서', parentId: null, sortOrder: 1 },
+                { id: 2, name: 'IT/프로그래밍', parentId: 1, sortOrder: 1 },
+                { id: 3, name: '경영/경제', parentId: 1, sortOrder: 2 },
+                { id: 4, name: '굿즈', parentId: null, sortOrder: 2 },
+                { id: 5, name: '의류', parentId: 4, sortOrder: 1 },
+                { id: 6, name: '문구/잡화', parentId: 4, sortOrder: 2 },
+                { id: 7, name: '전자기기', parentId: null, sortOrder: 3 },
+                { id: 8, name: '태블릿/노트북', parentId: 7, sortOrder: 1 },
+                { id: 9, name: '액세서리', parentId: 7, sortOrder: 2 }
+            ],
             courseProducts: [
                 { id: 1, type: 'course', name: 'React 완벽 가이드 2024', courseId: 1, category: '개발', originalPrice: '₩199,000', price: '₩149,000', sales: 1234, status: 'active' },
                 { id: 2, type: 'course', name: 'Python 데이터 분석 마스터', courseId: 2, category: '개발', originalPrice: '₩179,000', price: '₩129,000', sales: 892, status: 'active' },
@@ -50,6 +60,25 @@ export default {
             if (this.activeTab === 'books') return this.bookProducts;
             if (this.activeTab === 'general') return this.generalProducts;
             return this.courseProducts;
+        },
+        sortedCategories() {
+            // 계층 구조를 유지하면서 선택상자용 리스트 생성
+            const result = [];
+            const parents = this.categories
+                .filter(c => !c.parentId)
+                .sort((a, b) => a.sortOrder - b.sortOrder);
+
+            parents.forEach(parent => {
+                result.push(parent);
+                const children = this.categories
+                    .filter(c => c.parentId === parent.id)
+                    .sort((a, b) => a.sortOrder - b.sortOrder);
+                children.forEach(child => {
+                    result.push(child);
+                });
+            });
+
+            return result;
         }
     },
     methods: {
@@ -77,7 +106,13 @@ export default {
         viewDetail(product) {
             this.navigateTo('/commerce/products-detail', {id: product.id});
         },
-        openCategoryModal() { alert('카테고리 관리 모달은 추후 구현 예정입니다.'); },
+        openCategoryModal() { this.navigateTo('/commerce/product-categories'); },
+        getCategoryDisplayName(category) {
+            if (category.parentId) {
+                return `  → ${category.name}`;
+            }
+            return category.name;
+        },
         editProduct(product) {
             this.navigateTo('/commerce/products-detail', {id: product.id});
         },
