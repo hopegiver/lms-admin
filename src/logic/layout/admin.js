@@ -44,6 +44,7 @@ export default {
                     { id: 'inquiries', name: '문의 관리', icon: '💬', path: '/community/inquiries', badge: 12 }
                 ],
                 site: [
+                    { id: 'main-page', name: '메인페이지', icon: '🏠', path: '/site/main-page' },
                     { id: 'pages', name: '페이지', icon: '📄', path: '/site/pages' },
                     { id: 'menus', name: '메뉴', icon: '☰', path: '/site/menus' },
                     { id: 'design', name: '디자인', icon: '🎨', path: '/site/design' },
