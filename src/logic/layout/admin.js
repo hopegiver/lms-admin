@@ -7,11 +7,11 @@ export default {
             expandedMenuId: '',
             sidebarMenus: [
                 { id: 'dashboard', name: '대시보드', icon: '📊', path: '/dashboard' },
-                { id: 'marketing', name: '마케팅', icon: '📢', path: '/marketing/campaigns' },
                 { id: 'users', name: '사용자', icon: '👥', path: '/users/learners' },
                 { id: 'learning', name: '학습 관리', icon: '📚', path: '/learning/courses' },
                 { id: 'commerce', name: '판매 관리', icon: '🛒', path: '/commerce/products' },
                 { id: 'community', name: '커뮤니티', icon: '💬', path: '/community/boards' },
+                { id: 'marketing', name: '마케팅', icon: '📢', path: '/marketing/campaigns' },
                 { id: 'site', name: '사이트', icon: '🌐', path: '/site/pages' },
                 { id: 'analytics', name: '통계', icon: '📈', path: '/analytics/overview' },
                 { id: 'settings', name: '설정', icon: '⚙️', path: '/settings/general' }
