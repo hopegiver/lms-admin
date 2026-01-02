@@ -15,11 +15,16 @@ export default {
             pageSize: 10,
             totalCount: 89,
             categories: [
-                { id: 1, name: '개발' },
-                { id: 2, name: '디자인' },
-                { id: 3, name: '마케팅' },
-                { id: 4, name: '비즈니스' },
-                { id: 5, name: '데이터' }
+                { id: 1, name: '프로그래밍', parentId: null, sortOrder: 1 },
+                { id: 2, name: '웹 개발', parentId: 1, sortOrder: 1 },
+                { id: 3, name: '모바일 개발', parentId: 1, sortOrder: 2 },
+                { id: 4, name: '백엔드', parentId: 1, sortOrder: 3 },
+                { id: 5, name: '디자인', parentId: null, sortOrder: 2 },
+                { id: 6, name: 'UI/UX', parentId: 5, sortOrder: 1 },
+                { id: 7, name: '그래픽 디자인', parentId: 5, sortOrder: 2 },
+                { id: 8, name: '마케팅', parentId: null, sortOrder: 3 },
+                { id: 9, name: '디지털 마케팅', parentId: 8, sortOrder: 1 },
+                { id: 10, name: '콘텐츠 마케팅', parentId: 8, sortOrder: 2 }
             ],
             instructors: [
                 { id: 1, name: '김개발' },
@@ -40,6 +45,25 @@ export default {
     computed: {
         totalPages() {
             return Math.ceil(this.totalCount / this.pageSize);
+        },
+        sortedCategories() {
+            // 계층 구조를 유지하면서 선택상자용 리스트 생성
+            const result = [];
+            const parents = this.categories
+                .filter(c => !c.parentId)
+                .sort((a, b) => a.sortOrder - b.sortOrder);
+
+            parents.forEach(parent => {
+                result.push(parent);
+                const children = this.categories
+                    .filter(c => c.parentId === parent.id)
+                    .sort((a, b) => a.sortOrder - b.sortOrder);
+                children.forEach(child => {
+                    result.push(child);
+                });
+            });
+
+            return result;
         }
     },
     methods: {
@@ -56,7 +80,14 @@ export default {
             this.navigateTo('/learning/courses-detail', { id: course.id });
         },
         openCreateWizard() { this.navigateTo('/learning/courses-create'); },
-        openCategoryModal() { alert('카테고리 관리 모달은 추후 구현 예정입니다.'); },
+        openCategoryModal() { this.navigateTo('/learning/categories'); },
+        getCategoryDisplayName(category) {
+            if (category.parentId) {
+                const parent = this.categories.find(c => c.id === category.parentId);
+                return `  → ${category.name}`;
+            }
+            return category.name;
+        },
         editCourse(course) { this.navigateTo('/learning/courses-detail', { id: course.id }); },
         manageCurriculum(course) { this.navigateTo('/learning/curriculum', { courseId: course.id }); },
         copyCourse(course) { alert(`${course.title} 복사 기능은 추후 구현 예정입니다.`); },

@@ -49,7 +49,9 @@
                 <div class="col-md-2">
                     <select class="form-select" v-model="filters.category">
                         <option value="">전체 카테고리</option>
-                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                        <option v-for="cat in sortedCategories" :key="cat.id" :value="cat.id">
+                            {{ getCategoryDisplayName(cat) }}
+                        </option>
                     </select>
                 </div>
                 <div class="col-md-2">
