@@ -1,0 +1,262 @@
+<div class="main-page-editor">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">메인페이지 관리</h4>
+            <p class="text-muted mb-0">메인페이지의 섹션을 추가하고 순서를 변경합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @click="previewMainPage">
+                <span class="me-1">👁️</span> 미리보기
+            </button>
+            <button class="btn btn-primary" @click="saveMainPage">
+                <span class="me-1">💾</span> 저장
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 활성 섹션 목록 -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">페이지 구성</h6>
+                    <button class="btn btn-sm btn-primary" @click="showAddSectionModal = true">
+                        <span class="me-1">+</span> 섹션 추가
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div v-if="activeSections.length === 0" class="text-center text-muted py-5">
+                        <div class="fs-1 mb-3">📄</div>
+                        <div>섹션이 없습니다. 섹션을 추가해주세요.</div>
+                    </div>
+                    <div v-else class="sections-list">
+                        <div v-for="(section, index) in activeSections" :key="section.id"
+                             class="section-item border-bottom p-3 d-flex align-items-center gap-3">
+                            <!-- 드래그 핸들 -->
+                            <div class="drag-handle text-muted" style="cursor: move;">
+                                <span>☰</span>
+                            </div>
+
+                            <!-- 섹션 정보 -->
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="fs-5">{{ section.icon }}</span>
+                                    <strong>{{ section.name }}</strong>
+                                    <span class="badge bg-light text-dark">{{ section.type }}</span>
+                                </div>
+                                <div class="text-muted small">{{ section.description }}</div>
+                                <div v-if="section.settings" class="mt-2">
+                                    <span v-if="section.settings.itemCount" class="badge bg-secondary me-1">
+                                        {{ section.settings.itemCount }}개 표시
+                                    </span>
+                                    <span v-if="section.settings.layout" class="badge bg-secondary me-1">
+                                        {{ section.settings.layout }} 레이아웃
+                                    </span>
+                                    <span v-if="section.settings.showTitle !== undefined" class="badge bg-secondary">
+                                        {{ section.settings.showTitle ? '제목 표시' : '제목 숨김' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- 가시성 토글 -->
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox"
+                                       v-model="section.visible"
+                                       :id="'visible-' + section.id">
+                                <label class="form-check-label small text-muted" :for="'visible-' + section.id">
+                                    {{ section.visible ? '표시' : '숨김' }}
+                                </label>
+                            </div>
+
+                            <!-- 액션 버튼 -->
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        @click="moveSection(index, 'up')"
+                                        :disabled="index === 0">
+                                    ↑
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        @click="moveSection(index, 'down')"
+                                        :disabled="index === activeSections.length - 1">
+                                    ↓
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" @click="editSection(section)">
+                                    ⚙️
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @click="removeSection(index)">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 레이아웃 미리보기 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">레이아웃 미리보기</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="layout-preview bg-light">
+                        <!-- 헤더 -->
+                        <div class="preview-header bg-primary text-white p-3 text-center">
+                            헤더 영역
+                        </div>
+
+                        <!-- 활성 섹션들 -->
+                        <div v-for="section in visibleSections" :key="section.id"
+                             class="preview-section border-bottom p-3 bg-white">
+                            <div class="text-center">
+                                <span class="me-2">{{ section.icon }}</span>
+                                <strong>{{ section.name }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- 푸터 -->
+                        <div class="preview-footer bg-dark text-white p-3 text-center">
+                            푸터 영역
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사용 가능한 섹션 -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">사용 가능한 섹션</h6>
+                </div>
+                <div class="card-body">
+                    <div class="available-sections">
+                        <div v-for="section in availableSections" :key="section.type"
+                             class="section-card border rounded p-3 mb-2"
+                             style="cursor: pointer;"
+                             @click="addSection(section)">
+                            <div class="d-flex align-items-start gap-2">
+                                <span class="fs-4">{{ section.icon }}</span>
+                                <div class="flex-grow-1">
+                                    <strong class="d-block">{{ section.name }}</strong>
+                                    <small class="text-muted">{{ section.description }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 섹션 설정 모달 -->
+    <div v-if="showSettingsModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ editingSection.name }} 설정</h5>
+                    <button type="button" class="btn-close" @click="closeSettingsModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- 섹션 제목 -->
+                        <div class="col-12">
+                            <label class="form-label">섹션 제목</label>
+                            <input type="text" class="form-control" v-model="sectionSettings.title"
+                                   placeholder="예: 인기 강좌">
+                        </div>
+
+                        <!-- 부제목 -->
+                        <div class="col-12">
+                            <label class="form-label">부제목</label>
+                            <input type="text" class="form-control" v-model="sectionSettings.subtitle"
+                                   placeholder="예: 가장 많이 수강한 강좌를 만나보세요">
+                        </div>
+
+                        <!-- 레이아웃 선택 -->
+                        <div class="col-md-6" v-if="editingSection.type !== 'hero' && editingSection.type !== 'cta'">
+                            <label class="form-label">레이아웃</label>
+                            <select class="form-select" v-model="sectionSettings.layout">
+                                <option value="grid">그리드</option>
+                                <option value="carousel">캐러셀</option>
+                                <option value="list">리스트</option>
+                            </select>
+                        </div>
+
+                        <!-- 표시 개수 -->
+                        <div class="col-md-6" v-if="editingSection.type !== 'hero' && editingSection.type !== 'cta'">
+                            <label class="form-label">표시 개수</label>
+                            <select class="form-select" v-model="sectionSettings.itemCount">
+                                <option :value="4">4개</option>
+                                <option :value="6">6개</option>
+                                <option :value="8">8개</option>
+                                <option :value="12">12개</option>
+                            </select>
+                        </div>
+
+                        <!-- 배경색 -->
+                        <div class="col-md-6">
+                            <label class="form-label">배경색</label>
+                            <div class="d-flex gap-2">
+                                <input type="color" class="form-control form-control-color"
+                                       v-model="sectionSettings.backgroundColor">
+                                <input type="text" class="form-control"
+                                       v-model="sectionSettings.backgroundColor"
+                                       placeholder="#ffffff">
+                            </div>
+                        </div>
+
+                        <!-- 여백 -->
+                        <div class="col-md-6">
+                            <label class="form-label">여백</label>
+                            <select class="form-select" v-model="sectionSettings.padding">
+                                <option value="sm">작게</option>
+                                <option value="md">보통</option>
+                                <option value="lg">크게</option>
+                            </select>
+                        </div>
+
+                        <!-- 옵션 -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       v-model="sectionSettings.showTitle" id="showTitle">
+                                <label class="form-check-label" for="showTitle">
+                                    제목 표시
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Hero 전용 설정 -->
+                        <template v-if="editingSection.type === 'hero'">
+                            <div class="col-12">
+                                <label class="form-label">배경 이미지 URL</label>
+                                <input type="text" class="form-control" v-model="sectionSettings.backgroundImage"
+                                       placeholder="https://example.com/image.jpg">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">메인 텍스트</label>
+                                <textarea class="form-control" rows="2" v-model="sectionSettings.mainText"
+                                          placeholder="환영합니다!"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">버튼 텍스트</label>
+                                <input type="text" class="form-control" v-model="sectionSettings.buttonText"
+                                       placeholder="시작하기">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">버튼 링크</label>
+                                <input type="text" class="form-control" v-model="sectionSettings.buttonLink"
+                                       placeholder="/courses">
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="closeSettingsModal">취소</button>
+                    <button type="button" class="btn btn-primary" @click="saveSettings">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
