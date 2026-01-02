@@ -111,7 +111,7 @@ export default {
             let content = this.selectedTemplate.content;
             Object.keys(this.kakaoForm.variables).forEach(key => {
                 const value = this.kakaoForm.variables[key];
-                content = content.replace(new RegExp(`#{${key}}`, 'g'), value || `[${key}]`);
+                content = content.replace(new RegExp(`#\\{${key}\\}`, 'g'), value || `[${key}]`);
             });
             return content;
         }
