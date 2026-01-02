@@ -1,0 +1,241 @@
+<div class="kakao-alimtalk-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">알림톡 발송</h4>
+            <p class="text-muted mb-0">카카오 알림톡 캠페인을 생성하고 발송합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="saveDraft">
+                <span class="me-1">💾</span> 임시저장
+            </button>
+            <button class="btn btn-outline-secondary" @click="navigateTo('/marketing/campaigns')">
+                취소
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- 기본 정보 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">기본 정보</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">캠페인명 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="kakaoForm.campaignName"
+                               placeholder="예: 신규 강좌 출시 안내">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 템플릿 선택 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">템플릿 선택 <span class="text-danger">*</span></h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div v-for="template in approvedTemplates" :key="template.code" class="col-md-6">
+                            <div class="border rounded p-3 position-relative"
+                                 :class="{ 'border-primary border-2 bg-light': selectedTemplate && selectedTemplate.code === template.code }"
+                                 style="cursor: pointer;"
+                                 @click="selectTemplate(template)">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">{{ template.name }}</h6>
+                                        <div class="small text-muted">코드: {{ template.code }}</div>
+                                    </div>
+                                    <span class="badge" :class="getStatusBadge(template.status).class">
+                                        {{ getStatusBadge(template.status).text }}
+                                    </span>
+                                </div>
+                                <div class="small text-muted mb-2" style="white-space: pre-wrap; font-size: 12px;">
+                                    {{ template.content.substring(0, 100) }}{{ template.content.length > 100 ? '...' : '' }}
+                                </div>
+                                <div class="small">
+                                    <span class="badge bg-secondary me-1" v-for="variable in template.variables" :key="variable">
+                                        #{{{ variable }}}
+                                    </span>
+                                </div>
+                                <div v-if="template.buttons && template.buttons.length > 0" class="mt-2">
+                                    <span class="badge bg-info me-1" v-for="(btn, idx) in template.buttons" :key="idx">
+                                        🔘 {{ btn.name }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="approvedTemplates.length === 0" class="text-center text-muted py-4">
+                        승인된 템플릿이 없습니다
+                    </div>
+                </div>
+            </div>
+
+            <!-- 변수 입력 -->
+            <div v-if="selectedTemplate" class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">변수 값 입력</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info small mb-3">
+                        템플릿에 사용된 변수 값을 입력하세요. 수신자별로 자동으로 치환됩니다.
+                    </div>
+                    <div class="row g-3">
+                        <div v-for="variable in selectedTemplate.variables" :key="variable" class="col-md-6">
+                            <label class="form-label">
+                                {{ variable }} <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" v-model="kakaoForm.variables[variable]"
+                                   :placeholder="variable + ' 값을 입력하세요'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 수신 대상 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">수신 대상</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" v-model="kakaoForm.targetType"
+                                   value="all" id="targetAll">
+                            <label class="form-check-label" for="targetAll">
+                                전체 발송 (5,230명)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="kakaoForm.targetType"
+                                   value="groups" id="targetGroups">
+                            <label class="form-check-label" for="targetGroups">
+                                그룹 선택
+                            </label>
+                        </div>
+                    </div>
+
+                    <div v-if="kakaoForm.targetType === 'groups'" class="mt-3">
+                        <label class="form-label">수신 그룹 선택</label>
+                        <div v-for="group in availableGroups" :key="group.id" class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   :value="group.id" v-model="kakaoForm.targetGroups"
+                                   :id="'group-' + group.id">
+                            <label class="form-check-label" :for="'group-' + group.id">
+                                {{ group.name }} <span class="text-muted">({{ group.count.toLocaleString() }}명)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 대체 발송 설정 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">대체 발송 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" v-model="kakaoForm.useFallbackSms" id="useFallback">
+                        <label class="form-check-label" for="useFallback">
+                            알림톡 발송 실패 시 SMS로 대체 발송
+                        </label>
+                    </div>
+                    <div v-if="kakaoForm.useFallbackSms" class="alert alert-warning small mb-0">
+                        알림톡 발송 실패 시 자동으로 SMS가 발송됩니다. 추가 비용이 발생할 수 있습니다.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 발송 시간 설정 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">발송 시간 설정</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" v-model="kakaoForm.scheduleType"
+                               value="now" id="scheduleNow">
+                        <label class="form-check-label" for="scheduleNow">
+                            즉시 발송
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" v-model="kakaoForm.scheduleType"
+                               value="schedule" id="scheduleTime">
+                        <label class="form-check-label" for="scheduleTime">
+                            예약 발송
+                        </label>
+                    </div>
+                    <div v-if="kakaoForm.scheduleType === 'schedule'" class="row g-2 ms-4">
+                        <div class="col-md-6">
+                            <input type="date" class="form-control" v-model="kakaoForm.scheduleDate">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="time" class="form-control" v-model="kakaoForm.scheduleTime">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- 미리보기 -->
+            <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">미리보기</h6>
+                </div>
+                <div class="card-body">
+                    <div v-if="selectedTemplate" class="kakao-preview border rounded p-3 mb-3" style="background: #FAE100;">
+                        <div class="bg-white rounded p-3 shadow-sm">
+                            <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
+                                <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <span style="font-size: 18px;">💛</span>
+                                </div>
+                                <div>
+                                    <div class="fw-bold small">LMS</div>
+                                    <div class="text-muted" style="font-size: 11px;">알림톡</div>
+                                </div>
+                            </div>
+                            <div class="small mb-3" style="white-space: pre-wrap; line-height: 1.5;">
+                                {{ previewContent }}
+                            </div>
+                            <div v-if="selectedTemplate.buttons && selectedTemplate.buttons.length > 0" class="d-grid gap-2">
+                                <button v-for="(btn, idx) in selectedTemplate.buttons" :key="idx"
+                                        class="btn btn-sm btn-outline-secondary" disabled>
+                                    {{ btn.name }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="text-center text-muted py-5">
+                        템플릿을 선택하세요
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">예상 발송 수</div>
+                        <div class="h4 text-primary">{{ targetCount.toLocaleString() }}명</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">예상 비용</div>
+                        <div class="h5">₩{{ estimatedCost.total.toLocaleString() }}</div>
+                        <div class="small text-muted">
+                            알림톡: ₩{{ estimatedCost.alimtalk.toLocaleString() }}
+                            <span v-if="kakaoForm.useFallbackSms"><br>(대체 SMS 발생 시 추가 비용)</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100" @click="sendKakao" :disabled="!selectedTemplate">
+                        <span class="me-1">💛</span> 알림톡 발송
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

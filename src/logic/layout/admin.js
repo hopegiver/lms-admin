@@ -22,6 +22,7 @@ export default {
                     { id: 'campaigns', name: '캠페인 관리', icon: '📋', path: '/marketing/campaigns' },
                     { id: 'email', name: '이메일 발송', icon: '📧', path: '/marketing/email' },
                     { id: 'sms', name: 'SMS 발송', icon: '💬', path: '/marketing/sms' },
+                    { id: 'kakao', name: '알림톡 발송', icon: '💛', path: '/marketing/kakao' },
                     { id: 'push', name: '푸시 알림', icon: '🔔', path: '/marketing/push' },
                     { id: 'history', name: '발송 내역', icon: '📜', path: '/marketing/history' },
                     { id: 'groups', name: '수신자 그룹', icon: '👥', path: '/marketing/groups' }
