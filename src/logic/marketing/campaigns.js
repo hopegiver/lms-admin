@@ -112,6 +112,7 @@ export default {
             const icons = {
                 'email': '📧',
                 'sms': '💬',
+                'kakao': '💛',
                 'push': '🔔'
             };
             return icons[channel] || '📨';
@@ -120,6 +121,7 @@ export default {
             const labels = {
                 'email': '이메일',
                 'sms': 'SMS',
+                'kakao': '알림톡',
                 'push': '푸시'
             };
             return labels[channel] || channel;

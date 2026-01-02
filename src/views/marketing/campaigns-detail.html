@@ -1,0 +1,292 @@
+<div class="campaign-detail-page">
+    <!-- 로딩 상태 -->
+    <div v-if="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">로딩 중...</span>
+        </div>
+    </div>
+
+    <!-- 캠페인이 없는 경우 -->
+    <div v-else-if="!campaign" class="text-center py-5">
+        <div class="text-muted mb-3">캠페인을 찾을 수 없습니다.</div>
+        <button class="btn btn-primary" @click="goBack">목록으로 돌아가기</button>
+    </div>
+
+    <!-- 캠페인 상세 -->
+    <div v-else>
+        <!-- 페이지 헤더 -->
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <button class="btn btn-sm btn-outline-secondary" @click="goBack">
+                        ← 목록
+                    </button>
+                    <h4 class="mb-0">{{ campaign.name }}</h4>
+                    <span class="badge" :class="statusInfo.badge">
+                        {{ statusInfo.label }}
+                    </span>
+                </div>
+                <p class="text-muted mb-0">{{ campaign.description }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button v-if="canPerformAction('pause')" class="btn btn-warning" @click="pauseCampaign">
+                    ⏸️ 일시중지
+                </button>
+                <button v-if="canPerformAction('resume')" class="btn btn-success" @click="resumeCampaign">
+                    ▶️ 재개
+                </button>
+                <button v-if="canPerformAction('edit')" class="btn btn-primary" @click="editCampaign">
+                    ✏️ 수정
+                </button>
+                <button v-if="canPerformAction('duplicate')" class="btn btn-outline-primary" @click="duplicateCampaign">
+                    📋 복사
+                </button>
+                <button v-if="canPerformAction('retry')" class="btn btn-outline-warning" @click="retryCampaign">
+                    🔄 재시도
+                </button>
+                <button v-if="canPerformAction('delete')" class="btn btn-outline-danger" @click="confirmDelete">
+                    🗑️ 삭제
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- 발송 현황 -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0">발송 현황</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- 진행률 -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">발송 진행률</span>
+                                <span class="fw-medium">{{ campaign.sentCount.toLocaleString() }} / {{ campaign.targetCount.toLocaleString() }}명</span>
+                            </div>
+                            <div class="progress" style="height: 24px;">
+                                <div class="progress-bar" :class="`bg-${channelInfo.color}`"
+                                     :style="`width: ${progressPercentage}%`">
+                                    {{ progressPercentage }}%
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 통계 카드 -->
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="text-muted small mb-1">발송 완료</div>
+                                    <div class="h4 mb-0 text-primary">{{ campaign.sentCount.toLocaleString() }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="text-muted small mb-1">성공</div>
+                                    <div class="h4 mb-0 text-success">{{ campaign.successCount.toLocaleString() }}</div>
+                                    <div class="small text-muted">{{ successRate }}%</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="text-muted small mb-1">실패</div>
+                                    <div class="h4 mb-0 text-danger">{{ campaign.failCount.toLocaleString() }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="text-muted small mb-1">예상 비용</div>
+                                    <div class="h5 mb-0">₩{{ campaign.estimatedCost.toLocaleString() }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 성과 지표 (이메일/푸시만) -->
+                        <div v-if="campaign.channel === 'email' || campaign.channel === 'push'" class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <div class="text-center p-3 border rounded">
+                                    <div class="text-muted small mb-1">오픈율</div>
+                                    <div class="h4 mb-0">{{ campaign.openRate }}%</div>
+                                    <div class="small text-muted">{{ campaign.openCount.toLocaleString() }}명 열람</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-center p-3 border rounded">
+                                    <div class="text-muted small mb-1">클릭율</div>
+                                    <div class="h4 mb-0">{{ campaign.clickRate }}%</div>
+                                    <div class="small text-muted">{{ campaign.clickCount.toLocaleString() }}명 클릭</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 발송 내용 -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0">발송 내용</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- 이메일 -->
+                        <div v-if="campaign.channel === 'email'">
+                            <div class="mb-3">
+                                <div class="text-muted small mb-1">제목</div>
+                                <div class="fw-medium">{{ campaign.content.subject }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="text-muted small mb-1">발신자</div>
+                                <div>{{ campaign.content.senderName }} &lt;{{ campaign.content.senderEmail }}&gt;</div>
+                            </div>
+                            <div>
+                                <div class="text-muted small mb-2">본문</div>
+                                <div class="border rounded p-3 bg-light" style="white-space: pre-wrap; font-family: monospace;">{{ campaign.content.body }}</div>
+                            </div>
+                        </div>
+
+                        <!-- SMS -->
+                        <div v-else-if="campaign.channel === 'sms'">
+                            <div class="border rounded p-3 bg-light" style="white-space: pre-wrap;">{{ campaign.content.message }}</div>
+                        </div>
+
+                        <!-- 알림톡 -->
+                        <div v-else-if="campaign.channel === 'kakao'">
+                            <div class="mb-3">
+                                <div class="text-muted small mb-1">템플릿</div>
+                                <div class="fw-medium">{{ campaign.content.templateName }} ({{ campaign.content.templateCode }})</div>
+                            </div>
+                            <div>
+                                <div class="text-muted small mb-2">변수 값</div>
+                                <div class="border rounded p-3 bg-light">
+                                    <div v-for="(value, key) in campaign.content.variables" :key="key" class="mb-2">
+                                        <span class="badge bg-secondary">#{{'{'}}{{ key }}{{'}'}}}</span>
+                                        <span class="ms-2">{{ value }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 푸시 -->
+                        <div v-else-if="campaign.channel === 'push'">
+                            <div class="mb-3">
+                                <div class="text-muted small mb-1">제목</div>
+                                <div class="fw-medium">{{ campaign.content.title }}</div>
+                            </div>
+                            <div>
+                                <div class="text-muted small mb-1">내용</div>
+                                <div>{{ campaign.content.message }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 활동 로그 -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0">활동 로그</h6>
+                    </div>
+                    <div class="card-body">
+                        <div v-if="activityLog.length === 0" class="text-center text-muted py-3">
+                            활동 내역이 없습니다.
+                        </div>
+                        <div v-else class="timeline">
+                            <div v-for="(log, index) in activityLog" :key="index" class="timeline-item mb-3">
+                                <div class="d-flex gap-3">
+                                    <div class="text-center" style="width: 40px;">
+                                        <span class="fs-4">{{ getActivityIcon(log.type) }}</span>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-medium">{{ log.message }}</div>
+                                        <div class="small text-muted">{{ log.time }}</div>
+                                    </div>
+                                </div>
+                                <hr v-if="index < activityLog.length - 1" class="my-3">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- 캠페인 정보 -->
+                <div class="card border-0 shadow-sm mb-4 sticky-top" style="top: 80px;">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0">캠페인 정보</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">발송 채널</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fs-4">{{ channelInfo.icon }}</span>
+                                <span class="fw-medium">{{ channelInfo.name }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">발송 대상</div>
+                            <div v-if="campaign.targetType === 'all'" class="fw-medium">
+                                전체 회원
+                            </div>
+                            <div v-else-if="campaign.targetType === 'groups'" class="fw-medium">
+                                <div v-for="group in campaign.targetGroups" :key="group" class="badge bg-secondary me-1 mb-1">
+                                    {{ group }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">발송 방식</div>
+                            <div class="fw-medium">
+                                <span v-if="campaign.scheduleType === 'now'">즉시 발송</span>
+                                <span v-else>예약 발송</span>
+                            </div>
+                        </div>
+
+                        <div v-if="campaign.scheduledAt" class="mb-3">
+                            <div class="text-muted small mb-1">예약 시간</div>
+                            <div class="fw-medium">{{ campaign.scheduledAt }}</div>
+                        </div>
+
+                        <div v-if="campaign.startedAt" class="mb-3">
+                            <div class="text-muted small mb-1">발송 시작</div>
+                            <div class="fw-medium">{{ campaign.startedAt }}</div>
+                        </div>
+
+                        <div v-if="campaign.completedAt" class="mb-3">
+                            <div class="text-muted small mb-1">발송 완료</div>
+                            <div class="fw-medium">{{ campaign.completedAt }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">생성일</div>
+                            <div>{{ campaign.createdAt }}</div>
+                        </div>
+
+                        <div class="mb-0">
+                            <div class="text-muted small mb-1">작성자</div>
+                            <div>{{ campaign.createdBy }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 삭제 확인 모달 -->
+    <div v-if="showDeleteModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">캠페인 삭제</h5>
+                    <button type="button" class="btn-close" @click="showDeleteModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">정말로 이 캠페인을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showDeleteModal = false">취소</button>
+                    <button type="button" class="btn btn-danger" @click="deleteCampaign">삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,173 @@
+<div class="campaign-create-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">캠페인 생성</h4>
+            <p class="text-muted mb-0">새로운 마케팅 캠페인을 생성합니다</p>
+        </div>
+        <button class="btn btn-outline-secondary" @click="cancel">
+            취소
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- 기본 정보 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">기본 정보</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">캠페인명 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="campaign.name"
+                                   placeholder="예: 2024 신학기 프로모션">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">설명</label>
+                            <textarea class="form-control" rows="3" v-model="campaign.description"
+                                      placeholder="캠페인에 대한 설명을 입력하세요"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 발송 채널 선택 -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">발송 채널 선택 <span class="text-danger">*</span></h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="border rounded p-4 text-center position-relative"
+                                 :class="{ 'border-primary border-2 bg-light': campaign.channel === 'email' }"
+                                 style="cursor: pointer;"
+                                 @click="campaign.channel = 'email'">
+                                <input class="form-check-input position-absolute top-0 end-0 m-2"
+                                       type="radio" v-model="campaign.channel" value="email">
+                                <div class="fs-1 mb-2">📧</div>
+                                <h6 class="mb-1">이메일</h6>
+                                <p class="text-muted small mb-0">대량 발송, 상세한 내용 전달</p>
+                                <div class="small text-muted mt-2">비용: ₩10/건</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-4 text-center position-relative"
+                                 :class="{ 'border-primary border-2 bg-light': campaign.channel === 'sms' }"
+                                 style="cursor: pointer;"
+                                 @click="campaign.channel = 'sms'">
+                                <input class="form-check-input position-absolute top-0 end-0 m-2"
+                                       type="radio" v-model="campaign.channel" value="sms">
+                                <div class="fs-1 mb-2">💬</div>
+                                <h6 class="mb-1">SMS</h6>
+                                <p class="text-muted small mb-0">즉시 도달, 긴급 안내</p>
+                                <div class="small text-muted mt-2">비용: ₩20/건 (SMS), ₩30/건 (LMS)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-4 text-center position-relative"
+                                 :class="{ 'border-primary border-2 bg-light': campaign.channel === 'kakao' }"
+                                 style="cursor: pointer;"
+                                 @click="campaign.channel = 'kakao'">
+                                <input class="form-check-input position-absolute top-0 end-0 m-2"
+                                       type="radio" v-model="campaign.channel" value="kakao">
+                                <div class="fs-1 mb-2">💛</div>
+                                <h6 class="mb-1">알림톡</h6>
+                                <p class="text-muted small mb-0">높은 열람률, 템플릿 기반</p>
+                                <div class="small text-muted mt-2">비용: ₩12/건</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-4 text-center position-relative"
+                                 :class="{ 'border-primary border-2 bg-light': campaign.channel === 'push' }"
+                                 style="cursor: pointer;"
+                                 @click="campaign.channel = 'push'">
+                                <input class="form-check-input position-absolute top-0 end-0 m-2"
+                                       type="radio" v-model="campaign.channel" value="push">
+                                <div class="fs-1 mb-2">🔔</div>
+                                <h6 class="mb-1">푸시 알림</h6>
+                                <p class="text-muted small mb-0">실시간 알림, 앱 사용자</p>
+                                <div class="small text-muted mt-2">비용: ₩5/건</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 발송 시간 -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">발송 시간</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" v-model="campaign.scheduleType"
+                               value="now" id="scheduleNow">
+                        <label class="form-check-label" for="scheduleNow">
+                            즉시 발송
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" v-model="campaign.scheduleType"
+                               value="schedule" id="scheduleTime">
+                        <label class="form-check-label" for="scheduleTime">
+                            예약 발송
+                        </label>
+                    </div>
+                    <div v-if="campaign.scheduleType === 'schedule'" class="row g-2 ms-4">
+                        <div class="col-md-6">
+                            <label class="form-label small">날짜</label>
+                            <input type="date" class="form-control" v-model="campaign.scheduleDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">시간</label>
+                            <input type="time" class="form-control" v-model="campaign.scheduleTime">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- 선택 요약 -->
+            <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0">선택 요약</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">캠페인명</div>
+                        <div class="fw-medium">{{ campaign.name || '(미입력)' }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">발송 채널</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fs-4">{{ getChannelIcon(campaign.channel) }}</span>
+                            <span class="fw-medium">{{ getChannelName(campaign.channel) }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="text-muted small mb-1">발송 시간</div>
+                        <div class="fw-medium">
+                            <span v-if="campaign.scheduleType === 'now'">즉시 발송</span>
+                            <span v-else-if="campaign.scheduleDate && campaign.scheduleTime">
+                                {{ campaign.scheduleDate }} {{ campaign.scheduleTime }}
+                            </span>
+                            <span v-else class="text-muted">(미설정)</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info small mb-3">
+                        다음 단계에서 발송 내용과 수신 대상을 설정합니다.
+                    </div>
+
+                    <button class="btn btn-primary w-100" @click="saveCampaign">
+                        다음 단계로
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
