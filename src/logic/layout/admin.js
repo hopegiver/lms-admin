@@ -25,6 +25,7 @@ export default {
                     { id: 'kakao', name: '알림톡 발송', icon: '💛', path: '/marketing/kakao' },
                     { id: 'push', name: '푸시 알림', icon: '🔔', path: '/marketing/push' },
                     { id: 'history', name: '발송 내역', icon: '📜', path: '/marketing/history' },
+                    { id: 'keywords', name: '키워드 관리', icon: '🔍', path: '/marketing/keywords' },
                     { id: 'groups', name: '수신자 그룹', icon: '👥', path: '/marketing/groups' }
                 ],
                 users: [

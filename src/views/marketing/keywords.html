@@ -1,0 +1,335 @@
+<div class="keyword-management-page">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">키워드 관리</h4>
+            <p class="text-muted mb-0">검색엔진 키워드 순위를 모니터링합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" @click="checkAllRanks" :disabled="isChecking">
+                <span class="me-1">🔄</span>
+                {{ isChecking ? '조회중...' : '전체 순위 조회' }}
+            </button>
+            <button class="btn btn-primary" @click="openAddModal">
+                <span class="me-1">➕</span> 키워드 추가
+            </button>
+        </div>
+    </div>
+
+    <!-- 요약 카드 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small mb-1">전체 키워드</div>
+                            <div class="h3 mb-0">{{ summary.total }}</div>
+                        </div>
+                        <div class="fs-1">📊</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small mb-1">TOP 10</div>
+                            <div class="h3 mb-0 text-success">{{ summary.top10 }}</div>
+                        </div>
+                        <div class="fs-1">🏆</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small mb-1">순위 상승</div>
+                            <div class="h3 mb-0 text-primary">{{ summary.improved }}</div>
+                        </div>
+                        <div class="fs-1">📈</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small mb-1">순위 하락</div>
+                            <div class="h3 mb-0 text-danger">{{ summary.declined }}</div>
+                        </div>
+                        <div class="fs-1">📉</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 필터 및 검색 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" v-model="searchQuery" placeholder="키워드 검색...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" v-model="filterEngine">
+                        <option value="">전체 검색엔진</option>
+                        <option value="naver">네이버</option>
+                        <option value="google">구글</option>
+                        <option value="daum">다음</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" v-model="filterStatus">
+                        <option value="">전체 상태</option>
+                        <option value="active">활성</option>
+                        <option value="inactive">비활성</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" @click="resetFilters">
+                        초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 키워드 목록 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h6 class="mb-0">등록 키워드 ({{ filteredKeywords.length }})</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>키워드</th>
+                            <th class="text-center">검색엔진</th>
+                            <th class="text-center">현재 순위</th>
+                            <th class="text-center">변동</th>
+                            <th class="text-center">최고 순위</th>
+                            <th class="text-center">상태</th>
+                            <th>최근 조회</th>
+                            <th class="text-center">작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-if="filteredKeywords.length === 0">
+                            <td colspan="8" class="text-center text-muted py-5">
+                                등록된 키워드가 없습니다
+                            </td>
+                        </tr>
+                        <tr v-for="keyword in filteredKeywords" :key="keyword.id">
+                            <td>
+                                <div class="fw-medium">{{ keyword.keyword }}</div>
+                                <div class="small text-muted text-truncate" style="max-width: 200px;">
+                                    {{ keyword.targetUrl }}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="fs-5">{{ getSearchEngineIcon(keyword.searchEngine) }}</span>
+                                <div class="small text-muted">{{ getSearchEngineLabel(keyword.searchEngine) }}</div>
+                            </td>
+                            <td class="text-center">
+                                <span v-if="keyword.currentRank" class="badge" :class="keyword.currentRank <= 10 ? 'bg-success' : keyword.currentRank <= 20 ? 'bg-warning' : 'bg-secondary'">
+                                    {{ keyword.currentRank }}위
+                                </span>
+                                <span v-else class="text-muted">—</span>
+                            </td>
+                            <td class="text-center">
+                                <span :class="getRankChangeClass(keyword)" class="fw-medium">
+                                    {{ getRankChangeIcon(keyword) }}
+                                    <span v-if="getRankChange(keyword) !== null">
+                                        {{ Math.abs(getRankChange(keyword)) }}
+                                    </span>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span v-if="keyword.bestRank" class="text-primary fw-medium">
+                                    {{ keyword.bestRank }}위
+                                </span>
+                                <span v-else class="text-muted">—</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge" :class="keyword.status === 'active' ? 'bg-success' : 'bg-secondary'">
+                                    {{ keyword.status === 'active' ? '활성' : '비활성' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span v-if="keyword.lastChecked" class="small">{{ keyword.lastChecked }}</span>
+                                <span v-else class="text-muted small">미조회</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" @click="checkSingleRank(keyword)" title="순위 조회">
+                                        🔄
+                                    </button>
+                                    <button class="btn btn-outline-secondary" @click="viewDetail(keyword)" title="상세보기">
+                                        📊
+                                    </button>
+                                    <button class="btn btn-outline-danger" @click="deleteKeyword(keyword)" title="삭제">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 키워드 추가 모달 -->
+    <div v-if="showAddModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">키워드 추가</h5>
+                    <button type="button" class="btn-close" @click="closeAddModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">키워드 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="newKeyword.keyword"
+                               placeholder="예: Vue.js 강좌">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">검색엔진 <span class="text-danger">*</span></label>
+                        <select class="form-select" v-model="newKeyword.searchEngine">
+                            <option value="naver">네이버</option>
+                            <option value="google">구글</option>
+                            <option value="daum">다음</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">목표 URL <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="newKeyword.targetUrl"
+                               placeholder="예: https://example.com/courses/vuejs">
+                        <div class="form-text">순위를 확인할 페이지 URL을 입력하세요</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="closeAddModal">취소</button>
+                    <button type="button" class="btn btn-primary" @click="addKeyword">등록</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 상세보기 모달 -->
+    <div v-if="showDetailModal && selectedKeyword" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ selectedKeyword.keyword }} - 순위 추이</h5>
+                    <button type="button" class="btn-close" @click="closeDetailModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <div class="small text-muted mb-1">검색엔진</div>
+                                    <div class="h5 mb-0">
+                                        {{ getSearchEngineIcon(selectedKeyword.searchEngine) }}
+                                        {{ getSearchEngineLabel(selectedKeyword.searchEngine) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <div class="small text-muted mb-1">목표 URL</div>
+                                    <div class="h6 mb-0 text-truncate">{{ selectedKeyword.targetUrl }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <div class="small text-muted mb-1">현재 순위</div>
+                                    <div class="h3 mb-0" :class="selectedKeyword.currentRank <= 10 ? 'text-success' : 'text-muted'">
+                                        {{ selectedKeyword.currentRank ? selectedKeyword.currentRank + '위' : '—' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <div class="small text-muted mb-1">최고 순위</div>
+                                    <div class="h3 mb-0 text-primary">
+                                        {{ selectedKeyword.bestRank ? selectedKeyword.bestRank + '위' : '—' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <div class="small text-muted mb-1">변동</div>
+                                    <div class="h3 mb-0" :class="getRankChangeClass(selectedKeyword)">
+                                        {{ getRankChangeIcon(selectedKeyword) }}
+                                        <span v-if="getRankChange(selectedKeyword) !== null">
+                                            {{ Math.abs(getRankChange(selectedKeyword)) }}
+                                        </span>
+                                        <span v-else>—</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 bg-light">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0">최근 순위 추이</h6>
+                        </div>
+                        <div class="card-body">
+                            <div v-if="selectedKeyword.history.length > 0" class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>날짜</th>
+                                            <th class="text-center">순위</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(record, index) in selectedKeyword.history" :key="index">
+                                            <td>{{ record.date }}</td>
+                                            <td class="text-center">
+                                                <span v-if="record.rank" class="badge" :class="record.rank <= 10 ? 'bg-success' : record.rank <= 20 ? 'bg-warning' : 'bg-secondary'">
+                                                    {{ record.rank }}위
+                                                </span>
+                                                <span v-else class="text-muted">—</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-else class="text-center text-muted py-4">
+                                순위 기록이 없습니다
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="closeDetailModal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
