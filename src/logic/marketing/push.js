@@ -4,7 +4,6 @@ export default {
     data() {
         return {
             pushForm: {
-                campaignName: '',
                 title: '',
                 message: '',
                 url: '',
@@ -43,10 +42,6 @@ export default {
     },
     methods: {
         sendPush() {
-            if (!this.pushForm.campaignName) {
-                alert('캠페인명을 입력해주세요.');
-                return;
-            }
             if (!this.pushForm.title || !this.pushForm.message) {
                 alert('제목과 메시지를 입력해주세요.');
                 return;
@@ -63,12 +58,8 @@ export default {
             if (confirm(`${this.targetCount}명에게 푸시 알림을 발송하시겠습니까?\n\n발송 방식: ${scheduleInfo}\n예상 비용: ₩${this.estimatedCost.toLocaleString()}`)) {
                 console.log('푸시 발송:', this.pushForm);
                 alert('푸시 알림이 발송되었습니다.');
-                this.navigateTo('/marketing/campaigns');
+                this.navigateTo('/marketing/history');
             }
-        },
-        saveDraft() {
-            console.log('임시 저장:', this.pushForm);
-            alert('임시저장되었습니다.');
         }
     }
 }

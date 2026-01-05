@@ -17,14 +17,40 @@
                 <div class="card-body">
                     <!-- 발신 정보 -->
                     <div class="mb-4">
-                        <h6 class="mb-3">발신 정보</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">발신 정보</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" @click="openNumberModal">
+                                + 번호 추가
+                            </button>
+                        </div>
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label">발신번호</label>
                                 <select class="form-select" v-model="smsForm.senderNumber">
-                                    <option value="1588-0000">1588-0000</option>
-                                    <option value="1588-0001">1588-0001</option>
+                                    <option v-for="num in senderNumbers.filter(n => n.status === 'active')" :key="num.number" :value="num.number">
+                                        {{ num.number }} - {{ num.name }}
+                                    </option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <!-- 발신번호 목록 -->
+                        <div class="mt-3">
+                            <div class="small text-muted mb-2">등록된 발신번호</div>
+                            <div class="list-group list-group-flush">
+                                <div v-for="num in senderNumbers" :key="num.number"
+                                     class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                    <div>
+                                        <span class="fw-medium">{{ num.number }}</span>
+                                        <span class="text-muted ms-2">{{ num.name }}</span>
+                                        <span class="badge ms-2" :class="num.status === 'active' ? 'bg-success' : 'bg-warning'">
+                                            {{ num.status === 'active' ? '사용중' : '승인대기' }}
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteNumber(num)">
+                                        삭제
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -39,7 +65,16 @@
                                 {{ messageType }}
                             </span>
                         </div>
+
+                        <!-- LMS 제목 (LMS일 때만 표시) -->
+                        <div v-if="messageType === 'LMS'" class="mb-3">
+                            <label class="form-label">제목 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="smsForm.title"
+                                   placeholder="LMS 제목을 입력하세요 (필수)">
+                        </div>
+
                         <div class="mb-2">
+                            <label class="form-label">본문 <span class="text-danger">*</span></label>
                             <div class="btn-group btn-group-sm mb-2">
                                 <button type="button" class="btn btn-outline-secondary" @click="insertVariable('이름')">
                                     {{이름}}
@@ -191,6 +226,37 @@
                     <button class="btn btn-primary w-100 btn-lg" @click="sendSms">
                         <span class="me-1">💬</span> SMS 발송
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 발신번호 추가 모달 -->
+    <div v-if="showNumberModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">발신번호 추가</h5>
+                    <button type="button" class="btn-close" @click="closeNumberModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small">
+                        발신번호는 통신사 승인 후 사용 가능합니다. 승인은 1~2 영업일 소요됩니다.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">발신번호 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="newNumber.number"
+                               placeholder="예: 02-1234-5678 또는 1588-0000">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">번호 이름 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="newNumber.name"
+                               placeholder="예: LMS 고객센터">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="closeNumberModal">취소</button>
+                    <button type="button" class="btn btn-primary" @click="addNumber">등록</button>
                 </div>
             </div>
         </div>

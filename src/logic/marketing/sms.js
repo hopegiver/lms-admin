@@ -4,6 +4,7 @@ export default {
     data() {
         return {
             smsForm: {
+                title: '',
                 senderNumber: '1588-0000',
                 message: '',
                 targetType: 'all',
@@ -20,6 +21,16 @@ export default {
                 { id: 5, name: '수강 완료자', count: 1456 },
                 { id: 6, name: '기업 회원', count: 678 }
             ],
+            senderNumbers: [
+                { number: '1588-0000', name: 'LMS 고객센터', status: 'active' },
+                { number: '1588-0001', name: 'LMS 마케팅', status: 'active' },
+                { number: '02-1234-5678', name: 'LMS 본사', status: 'active' }
+            ],
+            showNumberModal: false,
+            newNumber: {
+                number: '',
+                name: ''
+            },
             messageLength: 0,
             messageByte: 0,
             messageType: 'SMS'
@@ -79,6 +90,10 @@ export default {
             this.smsForm.message += `{{${variable}}}`;
         },
         sendSms() {
+            if (this.messageType === 'LMS' && !this.smsForm.title) {
+                alert('LMS는 제목이 필수입니다.');
+                return;
+            }
             if (!this.smsForm.message) {
                 alert('메시지를 입력해주세요.');
                 return;
@@ -96,6 +111,38 @@ export default {
                 console.log('SMS 발송:', this.smsForm);
                 alert(`${this.messageType}가 발송되었습니다.`);
                 this.navigateTo('/marketing/history');
+            }
+        },
+        openNumberModal() {
+            this.showNumberModal = true;
+        },
+        closeNumberModal() {
+            this.showNumberModal = false;
+            this.newNumber = { number: '', name: '' };
+        },
+        addNumber() {
+            if (!this.newNumber.number) {
+                alert('발신번호를 입력해주세요.');
+                return;
+            }
+            if (!this.newNumber.name) {
+                alert('번호 이름을 입력해주세요.');
+                return;
+            }
+
+            this.senderNumbers.push({
+                number: this.newNumber.number,
+                name: this.newNumber.name,
+                status: 'pending'
+            });
+
+            alert('발신번호가 등록되었습니다. 통신사 승인 후 사용 가능합니다.');
+            this.closeNumberModal();
+        },
+        deleteNumber(number) {
+            if (confirm(`${number.number} (${number.name})을 삭제하시겠습니까?`)) {
+                const index = this.senderNumbers.indexOf(number);
+                this.senderNumbers.splice(index, 1);
             }
         }
     }
