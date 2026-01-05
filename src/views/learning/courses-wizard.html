@@ -47,6 +47,106 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-12">
+                        <label class="form-label">강좌 유형 *</label>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <div class="card" :class="basicInfo.courseType === 'self-paced' ? 'border-primary' : ''"
+                                     style="cursor: pointer;" @click="basicInfo.courseType = 'self-paced'">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-3 mb-2">📚</div>
+                                        <div class="fw-bold small">자기주도</div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">온라인 · 무제한</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card" :class="basicInfo.courseType === 'cohort' ? 'border-primary' : ''"
+                                     style="cursor: pointer;" @click="basicInfo.courseType = 'cohort'">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-3 mb-2">👥</div>
+                                        <div class="fw-bold small">코호트</div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">온라인 · 기수제</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card" :class="basicInfo.courseType === 'in-person' ? 'border-primary' : ''"
+                                     style="cursor: pointer;" @click="basicInfo.courseType = 'in-person'">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-3 mb-2">🏫</div>
+                                        <div class="fw-bold small">집체교육</div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">오프라인 · 기수제</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card" :class="basicInfo.courseType === 'blended' ? 'border-primary' : ''"
+                                     style="cursor: pointer;" @click="basicInfo.courseType = 'blended'">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-3 mb-2">🔄</div>
+                                        <div class="fw-bold small">혼합교육</div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">온/오프라인 · 기수제</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 스케줄형 강좌 추가 필드 -->
+                    <div v-if="isScheduledCourse" class="col-12">
+                        <div class="alert alert-info small">
+                            <strong>ℹ️ 안내:</strong>
+                            <span v-if="basicInfo.courseType === 'cohort'">코호트는 정해진 기간에 학습자들이 함께 학습하는 온라인 그룹 강좌입니다.</span>
+                            <span v-else-if="basicInfo.courseType === 'in-person'">집체교육은 오프라인 교실에서 진행되는 강좌입니다.</span>
+                            <span v-else-if="basicInfo.courseType === 'blended'">혼합교육은 온라인과 오프라인을 결합한 강좌입니다.</span>
+                        </div>
+                    </div>
+
+                    <div v-if="isScheduledCourse" class="col-md-6">
+                        <label class="form-label">기수 번호 *</label>
+                        <input type="number" class="form-control" v-model.number="basicInfo.cohortNumber" placeholder="예: 1" min="1">
+                        <div class="form-text">강좌명에 자동으로 표시됩니다</div>
+                    </div>
+
+                    <div v-if="isScheduledCourse" class="col-md-6">
+                        <label class="form-label">정원 *</label>
+                        <input type="number" class="form-control" v-model.number="basicInfo.capacity" placeholder="예: 30" min="1">
+                        <div class="form-text">최대 수강 인원</div>
+                    </div>
+
+                    <div v-if="isScheduledCourse" class="col-md-4">
+                        <label class="form-label">수강 신청 마감일 *</label>
+                        <input type="date" class="form-control" v-model="basicInfo.registrationEndDate">
+                    </div>
+
+                    <div v-if="isScheduledCourse" class="col-md-4">
+                        <label class="form-label">시작일 *</label>
+                        <input type="date" class="form-control" v-model="basicInfo.startDate">
+                    </div>
+
+                    <div v-if="isScheduledCourse" class="col-md-4">
+                        <label class="form-label">종료일 *</label>
+                        <input type="date" class="form-control" v-model="basicInfo.endDate">
+                    </div>
+
+                    <div v-if="basicInfo.courseType === 'in-person' || basicInfo.courseType === 'blended'" class="col-12">
+                        <label class="form-label">교육 장소 *</label>
+                        <input type="text" class="form-control" v-model="basicInfo.location" placeholder="예: 서울 강남구 테헤란로 123">
+                    </div>
+
+                    <div v-if="basicInfo.courseType === 'blended'" class="col-md-6">
+                        <label class="form-label">온라인 비율 (%)</label>
+                        <input type="number" class="form-control" v-model.number="basicInfo.onlineRatio" min="0" max="100">
+                        <div class="form-text">온라인 수업 비율</div>
+                    </div>
+
+                    <div v-if="basicInfo.courseType === 'blended'" class="col-md-6">
+                        <label class="form-label">오프라인 비율 (%)</label>
+                        <input type="number" class="form-control" v-model.number="basicInfo.offlineRatio" min="0" max="100" disabled>
+                        <div class="form-text">자동 계산됨</div>
+                    </div>
+
+                    <div class="col-12">
                         <label class="form-label">강좌명 *</label>
                         <input type="text" class="form-control" v-model="basicInfo.title" placeholder="예: React 완벽 가이드">
                     </div>
@@ -361,10 +461,31 @@
                         <div class="card bg-light">
                             <div class="card-body">
                                 <h6 class="mb-3">📋 기본 정보</h6>
+                                <div class="small mb-2">
+                                    <strong>강좌 유형:</strong>
+                                    <span v-if="basicInfo.courseType === 'self-paced'">📚 자기주도</span>
+                                    <span v-else-if="basicInfo.courseType === 'cohort'">👥 코호트</span>
+                                    <span v-else-if="basicInfo.courseType === 'in-person'">🏫 집체교육</span>
+                                    <span v-else-if="basicInfo.courseType === 'blended'">🔄 혼합교육</span>
+                                </div>
                                 <div class="small mb-2"><strong>강좌명:</strong> {{ basicInfo.title }}</div>
                                 <div class="small mb-2"><strong>카테고리:</strong> {{ basicInfo.category }}</div>
                                 <div class="small mb-2"><strong>강사:</strong> {{ basicInfo.instructor }}</div>
-                                <div class="small"><strong>난이도:</strong> {{ basicInfo.level }}</div>
+                                <div class="small mb-2"><strong>난이도:</strong> {{ basicInfo.level }}</div>
+                                <div v-if="isScheduledCourse" class="small mb-2"><strong>기수:</strong> {{ basicInfo.cohortNumber }}기</div>
+                                <div v-if="isScheduledCourse" class="small mb-2"><strong>정원:</strong> {{ basicInfo.capacity }}명</div>
+                                <div v-if="isScheduledCourse" class="small mb-2">
+                                    <strong>기간:</strong> {{ basicInfo.startDate }} ~ {{ basicInfo.endDate }}
+                                </div>
+                                <div v-if="isScheduledCourse" class="small mb-2">
+                                    <strong>신청마감:</strong> {{ basicInfo.registrationEndDate }}
+                                </div>
+                                <div v-if="basicInfo.courseType === 'in-person' || basicInfo.courseType === 'blended'" class="small mb-2">
+                                    <strong>장소:</strong> {{ basicInfo.location }}
+                                </div>
+                                <div v-if="basicInfo.courseType === 'blended'" class="small">
+                                    <strong>비율:</strong> 온라인 {{ basicInfo.onlineRatio }}% / 오프라인 {{ basicInfo.offlineRatio }}%
+                                </div>
                             </div>
                         </div>
                     </div>

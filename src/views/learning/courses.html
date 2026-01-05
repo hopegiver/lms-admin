@@ -60,7 +60,16 @@
                         <option v-for="inst in instructors" :key="inst.id" :value="inst.id">{{ inst.name }}</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
+                    <select class="form-select" v-model="filters.courseType">
+                        <option value="">전체 유형</option>
+                        <option value="self-paced">자기주도</option>
+                        <option value="cohort">코호트</option>
+                        <option value="in-person">집체교육</option>
+                        <option value="blended">혼합교육</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <div class="input-group">
                         <span class="input-group-text bg-white">🔍</span>
                         <input type="text" class="form-control" placeholder="강좌명 검색..." v-model="searchQuery">
@@ -95,7 +104,18 @@
 
     <!-- 강좌 카드 그리드 -->
     <div class="row g-4 mb-4">
-        <div class="col-md-6 col-lg-4 col-xl-3" v-for="course in courses" :key="course.id">
+        <!-- 빈 결과 메시지 -->
+        <div v-if="filteredCourses.length === 0" class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <div class="fs-1 mb-3">📭</div>
+                    <h5 class="text-muted">조건에 맞는 강좌가 없습니다</h5>
+                    <p class="text-muted small mb-0">검색 조건을 변경해보세요</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 col-xl-3" v-for="course in paginatedCourses" :key="course.id">
             <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" @click="viewDetail(course)">
                 <div class="position-absolute top-0 start-0 m-2">
                     <input type="checkbox" class="form-check-input" v-model="selectedIds" :value="course.id"
@@ -119,22 +139,48 @@
                 <div class="card-body">
                     <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3"
                          style="height: 120px;">
-                        <span style="font-size: 3rem;">📚</span>
+                        <span style="font-size: 3rem;">{{ getCourseTypeIcon(course.courseType) }}</span>
                     </div>
                     <div class="mb-2">
+                        <span class="badge" :class="getCourseTypeClass(course.courseType)">
+                            {{ getCourseTypeLabel(course.courseType) }}
+                        </span>
                         <span class="badge" :class="getStatusClass(course.status)">
                             {{ getStatusText(course.status) }}
                         </span>
-                        <span class="badge bg-light text-dark ms-1">{{ course.category }}</span>
+                        <span v-if="course.cohortNumber" class="badge bg-dark ms-1">
+                            {{ course.cohortNumber }}기
+                        </span>
+                        <span v-if="getEnrollmentStatus(course)" class="badge ms-1" :class="getEnrollmentStatus(course).class">
+                            {{ getEnrollmentStatus(course).text }}
+                        </span>
                     </div>
                     <h6 class="card-title fw-bold mb-2" style="min-height: 48px;">{{ course.title }}</h6>
                     <p class="text-muted small mb-2">👨‍🏫 {{ course.instructor }}</p>
-                    <p class="text-muted small mb-3">📝 {{ course.lessons }}개 차시 · ⏱️ {{ course.duration }}</p>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted small">👥 {{ course.students }}명</span>
-                        <span class="small">
-                            <span class="text-warning">★</span> {{ course.rating }}
-                        </span>
+
+                    <!-- 자기주도 학습 정보 -->
+                    <div v-if="course.courseType === 'self-paced'">
+                        <p class="text-muted small mb-3">📝 {{ course.lessons }}개 차시 · ⏱️ {{ course.duration }}</p>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small">👥 {{ course.students.toLocaleString() }}명</span>
+                            <span class="small">
+                                <span class="text-warning">★</span> {{ course.rating }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 코호트/집체/혼합 정보 -->
+                    <div v-else>
+                        <p class="text-muted small mb-1">📅 {{ course.startDate }} ~ {{ course.endDate }}</p>
+                        <p class="text-muted small mb-2" v-if="course.location">📍 {{ course.location }}</p>
+                        <p class="text-muted small mb-2" v-if="course.onlineRatio">💻 온라인 {{ course.onlineRatio }}% · 🏫 오프라인 {{ course.offlineRatio }}%</p>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small">👥 {{ course.students }} / {{ course.capacity }}명</span>
+                            <div class="progress flex-grow-1 ms-2" style="height: 8px;">
+                                <div class="progress-bar" :class="course.students >= course.capacity ? 'bg-danger' : 'bg-primary'"
+                                     :style="{width: (course.students / course.capacity * 100) + '%'}"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -145,7 +191,7 @@
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
-                <div class="text-muted small">총 {{ totalCount }}개 강좌</div>
+                <div class="text-muted small">총 {{ filteredCourses.length }}개 강좌</div>
                 <nav>
                     <ul class="pagination pagination-sm mb-0">
                         <li class="page-item" :class="{ disabled: currentPage === 1 }">

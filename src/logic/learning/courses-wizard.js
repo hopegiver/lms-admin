@@ -13,7 +13,18 @@ export default {
                 level: 'beginner',
                 instructor: '',
                 description: '',
-                thumbnail: null
+                thumbnail: null,
+                courseType: 'self-paced',
+                // 코호트/집체/혼합 강좌용 필드
+                cohortNumber: null,
+                capacity: null,
+                startDate: '',
+                endDate: '',
+                registrationEndDate: '',
+                location: '',
+                onlineRatio: 60,
+                offlineRatio: 40,
+                templateCourseId: null
             },
 
             // 2단계: 커리큘럼 구성
@@ -68,11 +79,35 @@ export default {
     mounted() {
         this.loadResources();
     },
+    watch: {
+        'basicInfo.onlineRatio'(newVal) {
+            if (this.basicInfo.courseType === 'blended') {
+                this.basicInfo.offlineRatio = 100 - newVal;
+            }
+        }
+    },
     computed: {
+        isScheduledCourse() {
+            return ['cohort', 'in-person', 'blended'].includes(this.basicInfo.courseType);
+        },
+
         canProceed() {
             switch (this.currentStep) {
                 case 1:
-                    return this.basicInfo.title && this.basicInfo.category && this.basicInfo.instructor;
+                    const basicValid = this.basicInfo.title && this.basicInfo.category && this.basicInfo.instructor;
+                    if (!basicValid) return false;
+
+                    // 스케줄형 강좌는 추가 필드 필수
+                    if (this.isScheduledCourse) {
+                        if (!this.basicInfo.capacity || !this.basicInfo.startDate || !this.basicInfo.endDate || !this.basicInfo.registrationEndDate) {
+                            return false;
+                        }
+                        // 집체교육/혼합교육은 장소 필수
+                        if ((this.basicInfo.courseType === 'in-person' || this.basicInfo.courseType === 'blended') && !this.basicInfo.location) {
+                            return false;
+                        }
+                    }
+                    return true;
                 case 2:
                     return this.sections.length > 0 && this.sections.some(s => s.lessons && s.lessons.length > 0);
                 case 3:
