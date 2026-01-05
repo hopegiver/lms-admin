@@ -11,7 +11,7 @@ export default {
                 createdAt: null,
                 updatedAt: null
             },
-            focusedBlockIndex: null,
+            currentPageIndex: 0,
             blockIdCounter: 1
         }
     },
@@ -102,70 +102,86 @@ export default {
         },
 
         /**
-         * 블록 추가
+         * 블록(페이지) 추가
          */
         addBlock(type, position = null) {
-            console.log('Adding block:', type, 'at position:', position);
+            console.log('Adding page:', type, 'at position:', position);
             const block = this.createBlock(type);
-            console.log('Created block:', block);
+            console.log('Created page:', block);
 
             if (position !== null) {
                 this.content.blocks.splice(position, 0, block);
-                this.focusedBlockIndex = position;
+                this.currentPageIndex = position;
             } else {
                 this.content.blocks.push(block);
-                this.focusedBlockIndex = this.content.blocks.length - 1;
+                this.currentPageIndex = this.content.blocks.length - 1;
             }
 
-            console.log('Total blocks:', this.content.blocks.length);
-            console.log('Focused index:', this.focusedBlockIndex);
+            console.log('Total pages:', this.content.blocks.length);
+            console.log('Current page:', this.currentPageIndex);
         },
 
         /**
-         * 블록 메뉴 표시
+         * 블록 타입 레이블
          */
-        showBlockMenu(position) {
-            // 사이드바의 블록 버튼을 클릭했을 때 해당 위치에 추가
-            // 현재는 사이드바 버튼이 addBlock을 직접 호출
-            console.log('Block menu at position:', position);
+        getBlockTypeLabel(type) {
+            const labels = {
+                text: '텍스트',
+                image: '이미지',
+                video: '비디오',
+                quiz: '퀴즈',
+                code: '코드',
+                file: '파일',
+                divider: '구분선'
+            };
+            return labels[type] || type;
         },
 
         /**
-         * 블록 포커스
+         * 블록 타입 변경 시
          */
-        focusBlock(index) {
-            this.focusedBlockIndex = index;
+        onBlockTypeChange(index) {
+            const newType = this.content.blocks[index].type;
+            console.log('Changing page type to:', newType);
+
+            // 새 타입의 블록 데이터로 교체
+            const newBlock = this.createBlock(newType);
+            this.content.blocks[index].data = newBlock.data;
         },
 
         /**
-         * 블록 삭제
+         * 페이지 삭제
          */
         deleteBlock(index) {
-            if (confirm('이 블록을 삭제하시겠습니까?')) {
+            if (confirm('이 페이지를 삭제하시겠습니까?')) {
                 this.content.blocks.splice(index, 1);
-                this.focusedBlockIndex = null;
+
+                // 현재 페이지 인덱스 조정
+                if (this.currentPageIndex >= this.content.blocks.length) {
+                    this.currentPageIndex = Math.max(0, this.content.blocks.length - 1);
+                }
             }
         },
 
         /**
-         * 블록 위로 이동
+         * 페이지 위로 이동
          */
         moveBlockUp(index) {
             if (index > 0) {
                 const block = this.content.blocks.splice(index, 1)[0];
                 this.content.blocks.splice(index - 1, 0, block);
-                this.focusedBlockIndex = index - 1;
+                this.currentPageIndex = index - 1;
             }
         },
 
         /**
-         * 블록 아래로 이동
+         * 페이지 아래로 이동
          */
         moveBlockDown(index) {
             if (index < this.content.blocks.length - 1) {
                 const block = this.content.blocks.splice(index, 1)[0];
                 this.content.blocks.splice(index + 1, 0, block);
-                this.focusedBlockIndex = index + 1;
+                this.currentPageIndex = index + 1;
             }
         },
 
