@@ -4,13 +4,11 @@ export default {
     data() {
         return {
             kakaoForm: {
-                campaignName: '',
                 templateCode: '',
                 variables: {},
                 targetType: 'all',
                 targetGroups: [],
                 useFallbackSms: true,
-                fallbackMessage: '',
                 scheduleType: 'now',
                 scheduleDate: '',
                 scheduleTime: ''
@@ -128,10 +126,6 @@ export default {
             });
         },
         sendKakao() {
-            if (!this.kakaoForm.campaignName) {
-                alert('캠페인명을 입력해주세요.');
-                return;
-            }
             if (!this.kakaoForm.templateCode) {
                 alert('템플릿을 선택해주세요.');
                 return;
@@ -160,12 +154,8 @@ export default {
             if (confirm(`${this.targetCount}명에게 알림톡을 발송하시겠습니까?\n\n발송 방식: ${scheduleInfo}${fallbackInfo}\n예상 비용: ₩${this.estimatedCost.total.toLocaleString()}`)) {
                 console.log('알림톡 발송:', this.kakaoForm);
                 alert('알림톡이 발송되었습니다.');
-                this.navigateTo('/marketing/campaigns');
+                this.navigateTo('/marketing/history');
             }
-        },
-        saveDraft() {
-            console.log('임시 저장:', this.kakaoForm);
-            alert('임시저장되었습니다.');
         },
         getStatusBadge(status) {
             const badges = {

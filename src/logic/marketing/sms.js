@@ -4,7 +4,6 @@ export default {
     data() {
         return {
             smsForm: {
-                campaignName: '',
                 senderNumber: '1588-0000',
                 message: '',
                 targetType: 'all',
@@ -44,6 +43,16 @@ export default {
         },
         maxLength() {
             return this.messageType === 'LMS' ? 2000 : 90;
+        },
+        previewMessage() {
+            if (!this.smsForm.message) return '';
+            // 변수 치환 예시
+            let message = this.smsForm.message;
+            message = message.replace(/\{\{이름\}\}/g, '홍길동');
+            message = message.replace(/\{\{강좌명\}\}/g, 'Vue.js 마스터 클래스');
+            message = message.replace(/\{\{진도율\}\}/g, '75');
+            message = message.replace(/\{\{남은일수\}\}/g, '5');
+            return message;
         }
     },
     watch: {
@@ -70,10 +79,6 @@ export default {
             this.smsForm.message += `{{${variable}}}`;
         },
         sendSms() {
-            if (!this.smsForm.campaignName) {
-                alert('캠페인명을 입력해주세요.');
-                return;
-            }
             if (!this.smsForm.message) {
                 alert('메시지를 입력해주세요.');
                 return;
@@ -87,19 +92,11 @@ export default {
                 ? '즉시 발송'
                 : `예약 발송 (${this.smsForm.scheduleDate} ${this.smsForm.scheduleTime})`;
 
-            if (confirm(`${this.targetCount}명에게 SMS를 발송하시겠습니까?\n\n발송 방식: ${scheduleInfo}\n메시지 타입: ${this.messageType}\n예상 비용: ₩${this.estimatedCost.toLocaleString()}`)) {
+            if (confirm(`${this.targetCount}명에게 ${this.messageType}를 발송하시겠습니까?\n\n발송 방식: ${scheduleInfo}\n예상 비용: ₩${this.estimatedCost.toLocaleString()}`)) {
                 console.log('SMS 발송:', this.smsForm);
-                alert('SMS가 발송되었습니다.');
-                this.navigateTo('/marketing/campaigns');
+                alert(`${this.messageType}가 발송되었습니다.`);
+                this.navigateTo('/marketing/history');
             }
-        },
-        saveDraft() {
-            console.log('임시 저장:', this.smsForm);
-            alert('임시저장되었습니다.');
-        },
-        getGroupName(groupId) {
-            const group = this.availableGroups.find(g => g.id === groupId);
-            return group ? group.name : '';
         }
     }
 }

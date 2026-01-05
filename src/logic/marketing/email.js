@@ -3,17 +3,14 @@ export default {
     layout: 'admin',
     data() {
         return {
-            step: 1,
             emailForm: {
-                campaignName: '',
-                senderName: '',
-                senderEmail: '',
-                replyTo: '',
                 subject: '',
+                senderName: 'LMS',
+                senderEmail: 'noreply@lms.com',
+                replyTo: '',
                 content: '',
                 targetType: 'all',
                 targetGroups: [],
-                targetUsers: [],
                 scheduleType: 'now',
                 scheduleDate: '',
                 scheduleTime: ''
@@ -25,8 +22,7 @@ export default {
                 { id: 4, name: '휴면 회원 (30일 미접속)', count: 892 },
                 { id: 5, name: '수강 완료자', count: 1456 },
                 { id: 6, name: '기업 회원', count: 678 }
-            ],
-            previewMode: false
+            ]
         }
     },
     computed: {
@@ -38,44 +34,38 @@ export default {
                     const group = this.availableGroups.find(g => g.id === groupId);
                     return sum + (group ? group.count : 0);
                 }, 0);
-            } else if (this.emailForm.targetType === 'custom') {
-                return this.emailForm.targetUsers.length;
             }
             return 0;
         },
         estimatedCost() {
-            // 이메일 1건당 10원 가정
-            return this.targetCount * 10;
+            return this.targetCount * 10; // 이메일 1건당 10원
         },
-        canProceedToStep2() {
-            return this.emailForm.campaignName &&
-                   this.emailForm.senderName &&
-                   this.emailForm.senderEmail &&
-                   this.targetCount > 0;
-        },
-        canProceedToStep3() {
-            return this.emailForm.subject && this.emailForm.content;
+        previewContent() {
+            if (!this.emailForm.content) return '';
+            // 변수 치환 예시
+            let content = this.emailForm.content;
+            content = content.replace(/\{\{이름\}\}/g, '홍길동');
+            content = content.replace(/\{\{이메일\}\}/g, 'hong@example.com');
+            content = content.replace(/\{\{강좌명\}\}/g, 'Vue.js 마스터 클래스');
+            content = content.replace(/\{\{진도율\}\}/g, '75');
+            return content;
         }
     },
     methods: {
-        nextStep() {
-            if (this.step === 1 && !this.canProceedToStep2) {
-                alert('필수 항목을 모두 입력해주세요.');
-                return;
-            }
-            if (this.step === 2 && !this.canProceedToStep3) {
-                alert('제목과 내용을 입력해주세요.');
-                return;
-            }
-            this.step++;
-        },
-        prevStep() {
-            this.step--;
-        },
-        togglePreview() {
-            this.previewMode = !this.previewMode;
-        },
         sendEmail() {
+            if (!this.emailForm.subject) {
+                alert('제목을 입력해주세요.');
+                return;
+            }
+            if (!this.emailForm.content) {
+                alert('내용을 입력해주세요.');
+                return;
+            }
+            if (this.targetCount === 0) {
+                alert('발송 대상을 선택해주세요.');
+                return;
+            }
+
             const scheduleInfo = this.emailForm.scheduleType === 'now'
                 ? '즉시 발송'
                 : `예약 발송 (${this.emailForm.scheduleDate} ${this.emailForm.scheduleTime})`;
@@ -83,19 +73,11 @@ export default {
             if (confirm(`${this.targetCount}명에게 이메일을 발송하시겠습니까?\n\n발송 방식: ${scheduleInfo}\n예상 비용: ₩${this.estimatedCost.toLocaleString()}`)) {
                 console.log('이메일 발송:', this.emailForm);
                 alert('이메일이 발송되었습니다.');
-                this.navigateTo('/marketing/campaigns');
+                this.navigateTo('/marketing/history');
             }
-        },
-        saveDraft() {
-            console.log('임시 저장:', this.emailForm);
-            alert('임시저장되었습니다.');
         },
         insertVariable(variable) {
             this.emailForm.content += `{{${variable}}}`;
-        },
-        getGroupName(groupId) {
-            const group = this.availableGroups.find(g => g.id === groupId);
-            return group ? group.name : '';
         }
     }
 }

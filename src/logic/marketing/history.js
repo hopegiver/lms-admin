@@ -37,11 +37,11 @@ export default {
     },
     methods: {
         getChannelIcon(channel) {
-            const icons = { 'email': '📧', 'sms': '💬', 'push': '🔔' };
+            const icons = { 'email': '📧', 'sms': '💬', 'kakao': '💛', 'push': '🔔' };
             return icons[channel] || '📨';
         },
         getChannelLabel(channel) {
-            const labels = { 'email': '이메일', 'sms': 'SMS', 'push': '푸시' };
+            const labels = { 'email': '이메일', 'sms': 'SMS', 'kakao': '알림톡', 'push': '푸시' };
             return labels[channel] || channel;
         },
         getStatusBadgeClass(status) {
