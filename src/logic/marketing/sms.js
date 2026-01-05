@@ -139,10 +139,17 @@ export default {
             alert('발신번호가 등록되었습니다. 통신사 승인 후 사용 가능합니다.');
             this.closeNumberModal();
         },
-        deleteNumber(number) {
-            if (confirm(`${number.number} (${number.name})을 삭제하시겠습니까?`)) {
-                const index = this.senderNumbers.indexOf(number);
+        deleteSelectedNumber() {
+            const selectedNumber = this.senderNumbers.find(num => num.number === this.smsForm.senderNumber);
+            if (!selectedNumber) return;
+
+            if (confirm(`${selectedNumber.number} (${selectedNumber.name})을 삭제하시겠습니까?`)) {
+                const index = this.senderNumbers.indexOf(selectedNumber);
                 this.senderNumbers.splice(index, 1);
+
+                // 삭제 후 첫 번째 활성 번호로 변경
+                const activeNumbers = this.senderNumbers.filter(n => n.status === 'active');
+                this.smsForm.senderNumber = activeNumbers.length > 0 ? activeNumbers[0].number : '';
             }
         }
     }
