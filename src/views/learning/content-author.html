@@ -1,0 +1,506 @@
+<div class="content-author-page">
+    <!-- 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="#" @click.prevent="navigateTo('/learning/content')" class="text-muted">
+                    ← 콘텐츠 목록
+                </a>
+            </div>
+            <h4 class="mb-1">콘텐츠 저작도구</h4>
+            <p class="text-muted mb-0">블록 기반 인터랙티브 콘텐츠를 제작합니다</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @click="previewContent">
+                <i class="bi bi-eye"></i> 미리보기
+            </button>
+            <button class="btn btn-outline-primary" @click="saveDraft">
+                <i class="bi bi-save"></i> 임시저장
+            </button>
+            <button class="btn btn-primary" @click="publishContent">
+                <i class="bi bi-check-circle"></i> 게시
+            </button>
+        </div>
+    </div>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <div class="row">
+        <!-- 저작 영역 -->
+        <div class="col-lg-9">
+            <!-- 콘텐츠 메타정보 -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <input type="text" class="form-control form-control-lg border-0 mb-2"
+                           v-model="content.title"
+                           placeholder="콘텐츠 제목을 입력하세요">
+                    <input type="text" class="form-control border-0 text-muted"
+                           v-model="content.description"
+                           placeholder="간단한 설명을 입력하세요 (선택사항)">
+                </div>
+            </div>
+
+            <!-- 블록 에디터 -->
+            <div class="blocks-container">
+                <div v-for="(block, index) in content.blocks" :key="block.id"
+                     class="block-wrapper mb-3"
+                     :class="{ 'block-focused': focusedBlockIndex === index }"
+                     @click="focusBlock(index)">
+
+                    <div class="block-toolbar">
+                        <div class="block-handle">
+                            <i class="bi bi-grip-vertical"></i>
+                        </div>
+                        <div class="block-actions">
+                            <button class="btn btn-sm btn-link text-muted"
+                                    @click.stop="moveBlockUp(index)"
+                                    :disabled="index === 0">
+                                <i class="bi bi-arrow-up"></i>
+                            </button>
+                            <button class="btn btn-sm btn-link text-muted"
+                                    @click.stop="moveBlockDown(index)"
+                                    :disabled="index === content.blocks.length - 1">
+                                <i class="bi bi-arrow-down"></i>
+                            </button>
+                            <button class="btn btn-sm btn-link text-danger"
+                                    @click.stop="deleteBlock(index)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="block-content card border-0 shadow-sm">
+                        <div class="card-body">
+                            <!-- 텍스트 블록 -->
+                            <div v-if="block.type === 'text'">
+                                <div class="mb-2">
+                                    <select class="form-select form-select-sm w-auto d-inline-block"
+                                            v-model="block.data.style">
+                                        <option value="normal">본문</option>
+                                        <option value="h1">제목 1</option>
+                                        <option value="h2">제목 2</option>
+                                        <option value="h3">제목 3</option>
+                                    </select>
+                                </div>
+                                <textarea class="form-control border-0"
+                                          v-model="block.data.content"
+                                          :class="'text-style-' + block.data.style"
+                                          placeholder="텍스트를 입력하세요..."
+                                          rows="3"
+                                          @input="autoResize($event)"></textarea>
+                            </div>
+
+                            <!-- 이미지 블록 -->
+                            <div v-if="block.type === 'image'">
+                                <div v-if="!block.data.url" class="text-center py-5 border rounded bg-light">
+                                    <input type="file" :id="'file-' + block.id"
+                                           accept="image/*"
+                                           @change="handleImageUpload($event, index)"
+                                           class="d-none">
+                                    <label :for="'file-' + block.id" class="btn btn-outline-primary">
+                                        <i class="bi bi-image"></i> 이미지 선택
+                                    </label>
+                                    <p class="text-muted small mt-2 mb-0">또는 URL을 입력하세요</p>
+                                    <input type="text" class="form-control mt-2 w-50 mx-auto"
+                                           v-model="block.data.url"
+                                           placeholder="https://...">
+                                </div>
+                                <div v-else>
+                                    <img :src="block.data.url" class="img-fluid rounded" :alt="block.data.caption">
+                                    <input type="text" class="form-control mt-2 border-0"
+                                           v-model="block.data.caption"
+                                           placeholder="이미지 설명 (선택사항)">
+                                    <button class="btn btn-sm btn-outline-danger mt-2"
+                                            @click="block.data.url = ''">
+                                        이미지 변경
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 비디오 블록 -->
+                            <div v-if="block.type === 'video'">
+                                <div v-if="!block.data.url" class="text-center py-5 border rounded bg-light">
+                                    <div class="mb-3">
+                                        <select class="form-select form-select-sm w-auto d-inline-block"
+                                                v-model="block.data.provider">
+                                            <option value="youtube">YouTube</option>
+                                            <option value="vimeo">Vimeo</option>
+                                            <option value="file">파일 업로드</option>
+                                        </select>
+                                    </div>
+                                    <div v-if="block.data.provider !== 'file'">
+                                        <input type="text" class="form-control w-75 mx-auto"
+                                               v-model="block.data.url"
+                                               :placeholder="block.data.provider === 'youtube' ? 'YouTube URL' : 'Vimeo URL'">
+                                        <button class="btn btn-primary mt-2" @click="loadVideo(index)">
+                                            불러오기
+                                        </button>
+                                    </div>
+                                    <div v-else>
+                                        <input type="file" :id="'video-' + block.id"
+                                               accept="video/*"
+                                               @change="handleVideoUpload($event, index)"
+                                               class="d-none">
+                                        <label :for="'video-' + block.id" class="btn btn-outline-primary">
+                                            <i class="bi bi-camera-video"></i> 비디오 파일 선택
+                                        </label>
+                                    </div>
+                                </div>
+                                <div v-else>
+                                    <div class="ratio ratio-16x9">
+                                        <iframe v-if="block.data.provider === 'youtube'"
+                                                :src="getYoutubeEmbedUrl(block.data.url)"
+                                                allowfullscreen></iframe>
+                                        <iframe v-else-if="block.data.provider === 'vimeo'"
+                                                :src="getVimeoEmbedUrl(block.data.url)"
+                                                allowfullscreen></iframe>
+                                        <video v-else :src="block.data.url" controls class="w-100"></video>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger mt-2"
+                                            @click="block.data.url = ''">
+                                        비디오 변경
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 퀴즈 블록 -->
+                            <div v-if="block.type === 'quiz'">
+                                <input type="text" class="form-control fw-bold mb-3"
+                                       v-model="block.data.question"
+                                       placeholder="질문을 입력하세요">
+
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted">퀴즈 유형</label>
+                                    <select class="form-select form-select-sm" v-model="block.data.quizType">
+                                        <option value="multiple">객관식 (단일 선택)</option>
+                                        <option value="checkbox">객관식 (복수 선택)</option>
+                                        <option value="short">주관식 (단답형)</option>
+                                        <option value="essay">주관식 (서술형)</option>
+                                    </select>
+                                </div>
+
+                                <div v-if="block.data.quizType === 'multiple' || block.data.quizType === 'checkbox'">
+                                    <div v-for="(option, optIdx) in block.data.options"
+                                         :key="optIdx"
+                                         class="d-flex align-items-center gap-2 mb-2">
+                                        <input type="checkbox"
+                                               class="form-check-input"
+                                               v-model="option.correct"
+                                               :disabled="block.data.quizType === 'multiple' && option.correct === false && block.data.options.some(o => o.correct)">
+                                        <input type="text" class="form-control"
+                                               v-model="option.text"
+                                               :placeholder="'선택지 ' + (optIdx + 1)">
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                @click="removeQuizOption(index, optIdx)"
+                                                :disabled="block.data.options.length <= 2">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            @click="addQuizOption(index)">
+                                        <i class="bi bi-plus"></i> 선택지 추가
+                                    </button>
+                                </div>
+
+                                <div v-if="block.data.quizType === 'short'" class="mt-3">
+                                    <label class="form-label small text-muted">정답</label>
+                                    <input type="text" class="form-control"
+                                           v-model="block.data.answer"
+                                           placeholder="정답을 입력하세요">
+                                </div>
+
+                                <div v-if="block.data.quizType === 'essay'" class="mt-3">
+                                    <label class="form-label small text-muted">모범 답안 (선택사항)</label>
+                                    <textarea class="form-control"
+                                              v-model="block.data.answer"
+                                              rows="3"
+                                              placeholder="모범 답안을 입력하세요"></textarea>
+                                </div>
+
+                                <div class="mt-3">
+                                    <label class="form-label small text-muted">해설 (선택사항)</label>
+                                    <textarea class="form-control"
+                                              v-model="block.data.explanation"
+                                              rows="2"
+                                              placeholder="정답 해설을 입력하세요"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- 코드 블록 -->
+                            <div v-if="block.type === 'code'">
+                                <div class="mb-2">
+                                    <select class="form-select form-select-sm w-auto d-inline-block"
+                                            v-model="block.data.language">
+                                        <option value="javascript">JavaScript</option>
+                                        <option value="python">Python</option>
+                                        <option value="java">Java</option>
+                                        <option value="html">HTML</option>
+                                        <option value="css">CSS</option>
+                                        <option value="sql">SQL</option>
+                                        <option value="other">기타</option>
+                                    </select>
+                                </div>
+                                <textarea class="form-control font-monospace bg-dark text-light"
+                                          v-model="block.data.code"
+                                          rows="8"
+                                          placeholder="코드를 입력하세요..."
+                                          style="font-size: 14px;"></textarea>
+                            </div>
+
+                            <!-- 파일 다운로드 블록 -->
+                            <div v-if="block.type === 'file'">
+                                <div v-if="!block.data.url" class="text-center py-4 border rounded bg-light">
+                                    <input type="file" :id="'download-' + block.id"
+                                           @change="handleFileUpload($event, index)"
+                                           class="d-none">
+                                    <label :for="'download-' + block.id" class="btn btn-outline-primary">
+                                        <i class="bi bi-file-earmark-arrow-up"></i> 파일 선택
+                                    </label>
+                                </div>
+                                <div v-else class="d-flex align-items-center gap-3 p-3 border rounded">
+                                    <i class="bi bi-file-earmark-text fs-2 text-primary"></i>
+                                    <div class="flex-grow-1">
+                                        <input type="text" class="form-control form-control-sm border-0 fw-bold"
+                                               v-model="block.data.filename"
+                                               placeholder="파일명">
+                                        <small class="text-muted">{{ block.data.size }}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            @click="block.data.url = ''">
+                                        제거
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 구분선 블록 -->
+                            <div v-if="block.type === 'divider'">
+                                <hr class="my-3">
+                                <p class="text-center text-muted small mb-0">구분선</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 블록 추가 버튼 -->
+                    <div class="add-block-between text-center my-2" v-if="focusedBlockIndex === index">
+                        <button class="btn btn-sm btn-outline-primary" @click.stop="showBlockMenu(index + 1)">
+                            <i class="bi bi-plus"></i> 블록 추가
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 첫 블록 추가 -->
+                <div v-if="content.blocks.length === 0" class="text-center py-5">
+                    <p class="text-muted mb-3">블록을 추가하여 콘텐츠를 만들어보세요</p>
+                    <button class="btn btn-primary" @click="showBlockMenu(0)">
+                        <i class="bi bi-plus-circle"></i> 첫 번째 블록 추가
+                    </button>
+                </div>
+
+                <!-- 마지막에 블록 추가 -->
+                <div v-if="content.blocks.length > 0" class="text-center py-4">
+                    <button class="btn btn-outline-secondary" @click="showBlockMenu(content.blocks.length)">
+                        <i class="bi bi-plus"></i> 블록 추가
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 - 블록 추가 메뉴 -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0">블록 추가</h6>
+                </div>
+                <div class="card-body p-2">
+                    <div class="list-group list-group-flush">
+                        <button class="list-group-item list-group-item-action border-0 py-2"
+                                @click="addBlock('text')">
+                            <i class="bi bi-text-paragraph text-primary"></i>
+                            <span class="ms-2">텍스트</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action border-0 py-2"
+                                @click="addBlock('image')">
+                            <i class="bi bi-image text-success"></i>
+                            <span class="ms-2">이미지</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action border-0 py-2"
+                                @click="addBlock('video')">
+                            <i class="bi bi-camera-video text-danger"></i>
+                            <span class="ms-2">비디오</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action border-0 py-2"
+                                @click="addBlock('quiz')">
+                            <i class="bi bi-question-circle text-warning"></i>
+                            <span class="ms-2">퀴즈</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action border-0 py-2"
+                                @click="addBlock('code')">
+                            <i class="bi bi-code-slash text-info"></i>
+                            <span class="ms-2">코드</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action border-0 py-2"
+                                @click="addBlock('file')">
+                            <i class="bi bi-file-earmark-arrow-down text-secondary"></i>
+                            <span class="ms-2">파일</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action border-0 py-2"
+                                @click="addBlock('divider')">
+                            <i class="bi bi-dash-lg text-muted"></i>
+                            <span class="ms-2">구분선</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 도움말 -->
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-body">
+                    <h6 class="mb-2">💡 저작도구 가이드</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li class="mb-1">블록을 조합하여 콘텐츠 제작</li>
+                        <li class="mb-1">드래그로 블록 순서 변경</li>
+                        <li class="mb-1">퀴즈로 학습 효과 극대화</li>
+                        <li class="mb-1">미리보기로 결과 확인</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 미리보기 모달 -->
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ content.title || '제목 없음' }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted" v-if="content.description">{{ content.description }}</p>
+
+                    <div v-for="block in content.blocks" :key="block.id" class="mb-4">
+                        <!-- 미리보기: 텍스트 -->
+                        <div v-if="block.type === 'text'">
+                            <h1 v-if="block.data.style === 'h1'">{{ block.data.content }}</h1>
+                            <h2 v-else-if="block.data.style === 'h2'">{{ block.data.content }}</h2>
+                            <h3 v-else-if="block.data.style === 'h3'">{{ block.data.content }}</h3>
+                            <p v-else style="white-space: pre-wrap;">{{ block.data.content }}</p>
+                        </div>
+
+                        <!-- 미리보기: 이미지 -->
+                        <div v-if="block.type === 'image' && block.data.url">
+                            <img :src="block.data.url" class="img-fluid rounded" :alt="block.data.caption">
+                            <p class="text-muted small mt-2" v-if="block.data.caption">{{ block.data.caption }}</p>
+                        </div>
+
+                        <!-- 미리보기: 비디오 -->
+                        <div v-if="block.type === 'video' && block.data.url">
+                            <div class="ratio ratio-16x9">
+                                <iframe v-if="block.data.provider === 'youtube'"
+                                        :src="getYoutubeEmbedUrl(block.data.url)"
+                                        allowfullscreen></iframe>
+                                <iframe v-else-if="block.data.provider === 'vimeo'"
+                                        :src="getVimeoEmbedUrl(block.data.url)"
+                                        allowfullscreen></iframe>
+                                <video v-else :src="block.data.url" controls class="w-100"></video>
+                            </div>
+                        </div>
+
+                        <!-- 미리보기: 퀴즈 -->
+                        <div v-if="block.type === 'quiz'" class="border rounded p-3 bg-light">
+                            <p class="fw-bold mb-3">{{ block.data.question }}</p>
+                            <div v-if="block.data.quizType === 'multiple' || block.data.quizType === 'checkbox'">
+                                <div v-for="(option, idx) in block.data.options" :key="idx" class="form-check mb-2">
+                                    <input class="form-check-input"
+                                           :type="block.data.quizType === 'multiple' ? 'radio' : 'checkbox'"
+                                           :name="'quiz-' + block.id"
+                                           :id="'option-' + block.id + '-' + idx">
+                                    <label class="form-check-label" :for="'option-' + block.id + '-' + idx">
+                                        {{ option.text }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div v-else-if="block.data.quizType === 'short'">
+                                <input type="text" class="form-control" placeholder="답을 입력하세요">
+                            </div>
+                            <div v-else-if="block.data.quizType === 'essay'">
+                                <textarea class="form-control" rows="4" placeholder="답을 입력하세요"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 미리보기: 코드 -->
+                        <div v-if="block.type === 'code'">
+                            <div class="bg-dark text-light p-3 rounded">
+                                <small class="text-muted">{{ block.data.language }}</small>
+                                <pre class="mb-0 mt-2"><code>{{ block.data.code }}</code></pre>
+                            </div>
+                        </div>
+
+                        <!-- 미리보기: 파일 -->
+                        <div v-if="block.type === 'file' && block.data.url" class="border rounded p-3">
+                            <i class="bi bi-file-earmark-arrow-down text-primary fs-4"></i>
+                            <span class="ms-2">{{ block.data.filename }}</span>
+                            <span class="text-muted small ms-2">({{ block.data.size }})</span>
+                            <button class="btn btn-sm btn-outline-primary float-end">
+                                <i class="bi bi-download"></i> 다운로드
+                            </button>
+                        </div>
+
+                        <!-- 미리보기: 구분선 -->
+                        <hr v-if="block.type === 'divider'" class="my-4">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.content-author-page .text-style-h1 {
+    font-size: 2rem;
+    font-weight: bold;
+}
+.content-author-page .text-style-h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.content-author-page .text-style-h3 {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+.content-author-page .block-wrapper {
+    position: relative;
+}
+.content-author-page .block-toolbar {
+    display: none;
+    position: absolute;
+    left: -50px;
+    top: 10px;
+    z-index: 10;
+}
+.content-author-page .block-wrapper:hover .block-toolbar,
+.content-author-page .block-focused .block-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.content-author-page .block-handle {
+    cursor: grab;
+    color: #adb5bd;
+}
+.content-author-page .block-focused {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+    border-radius: 8px;
+}
+.content-author-page .add-block-between {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.content-author-page .block-wrapper:hover .add-block-between,
+.content-author-page .block-focused .add-block-between {
+    opacity: 1;
+}
+</style>
