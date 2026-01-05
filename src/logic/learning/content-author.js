@@ -16,14 +16,15 @@ export default {
         }
     },
     mounted() {
+        console.log('Content author mounted');
         // URL에서 콘텐츠 ID 가져오기 (편집 모드)
         const contentId = new URLSearchParams(window.location.search).get('id');
 
         if (contentId) {
             this.loadContent(contentId);
         } else {
-            // 새 콘텐츠: 기본 텍스트 블록 추가
-            this.addBlock('text');
+            // 새 콘텐츠: 초기에는 빈 상태로 시작
+            console.log('New content - starting with empty blocks');
         }
     },
     methods: {
@@ -104,7 +105,9 @@ export default {
          * 블록 추가
          */
         addBlock(type, position = null) {
+            console.log('Adding block:', type, 'at position:', position);
             const block = this.createBlock(type);
+            console.log('Created block:', block);
 
             if (position !== null) {
                 this.content.blocks.splice(position, 0, block);
@@ -113,6 +116,9 @@ export default {
                 this.content.blocks.push(block);
                 this.focusedBlockIndex = this.content.blocks.length - 1;
             }
+
+            console.log('Total blocks:', this.content.blocks.length);
+            console.log('Focused index:', this.focusedBlockIndex);
         },
 
         /**
